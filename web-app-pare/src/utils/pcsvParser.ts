@@ -140,11 +140,11 @@ export class PCSVParser {
         name: 'payment_mode',
         headers: ['id', 'name'],
         rows: [
-          ['1', 'Cash'],
-          ['2', 'Credit Card'],
-          ['3', 'Debit Card'],
-          ['4', 'Bank Transfer'],
-          ['5', 'PayPal']
+          ['1', '💵 Cash'],
+          ['2', '💳 Credit Card'],
+          ['3', '💳 Debit Card'],
+          ['4', '🏦 Bank Transfer'],
+          ['5', '💻 PayPal']
         ]
       }
     }
@@ -155,13 +155,13 @@ export class PCSVParser {
         name: 'category',
         headers: ['id', 'name'],
         rows: [
-          ['1', 'Food'],
-          ['2', 'Transport'],
-          ['3', 'Utilities'],
-          ['4', 'Entertainment'],
-          ['5', 'Shopping'],
-          ['6', 'Healthcare'],
-          ['7', 'Equipment']
+          ['1', '🍔 Food'],
+          ['2', '🚗 Transport'],
+          ['3', '💡 Utilities'],
+          ['4', '🎬 Entertainment'],
+          ['5', '🛍️ Shopping'],
+          ['6', '⚕️ Healthcare'],
+          ['7', '🔧 Equipment']
         ]
       }
     }

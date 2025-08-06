@@ -75,7 +75,6 @@
         :users="users"
         :payment-modes="paymentModes"
         :categories="categories"
-        :parsed-data="parsedData"
         @cancel="onDetailPanelCancel"
         @create-bill="onCreateBill"
         @save-bill="onSaveBill"
@@ -127,7 +126,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref, watch, onMounted } from 'vue'
+import { computed, defineComponent, ref, watch, onMounted, provide } from 'vue'
 import { useMessages, useThemeStore, SideBar } from '@opencloud-eu/web-pkg'
 import { useGettext } from 'vue3-gettext'
 import { PCSVParser, PCSVData } from './utils/pcsvParser'
@@ -228,6 +227,9 @@ export default defineComponent({
     // Update parsed data when content changes
     watch(editableContent, updateParsedData, { immediate: true })
     watch(() => currentUser.value, updateParsedData)
+
+    // Provide parsedData to child components
+    provide('parsedData', parsedData)
 
     const bills = computed(() => {
       return PCSVParser.getBills(parsedData.value).sort(

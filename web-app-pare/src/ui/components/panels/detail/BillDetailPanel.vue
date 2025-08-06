@@ -26,7 +26,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, computed, ref } from 'vue'
+import { defineComponent, PropType, computed, ref, inject } from 'vue'
 import { Bill, User, PaymentMode, Category, PCSVData } from '../../../../utils/pcsvParser'
 import DetailPanelHeader from '../DetailPanelHeader.vue'
 import { BillForm } from '../forms'
@@ -59,16 +59,13 @@ export default defineComponent({
     categories: {
       type: Array as PropType<Category[]>,
       required: true
-    },
-    parsedData: {
-      type: Object as PropType<PCSVData>,
-      required: true
     }
   },
   emits: ['cancel', 'create-bill', 'save-bill'],
   setup(props, { emit }) {
     const canSave = ref(false)
     const billForm = ref()
+    const parsedData = inject<PCSVData>('parsedData')
 
     const isVisible = computed(() => {
       return true
@@ -113,7 +110,8 @@ export default defineComponent({
       onValidationChange,
       onCancel,
       onSave,
-      onFormSubmit
+      onFormSubmit,
+      parsedData
     }
   }
 })
