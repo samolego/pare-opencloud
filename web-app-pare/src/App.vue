@@ -50,9 +50,9 @@
       <template #rootHeader>
         <div class="oc-p-s">
           <oc-button
-            v-if="currentSidebarConfig.showButton"
+            v-if="currentSidebarConfig.showCreateNewButton"
             variation="primary"
-            size="small"
+            size="medium"
             appearance="filled"
             @click="onSidebarButtonClick"
             class="oc-width-1-1"
@@ -128,8 +128,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, ref, watch, onMounted } from 'vue'
-import { Resource } from '@opencloud-eu/web-client'
-import { AppConfigObject, useMessages, useThemeStore, SideBar } from '@opencloud-eu/web-pkg'
+import { useMessages, useThemeStore, SideBar } from '@opencloud-eu/web-pkg'
 import { useGettext } from 'vue3-gettext'
 import { PCSVParser, PCSVData } from './utils/pcsvParser'
 import { SidebarItem, SidebarConfig } from './types/sidebar'
@@ -168,7 +167,7 @@ export default defineComponent({
     const editableContent = ref(props.currentContent)
     const originalContent = ref(props.currentContent)
     const lastSaved = ref<string>('')
-    const currentSection = ref<string>('bills')
+    const currentSection = ref<string>('bill')
     const isNavigationCollapsed = ref(true)
 
     // Detail Panel State
@@ -251,42 +250,42 @@ export default defineComponent({
     // Sidebar configuration map
     const sidebarConfigMap = computed(
       (): Record<string, { items: SidebarItem[]; config: SidebarConfig }> => ({
-        bills: {
+        bill: {
           items: bills.value as SidebarItem[],
           config: {
             title: $gettext('Recent Bills'),
             buttonText: $gettext('New Bill'),
             buttonIcon: 'plus',
             emptyMessage: $gettext('No bills yet. Create your first bill!'),
-            showButton: true,
+            showCreateNewButton: true,
             titleField: 'description',
             subtitleField: 'total_amount',
             metaField: 'datetime',
             descriptionField: 'comment'
           }
         },
-        members: {
+        member: {
           items: users.value as SidebarItem[],
           config: {
             title: $gettext('Members'),
             buttonText: $gettext('Add Member'),
             buttonIcon: 'user-plus',
             emptyMessage: $gettext('No members yet. Add your first member!'),
-            showButton: true,
+            showCreateNewButton: true,
             titleField: 'name',
             subtitleField: 'opencloud_id',
             metaField: '',
             descriptionField: ''
           }
         },
-        categories: {
+        category: {
           items: categories.value as SidebarItem[],
           config: {
             title: $gettext('Categories'),
             buttonText: $gettext('Add Category'),
             buttonIcon: 'tag',
             emptyMessage: $gettext('No categories yet. Add your first category!'),
-            showButton: true,
+            showCreateNewButton: true,
             titleField: 'name',
             subtitleField: '',
             metaField: '',
@@ -298,7 +297,7 @@ export default defineComponent({
           config: {
             title: $gettext('Statistics'),
             emptyMessage: $gettext('Statistics will appear here'),
-            showButton: false,
+            showCreateNewButton: false,
             titleField: 'name',
             subtitleField: '',
             metaField: '',
@@ -317,7 +316,7 @@ export default defineComponent({
         sidebarConfigMap.value[currentSection.value]?.config || {
           title: $gettext('Content'),
           emptyMessage: $gettext('No items'),
-          showButton: false,
+          showCreateNewButton: false,
           titleField: 'name',
           subtitleField: '',
           metaField: '',
@@ -329,7 +328,7 @@ export default defineComponent({
     const navigationItems = computed(() => {
       const items = [
         {
-          key: 'bills',
+          key: 'bill',
           label: $gettext('Bills'),
           icon: 'bill',
           count: bills.value.length
@@ -340,13 +339,13 @@ export default defineComponent({
           icon: 'bar-chart'
         },
         {
-          key: 'members',
+          key: 'member',
           label: $gettext('Members'),
           icon: 'user',
           count: users.value.length
         },
         {
-          key: 'categories',
+          key: 'category',
           label: $gettext('Categories'),
           icon: 'folder',
           count: categories.value.length
@@ -375,41 +374,41 @@ export default defineComponent({
     const contentPanels = computed(() => {
       const allPanels = [
         {
-          name: 'bills',
+          name: 'bill',
           title: () => $gettext('Bills'),
           isRoot: () => true,
-          isVisible: () => currentSection.value === 'bills',
+          isVisible: () => currentSection.value === 'bill',
           component: ContentPanel,
           componentAttrs: () => ({
             darkTheme: darkTheme.value,
             items: bills.value,
-            config: sidebarConfigMap.value.bills.config,
+            config: sidebarConfigMap.value.bill.config,
             onItemClick: onSidebarItemClick
           })
         },
         {
-          name: 'members',
+          name: 'member',
           title: () => $gettext('Members'),
           isRoot: () => true,
-          isVisible: () => currentSection.value === 'members',
+          isVisible: () => currentSection.value === 'member',
           component: UsersContentPanel,
           componentAttrs: () => ({
             darkTheme: darkTheme.value,
             items: users.value,
-            config: sidebarConfigMap.value.members.config,
+            config: sidebarConfigMap.value.member.config,
             onItemClick: onSidebarItemClick
           })
         },
         {
-          name: 'categories',
+          name: 'category',
           title: () => $gettext('Categories'),
           isRoot: () => true,
-          isVisible: () => currentSection.value === 'categories',
+          isVisible: () => currentSection.value === 'category',
           component: ContentPanel,
           componentAttrs: () => ({
             darkTheme: darkTheme.value,
             items: categories.value,
-            config: sidebarConfigMap.value.categories.config,
+            config: sidebarConfigMap.value.category.config,
             onItemClick: onSidebarItemClick
           })
         },
@@ -456,31 +455,15 @@ export default defineComponent({
 
     const onSidebarButtonClick = () => {
       detailPanel.value = {
-        type: currentSection.value as any,
+        type: currentSection.value as 'bill' | 'member' | 'category',
         mode: 'create',
         selectedItem: null
       }
     }
 
     const onSidebarItemClick = (item: SidebarItem) => {
-      let itemType: 'bill' | 'member' | 'category' | 'payment-mode'
-
-      switch (currentSection.value) {
-        case 'bills':
-          itemType = 'bill'
-          break
-        case 'members':
-          itemType = 'member'
-          break
-        case 'categories':
-          itemType = 'category'
-          break
-        default:
-          itemType = 'bill'
-      }
-
       detailPanel.value = {
-        type: itemType,
+        type: currentSection.value as 'bill' | 'member' | 'category',
         mode: 'edit',
         selectedItem: item
       }

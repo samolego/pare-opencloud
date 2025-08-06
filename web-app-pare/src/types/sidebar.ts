@@ -8,7 +8,7 @@ export interface SidebarConfig {
   buttonText?: string
   buttonIcon?: string
   emptyMessage: string
-  showButton?: boolean
+  showCreateNewButton?: boolean
   titleField: string
   subtitleField?: string
   metaField?: string
