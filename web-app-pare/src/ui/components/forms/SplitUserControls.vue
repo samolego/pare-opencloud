@@ -4,10 +4,10 @@
       <div class="split-user-info">
         <input
           :id="`user-${user.id}`"
-          v-model="userSplits[user.id].included"
+          :checked="userSplits[user.id].included"
           type="checkbox"
           class="split-user-checkbox"
-          @change="onSplitIncludedChange"
+          @change="onSplitIncludedChange(user.id)"
         />
         <label :for="`user-${user.id}`" class="split-user-name">
           {{ user.name }}
@@ -15,12 +15,12 @@
       </div>
       <div class="split-user-amount">
         <FormInput
-          v-model="userSplits[user.id].amount"
+          :model-value="userSplits[user.id].amount"
           type="number"
           step="0.01"
           :disabled="!userSplits[user.id].included"
           class="split-amount-input"
-          @input="onSplitAmountChange"
+          @update:model-value="(value) => onSplitAmountChange(user.id, value)"
         />
       </div>
     </div>
@@ -64,10 +64,8 @@ export default defineComponent({
   },
   emits: ['update:modelValue'],
   setup(props, { emit }) {
-    const userSplits = ref<{ [userId: number]: UserSplit }>({})
-
-    // Initialize user splits
-    const initializeUserSplits = () => {
+    // Use computed to directly access modelValue instead of local copy
+    const userSplits = computed(() => {
       const splits: { [userId: number]: UserSplit } = {}
       props.users.forEach((user) => {
         splits[user.id] = {
@@ -75,12 +73,8 @@ export default defineComponent({
           amount: props.modelValue[user.id]?.amount || '0.00'
         }
       })
-      userSplits.value = splits
-    }
-
-    // Initialize splits when users change or component mounts
-    watch(() => props.users, initializeUserSplits, { immediate: true })
-    watch(() => props.modelValue, initializeUserSplits, { deep: true })
+      return splits
+    })
 
     const totalSplitAmount = computed(() => {
       return Object.values(userSplits.value)
@@ -92,32 +86,43 @@ export default defineComponent({
       return totalSplitAmount.value - props.totalAmount
     })
 
-    const onSplitIncludedChange = () => {
-      calculateEqualSplits()
-      emitUpdate()
+    const onSplitIncludedChange = (userId: number) => {
+      const newSplits = { ...props.modelValue }
+      newSplits[userId].included = !newSplits[userId].included
+
+      // If switching to equal splits, recalculate amounts
+      if (newSplits[userId].included && props.totalAmount > 0) {
+        calculateEqualSplits(newSplits)
+      } else if (!newSplits[userId].included) {
+        newSplits[userId].amount = '0.00'
+      }
+
+      emit('update:modelValue', newSplits)
     }
 
-    const onSplitAmountChange = () => {
-      emitUpdate()
+    const onSplitAmountChange = (userId: number, amount: string) => {
+      const newSplits = { ...props.modelValue }
+      newSplits[userId].amount = amount
+      emit('update:modelValue', newSplits)
     }
 
-    const calculateEqualSplits = () => {
+    const calculateEqualSplits = (splits: { [userId: number]: UserSplit }) => {
       if (props.totalAmount <= 0) return
 
-      const includedUsers = Object.entries(userSplits.value).filter(([_, split]) => split.included)
+      const includedUsers = Object.entries(splits).filter(([_, split]) => split.included)
 
       if (includedUsers.length === 0) return
 
       const equalAmount = props.totalAmount / includedUsers.length
 
-      includedUsers.forEach(([, split]) => {
-        split.amount = equalAmount.toFixed(2)
+      includedUsers.forEach(([userId, split]) => {
+        splits[parseInt(userId)].amount = equalAmount.toFixed(2)
       })
 
       // Set excluded users to 0
-      Object.entries(userSplits.value).forEach(([, split]) => {
+      Object.entries(splits).forEach(([userId, split]) => {
         if (!split.included) {
-          split.amount = '0.00'
+          splits[parseInt(userId)].amount = '0.00'
         }
       })
     }
@@ -127,15 +132,12 @@ export default defineComponent({
       () => props.totalAmount,
       () => {
         if (props.totalAmount > 0) {
-          calculateEqualSplits()
-          emitUpdate()
+          const newSplits = { ...props.modelValue }
+          calculateEqualSplits(newSplits)
+          emit('update:modelValue', newSplits)
         }
       }
     )
-
-    const emitUpdate = () => {
-      emit('update:modelValue', { ...userSplits.value })
-    }
 
     return {
       userSplits,

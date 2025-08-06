@@ -10,34 +10,48 @@
     />
 
     <div class="bill-detail-content">
-      <BillForm
-        ref="billForm"
-        :bill="bill"
-        :users="users"
-        :payment-modes="paymentModes"
-        :categories="categories"
-        :parsed-data="parsedData"
-        :mode="mode"
-        @submit="onFormSubmit"
-        @validation-change="onValidationChange"
-      />
+      <div class="bill-detail-grid">
+        <!-- Main Content -->
+        <div class="bill-detail-main">
+          <BillForm
+            ref="billForm"
+            :bill="bill"
+            :users="users"
+            :payment-modes="paymentModes"
+            :categories="categories"
+            :parsed-data="parsedData"
+            :mode="mode"
+            @submit="onFormSubmit"
+            @validation-change="onValidationChange"
+            @splits-change="onSplitsChange"
+          />
+        </div>
+
+        <!-- Sidebar -->
+        <div class="bill-detail-sidebar">
+          <BillSplitSidebar v-model="userSplits" :users="users" :total-amount="totalAmount" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, inject } from 'vue'
+import { defineComponent, PropType, inject, ref } from 'vue'
 import { Bill, User, PaymentMode, Category, PCSVData } from '../../../../utils/pcsvParser'
 import { useBillDetailPanel } from '../../../../composables/useDetailPanelLogic'
 import { FormMode } from '../../../../types/forms'
+import { UserSplit } from '../../../../types/forms'
 import DetailPanelHeader from '../DetailPanelHeader.vue'
 import { BillForm } from '../forms'
+import BillSplitSidebar from '../BillSplitSidebar.vue'
 
 export default defineComponent({
   name: 'BillDetailPanel',
   components: {
     DetailPanelHeader,
-    BillForm
+    BillForm,
+    BillSplitSidebar
   },
   props: {
     bill: {
@@ -65,7 +79,7 @@ export default defineComponent({
   setup(props, { emit }) {
     const {
       canSave,
-      formRef: billForm,
+      formRef,
       isVisible,
       panelTitle,
       computedSaveText: saveText,
@@ -74,9 +88,19 @@ export default defineComponent({
       createEventHandlers
     } = useBillDetailPanel(props.mode)
 
+    // Use the formRef from composable as billForm
+    const billForm = formRef
+
     const parsedData = inject<PCSVData>('parsedData')
+    const totalAmount = ref(0)
+    const userSplits = ref<{ [userId: number]: UserSplit }>({})
 
     const { onCancel, onFormSubmit } = createEventHandlers(emit)
+
+    const onSplitsChange = (splits: { [userId: number]: UserSplit }, amount: number) => {
+      userSplits.value = splits
+      totalAmount.value = amount
+    }
 
     return {
       canSave,
@@ -84,10 +108,13 @@ export default defineComponent({
       panelTitle,
       saveText,
       billForm,
+      totalAmount,
+      userSplits,
       onValidationChange,
       onCancel,
       onSave,
       onFormSubmit,
+      onSplitsChange,
       parsedData
     }
   }
@@ -99,5 +126,45 @@ export default defineComponent({
 
 .bill-detail-panel {
   @include detail-panel;
+}
+
+.bill-detail-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.bill-detail-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  gap: 0;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+  }
+}
+
+.bill-detail-main {
+  overflow-y: auto;
+  @include custom-scrollbar;
+  padding: var(--oc-space-large);
+
+  @media (max-width: 1024px) {
+    padding: var(--oc-space-medium);
+  }
+}
+
+.bill-detail-sidebar {
+  border-left: 1px solid var(--oc-role-outline-variant);
+  background-color: var(--oc-role-surface-container);
+  height: 100%;
+
+  @media (max-width: 1024px) {
+    border-left: none;
+    border-top: 1px solid var(--oc-role-outline-variant);
+  }
 }
 </style>

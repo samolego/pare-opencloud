@@ -1,118 +1,273 @@
 <template>
   <div class="bill-form">
     <form @submit.prevent="onSubmit">
-      <!-- Basic Info Row -->
-      <div class="form-row">
-        <div class="form-column">
-          <!-- What? -->
-          <FormField label="What?" required :error="errors.description">
-            <FormInput
-              v-model="localForm.description"
-              placeholder="Enter description..."
-              required
-            />
-          </FormField>
+      <!-- Bill Details Section -->
+      <div class="bill-form-section">
+        <div class="section-header">
+          <div class="section-header-icon">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14,2 14,8 20,8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10,9 9,9 8,9"></polyline>
+            </svg>
+          </div>
+          <h2 class="section-title">Bill Details</h2>
         </div>
-        <div class="form-column">
-          <!-- How much? -->
-          <FormField label="How much?" required :error="errors.total_amount">
-            <FormInput
-              v-model="localForm.total_amount"
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              required
-            />
-          </FormField>
-        </div>
-        <div class="form-column">
-          <!-- Who paid? -->
-          <FormField label="Who paid?" required :error="errors.who_paid_id">
-            <FormSelect
-              v-model="localForm.who_paid_id"
-              :options="userOptions"
-              placeholder="Select user..."
-              required
-            />
-          </FormField>
+
+        <div class="section-content">
+          <!-- Description - Full width -->
+          <div class="form-field-full">
+            <FormField label="What was this for?" required :error="errors.description">
+              <FormInput
+                v-model="localForm.description"
+                placeholder="e.g., Dinner at Italian restaurant"
+                required
+              />
+            </FormField>
+          </div>
+
+          <!-- Amount and Category Row -->
+          <div class="form-row">
+            <div class="form-column">
+              <FormField label="Total Amount" required :error="errors.total_amount">
+                <div class="amount-input-wrapper">
+                  <div class="amount-currency">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <line x1="12" y1="1" x2="12" y2="23"></line>
+                      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                  </div>
+                  <FormInput
+                    v-model="localForm.total_amount"
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    required
+                    class="amount-input"
+                  />
+                </div>
+              </FormField>
+            </div>
+            <div class="form-column">
+              <FormField label="Category" :error="errors.category_id">
+                <div class="select-input-wrapper">
+                  <div class="select-icon">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"
+                      ></path>
+                      <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                    </svg>
+                  </div>
+                  <FormSelect
+                    v-model="localForm.category_id"
+                    :options="categoryOptions"
+                    placeholder="Select category..."
+                    class="select-with-icon"
+                  />
+                </div>
+              </FormField>
+            </div>
+          </div>
+
+          <!-- Date and Time Row -->
+          <div class="form-row">
+            <div class="form-column">
+              <FormField label="Date" required :error="errors.date">
+                <div class="input-wrapper">
+                  <div class="input-icon">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                  </div>
+                  <FormInput
+                    v-model="localForm.date"
+                    type="date"
+                    required
+                    class="input-with-icon"
+                  />
+                </div>
+              </FormField>
+            </div>
+            <div class="form-column">
+              <FormField label="Time" required :error="errors.time">
+                <div class="input-wrapper">
+                  <div class="input-icon">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12,6 12,12 16,14"></polyline>
+                    </svg>
+                  </div>
+                  <FormInput
+                    v-model="localForm.time"
+                    type="time"
+                    required
+                    class="input-with-icon"
+                  />
+                </div>
+              </FormField>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- For who -->
-      <FormField label="For who" required :error="errors.splits">
-        <SplitUserControls
-          v-model="userSplits"
-          :users="users"
-          :total-amount="parseFloat(localForm.total_amount) || 0"
-        />
-      </FormField>
+      <!-- Payment Details Section -->
+      <div class="bill-form-section">
+        <div class="section-header">
+          <div class="section-header-icon">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+              <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+          </div>
+          <h2 class="section-title">Payment Details</h2>
+        </div>
 
-      <!-- Date and Details Row -->
-      <div class="form-row">
-        <div class="form-column">
-          <!-- When? -->
-          <FormField label="When?" required :error="errors.date">
-            <FormInput v-model="localForm.date" type="date" required />
-          </FormField>
-        </div>
-        <div class="form-column">
-          <!-- What time? -->
-          <FormField label="What time?" required :error="errors.time">
-            <FormInput v-model="localForm.time" type="time" required />
-          </FormField>
-        </div>
-        <div class="form-column">
-          <!-- Repeat -->
-          <FormField label="Repeat">
-            <FormSelect v-model="localForm.repeat" :options="repeatOptions" />
-          </FormField>
+        <div class="section-content">
+          <div class="form-row">
+            <div class="form-column">
+              <FormField label="Who paid initially?" required :error="errors.who_paid_id">
+                <FormSelect
+                  v-model="localForm.who_paid_id"
+                  :options="userOptions"
+                  placeholder="Select user..."
+                  required
+                />
+              </FormField>
+            </div>
+            <div class="form-column">
+              <FormField label="Payment Method" :error="errors.payment_mode_id">
+                <FormSelect
+                  v-model="localForm.payment_mode_id"
+                  :options="paymentModeOptions"
+                  placeholder="Select payment mode..."
+                />
+              </FormField>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Payment and Category Row -->
-      <div class="form-row">
-        <div class="form-column">
-          <!-- Payment mode -->
-          <FormField label="Payment mode">
-            <FormSelect
-              v-model="localForm.payment_mode_id"
-              :options="paymentModeOptions"
-              placeholder="Select payment mode..."
-            />
-          </FormField>
+      <!-- Additional Details Section -->
+      <div class="bill-form-section">
+        <div class="section-header">
+          <div class="section-header-icon">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14,2 14,8 20,8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10,9 9,9 8,9"></polyline>
+            </svg>
+          </div>
+          <h2 class="section-title">Additional Details</h2>
         </div>
-        <div class="form-column">
-          <!-- Category -->
-          <FormField label="Category">
-            <FormSelect
-              v-model="localForm.category_id"
-              :options="categoryOptions"
-              placeholder="Select category..."
-            />
-          </FormField>
-        </div>
-        <div class="form-column">
-          <!-- Empty column for balance -->
+
+        <div class="section-content">
+          <!-- Repeat Field -->
+          <div class="form-field-full">
+            <FormField label="Repeat" :error="errors.repeat">
+              <FormSelect v-model="localForm.repeat" :options="repeatOptions" />
+            </FormField>
+          </div>
+
+          <!-- Comment -->
+          <div class="form-field-full">
+            <FormField label="Notes / Comments" :error="errors.comment">
+              <FormTextarea
+                v-model="localForm.comment"
+                placeholder="Add any additional notes about this bill..."
+                :rows="3"
+              />
+            </FormField>
+          </div>
+
+          <!-- File link -->
+          <div class="form-field-full">
+            <FormField
+              label="Receipt / Document Link"
+              help-text="Optional: Link to receipt or document"
+              :error="errors.file_link"
+            >
+              <div class="input-wrapper">
+                <div class="input-icon">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                  </svg>
+                </div>
+                <FormInput
+                  v-model="localForm.file_link"
+                  type="url"
+                  placeholder="https://example.com/receipt.pdf"
+                  class="input-with-icon"
+                />
+              </div>
+            </FormField>
+          </div>
         </div>
       </div>
-
-      <!-- Comment -->
-      <FormField label="Comment">
-        <FormTextarea v-model="localForm.comment" placeholder="Additional notes..." :rows="3" />
-      </FormField>
-
-      <!-- File link -->
-      <FormField
-        label="Attach public link to personal file"
-        help-text="Link to receipt or document"
-        :error="errors.file_link"
-      >
-        <FormInput
-          v-model="localForm.file_link"
-          type="url"
-          placeholder="https://example.com/receipt.pdf"
-        />
-      </FormField>
     </form>
   </div>
 </template>
@@ -129,7 +284,7 @@ import {
   PCSVParser
 } from '../../../../utils/pcsvParser'
 import { UserSplit, BillFormData, ValidationErrors } from '../../../../types/forms'
-import { FormField, FormInput, FormSelect, FormTextarea, SplitUserControls } from '../../forms'
+import { FormField, FormInput, FormSelect, FormTextarea } from '../../forms'
 
 export default defineComponent({
   name: 'BillForm',
@@ -137,8 +292,7 @@ export default defineComponent({
     FormField,
     FormInput,
     FormSelect,
-    FormTextarea,
-    SplitUserControls
+    FormTextarea
   },
   props: {
     bill: {
@@ -166,8 +320,8 @@ export default defineComponent({
       default: 'create'
     }
   },
-  emits: ['submit', 'validation-change'],
-  setup(props, { emit }) {
+  emits: ['submit', 'validation-change', 'splits-change'],
+  setup(props, { emit, expose }) {
     const localForm = reactive<BillFormData>({
       description: '',
       total_amount: '',
@@ -182,7 +336,7 @@ export default defineComponent({
     })
 
     const userSplits = ref<{ [userId: number]: UserSplit }>({})
-    const errors = ref<{ [key: string]: string }>({})
+    const errors = ref<ValidationErrors>({})
 
     // Initialize form data
     const initializeForm = () => {
@@ -217,7 +371,6 @@ export default defineComponent({
 
     // Initialize user splits
     const initializeUserSplits = () => {
-      // Update existing userSplits object instead of replacing it
       props.users.forEach((user) => {
         if (!userSplits.value[user.id]) {
           userSplits.value[user.id] = {
@@ -279,6 +432,15 @@ export default defineComponent({
         }
       },
       { immediate: true }
+    )
+
+    // Emit splits changes to parent for sidebar
+    watch(
+      [userSplits, () => localForm.total_amount],
+      () => {
+        emit('splits-change', userSplits.value, parseFloat(localForm.total_amount) || 0)
+      },
+      { deep: true, immediate: true }
     )
 
     // Computed options
@@ -389,6 +551,17 @@ export default defineComponent({
       emit('submit', { bill, splits })
     }
 
+    // Method to update splits from parent (sidebar)
+    const updateSplits = (newSplits: { [userId: number]: UserSplit }) => {
+      userSplits.value = { ...newSplits }
+    }
+
+    // Expose methods to parent component
+    expose({
+      updateSplits,
+      onSubmit
+    })
+
     return {
       localForm,
       userSplits,
@@ -407,7 +580,42 @@ export default defineComponent({
 @import '../../../styles/mixins';
 
 .bill-form {
-  @include form-responsive;
+  display: flex;
+  flex-direction: column;
+  gap: var(--oc-space-large);
+}
+
+.bill-form-section {
+  background-color: var(--oc-role-surface-container);
+  border: 1px solid var(--oc-role-outline-variant);
+  border-radius: var(--oc-space-medium);
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-bottom: var(--oc-space-large);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--oc-space-medium);
+  padding: var(--oc-space-large);
+  background-color: var(--oc-role-surface-container-high);
+  border-bottom: 1px solid var(--oc-role-outline-variant);
+}
+
+.section-header-icon {
+  color: var(--oc-role-primary);
+}
+
+.section-title {
+  font-size: var(--oc-font-size-large);
+  font-weight: var(--oc-font-weight-semibold);
+  color: var(--oc-role-on-surface);
+  margin: 0;
+}
+
+.section-content {
+  padding: var(--oc-space-medium);
 }
 
 .form-row {
@@ -416,5 +624,37 @@ export default defineComponent({
 
 .form-column {
   @include form-column;
+}
+
+.form-field-full {
+  @include form-field-spacing;
+  margin-bottom: var(--oc-space-large);
+}
+
+.input-wrapper,
+.amount-input-wrapper,
+.select-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon,
+.amount-currency,
+.select-icon {
+  position: absolute;
+  left: var(--oc-space-medium);
+  z-index: 1;
+  color: var(--oc-role-on-surface-variant);
+  pointer-events: none;
+}
+
+.input-with-icon,
+.amount-input {
+  padding-left: calc(var(--oc-space-xlarge) + var(--oc-space-medium));
+}
+
+.select-with-icon {
+  padding-left: calc(var(--oc-space-xlarge) + var(--oc-space-medium));
 }
 </style>
