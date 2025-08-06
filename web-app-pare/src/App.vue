@@ -612,6 +612,11 @@ export default defineComponent({
   }
 }
 
+/* Global override for OpenCloud sidebar border */
+#app-sidebar {
+  border-left: none !important;
+}
+
 .main-content {
   flex: 1;
   min-width: 0; // Prevent flex item from growing beyond container
