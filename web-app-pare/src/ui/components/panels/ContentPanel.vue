@@ -13,31 +13,33 @@
           :class="{ 'content-item-dark': darkTheme }"
           @click="props.onItemClick(item)"
         >
-          <div class="item-main">
-            <div class="item-title oc-text-bold oc-text-small">
-              {{ getItemTitle(item) }}
-            </div>
-            <div
-              v-if="getItemSubtitle(item)"
-              class="item-details oc-flex oc-flex-between oc-flex-middle oc-mt-xs"
-            >
+          <slot name="item" :item="item">
+            <div class="item-main">
+              <div class="item-title oc-text-bold oc-text-small">
+                {{ getItemTitle(item) }}
+              </div>
               <div
-                class="item-subtitle"
-                :class="{ 'item-amount-negative': isNegativeAmount(item) }"
+                v-if="getItemSubtitle(item)"
+                class="item-details oc-flex oc-flex-between oc-flex-middle oc-mt-xs"
               >
-                {{ getItemSubtitle(item) }}
+                <div
+                  class="item-subtitle"
+                  :class="{ 'item-amount-negative': isNegativeAmount(item) }"
+                >
+                  {{ getItemSubtitle(item) }}
+                </div>
+                <div v-if="getItemMeta(item)" class="item-meta oc-text-muted oc-text-xsmall">
+                  {{ getItemMeta(item) }}
+                </div>
               </div>
-              <div v-if="getItemMeta(item)" class="item-meta oc-text-muted oc-text-xsmall">
-                {{ getItemMeta(item) }}
+              <div
+                v-if="getItemDescription(item)"
+                class="item-description oc-text-muted oc-text-xsmall oc-mt-xs"
+              >
+                {{ truncateText(getItemDescription(item), 50) }}
               </div>
             </div>
-            <div
-              v-if="getItemDescription(item)"
-              class="item-description oc-text-muted oc-text-xsmall oc-mt-xs"
-            >
-              {{ truncateText(getItemDescription(item), 50) }}
-            </div>
-          </div>
+          </slot>
         </div>
       </div>
 
@@ -50,9 +52,7 @@
             :disabled="currentPage === 1"
             @click="goToPreviousPage"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
-            </svg>
+            <oc-icon name="arrow-left-s" />
             Previous
           </button>
 
@@ -63,9 +63,7 @@
             @click="goToNextPage"
           >
             Next
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
-            </svg>
+            <oc-icon name="arrow-right-s" />
           </button>
         </div>
 

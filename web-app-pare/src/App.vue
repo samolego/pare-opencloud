@@ -136,20 +136,24 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, PropType, ref, watch, nextTick } from 'vue'
+import { computed, defineComponent, PropType, ref, watch, nextTick, onMounted } from 'vue'
 import { Resource } from '@opencloud-eu/web-client'
 import { AppConfigObject, useMessages, useThemeStore, SideBar } from '@opencloud-eu/web-pkg'
 import { useGettext } from 'vue3-gettext'
 import { PCSVParser, PCSVData } from './utils/pcsvParser'
 import { SidebarItem, SidebarConfig } from './types/sidebar'
+import { useUser } from './composables/useUser'
 import NavigationPanel from './ui/components/panels/NavigationPanel.vue'
 import ContentPanel from './ui/components/panels/ContentPanel.vue'
+import UsersContentPanel from './ui/components/panels/UsersContentPanel.vue'
 import { NewBillModal, NewMemberModal, NewCategoryModal } from './ui/components/modals'
 
 export default defineComponent({
   name: 'App',
   components: {
     SideBar,
+    ContentPanel,
+    UsersContentPanel,
     NewBillModal,
     NewMemberModal,
     NewCategoryModal
@@ -177,14 +181,15 @@ export default defineComponent({
     const showNewMemberModal = ref(false)
     const showNewCategoryModal = ref(false)
 
-    const currentUser = computed(() => ({
-      name: 'Current User', // TODO: Get from OpenCloud user context
-      opencloud_id: null // TODO: Get actual OpenCloud user ID
-    }))
-
     const { $gettext } = useGettext()
     const { showMessage } = useMessages()
     const themeStore = useThemeStore()
+    const { user: currentUser, initUser } = useUser()
+
+    // Initialize user on component mount
+    onMounted(async () => {
+      await initUser(props.resource)
+    })
 
     const darkTheme = computed(() => {
       return themeStore.currentTheme.isDark
@@ -208,8 +213,8 @@ export default defineComponent({
         let data = PCSVParser.parse(editableContent.value)
         data = PCSVParser.ensureDefaultTables(
           data,
-          currentUser.value.name,
-          currentUser.value.opencloud_id
+          currentUser.value?.name || 'Current User',
+          currentUser.value?.opencloud_id || null
         )
 
         return data
@@ -315,31 +320,37 @@ export default defineComponent({
       )
     })
 
-    const navigationItems = computed(() => [
-      {
-        key: 'bills',
-        label: $gettext('Bills'),
-        icon: 'bill',
-        count: bills.value.length
-      },
-      {
-        key: 'statistics',
-        label: $gettext('Statistics'),
-        icon: 'bar-chart'
-      },
-      {
-        key: 'members',
-        label: $gettext('Members'),
-        icon: 'user',
-        count: users.value.length
-      },
-      {
-        key: 'categories',
-        label: $gettext('Categories'),
-        icon: 'folder',
-        count: categories.value.length
-      }
-    ])
+    const isDevMode = import.meta.env.MODE === 'development'
+
+    const navigationItems = computed(() => {
+      const items = [
+        {
+          key: 'bills',
+          label: $gettext('Bills'),
+          icon: 'bill',
+          count: bills.value.length
+        },
+        {
+          key: 'statistics',
+          label: $gettext('Statistics'),
+          icon: 'bar-chart'
+        },
+        {
+          key: 'members',
+          label: $gettext('Members'),
+          icon: 'user',
+          count: users.value.length
+        },
+        {
+          key: 'categories',
+          label: $gettext('Categories'),
+          icon: 'folder',
+          count: categories.value.length
+        }
+      ]
+
+      return items
+    })
 
     const navigationPanels = computed(() => [
       {
@@ -377,7 +388,7 @@ export default defineComponent({
           title: () => $gettext('Members'),
           isRoot: () => true,
           isVisible: () => currentSection.value === 'members',
-          component: ContentPanel,
+          component: UsersContentPanel,
           componentAttrs: () => ({
             darkTheme: darkTheme.value,
             items: users.value,
@@ -413,7 +424,7 @@ export default defineComponent({
         }
       ]
 
-      return allPanels.filter((panel) => panel.isVisible())
+      return allPanels
     })
 
     // Watch for external content changes
