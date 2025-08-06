@@ -8,14 +8,8 @@
       :panel-context="panelContext"
       :active-panel="'navigation'"
       @select-panel="onNavigate"
-      @close="closeSidebar"
       class="navigation-sidebar"
     >
-      <template #rootHeader>
-        <div class="oc-p-s">
-          <h2 class="oc-text-bold oc-mb-s">{{ $gettext('Pare Finance') }}</h2>
-        </div>
-      </template>
     </SideBar>
 
     <!-- Content Sidebar -->
@@ -26,7 +20,6 @@
       :panel-context="panelContext"
       :active-panel="currentSection"
       @select-panel="onNavigate"
-      @close="closeSidebar"
       class="content-sidebar"
     >
       <template #rootHeader>
@@ -330,7 +323,10 @@ export default defineComponent({
     const navigationPanels = computed(() => [
       {
         name: 'navigation',
-        title: () => $gettext('Pare Finance'),
+        title: () =>
+          props.resource.name
+            ? props.resource.name.slice(0, props.resource.extension.length) || props.resource.name
+            : $gettext('Pare Finance'),
         isRoot: () => true,
         isVisible: () => true,
         component: NavigationPanel,
@@ -463,7 +459,7 @@ export default defineComponent({
 
     const onCreateMember = (data: { name: string; opencloud_id: string }) => {
       try {
-        let updatedData = { ...parsedData.value }
+        const updatedData = { ...parsedData.value }
         const usersTable = updatedData.tables.users
         const nextUserId = Math.max(...usersTable.rows.map((row) => parseInt(row[0])), 0) + 1
 
@@ -506,10 +502,6 @@ export default defineComponent({
       }
     }
 
-    const closeSidebar = () => {
-      // Handle sidebar close if needed
-    }
-
     // Focus the editor when component mounts
     nextTick(() => {
       if (textEditor.value && !props.isReadOnly) {
@@ -545,8 +537,7 @@ export default defineComponent({
       onSidebarButtonClick,
       onCreateBill,
       onCreateMember,
-      onCreateCategory,
-      closeSidebar
+      onCreateCategory
     }
   }
 })
@@ -565,9 +556,18 @@ export default defineComponent({
   background-color: var(--oc-role-surface-container-low);
 }
 
+.navigation-sidebar {
+  .header__close {
+    display: none !important;
+  }
+}
 .content-sidebar {
   min-width: 280px !important;
   width: 280px !important;
+
+  .header__close {
+    display: none !important;
+  }
 }
 
 .main-content {
