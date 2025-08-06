@@ -30,7 +30,7 @@ export default defineWebApplication({
           // Add this if you want your app to be present in the "New" file menu.
           newFileMenu: {
             menuTitle() {
-              return $gettext('Pare CSV Bills')
+              return $gettext('Pare Bill')
             }
           }
         }
@@ -46,7 +46,7 @@ export default defineWebApplication({
         }),
         meta: {
           authContext: 'hybrid',
-          title: $gettext('Advanced PDF Viewer'),
+          title: $gettext('Pare Finance'),
           patchCleanPath: true
         }
       },

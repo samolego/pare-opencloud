@@ -5,41 +5,41 @@ import translations from '../l10n/translations.json'
 
 const applicationId = 'json-viewer'
 export default defineWebApplication({
-    setup() {
-        const { $gettext } = useGettext()
+  setup() {
+    const { $gettext } = useGettext()
 
-        const routes = [
-            {
-                name: applicationId,
-                path: '/:driveAliasAndItem(.*)?',
-                                    component: AppWrapperRoute(JsonViewer, {
-                                        applicationId
-                                    }),
-                                    meta: {
-                                        authContext: 'hybrid',
-                                    title: $gettext('JSON Viewer'),
-                                    patchCleanPath: true
-                                    }
-            }
-        ]
-
-        const appInfo = {
-            name: $gettext('JSON Viewer'),
-                                    id: applicationId,
-                                    icon: 'file-code',
-                                    defaultExtension: 'json',
-                                        extensions: [
-                                            {
-                                                extension: 'json',
-                                    routeName: 'json-viewer'
-                                            }
-                                        ]
+    const routes = [
+      {
+        name: applicationId,
+        path: '/:driveAliasAndItem(.*)?',
+        component: AppWrapperRoute(JsonViewer, {
+          applicationId
+        }),
+        meta: {
+          authContext: 'hybrid',
+          title: $gettext('JSON Viewer'),
+          patchCleanPath: true
         }
+      }
+    ]
 
-        return {
-            appInfo,
-            routes,
-            translations
+    const appInfo = {
+      name: $gettext('JSON Viewer'),
+      id: applicationId,
+      icon: 'file-code',
+      defaultExtension: 'json',
+      extensions: [
+        {
+          extension: 'json',
+          routeName: 'json-viewer'
         }
+      ]
     }
+
+    return {
+      appInfo,
+      routes,
+      translations
+    }
+  }
 })
