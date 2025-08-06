@@ -17,7 +17,9 @@ dist
 
 # dev setup
 docker-compose.override.yml
-dev/docker/opencloud/files
+dev/docker/opencloud/files/*
+!dev/docker/opencloud/files/.gitkeep
+!dev/docker/opencloud/files/.gitignore
 
 # Certificate files (never commit these!)
 *.crt
