@@ -1,57 +1,72 @@
 <template>
   <div class="oc-pare-app oc-width-1-1 oc-height-1-1 oc-flex">
     <!-- Navigation Sidebar -->
-    <NavigationSidebar
-      :dark-theme="darkTheme"
-      :current-section="currentSection"
-      :bills-count="bills.length"
-      :members-count="users.length"
-      :categories-count="categories.length"
-      @navigate="onNavigate"
-    />
+    <SideBar
+      :is-open="true"
+      :loading="false"
+      :available-panels="navigationPanels"
+      :panel-context="panelContext"
+      :active-panel="'navigation'"
+      @select-panel="onNavigate"
+      @close="closeSidebar"
+      class="navigation-sidebar"
+    >
+      <template #rootHeader>
+        <div class="oc-p-s">
+          <h2 class="oc-text-bold oc-mb-s">{{ $gettext('Pare Finance') }}</h2>
+        </div>
+      </template>
+    </SideBar>
 
     <!-- Content Sidebar -->
-    <Sidebar
-      :dark-theme="darkTheme"
-      :items="currentSidebarItems"
-      :config="currentSidebarConfig"
-      @button-click="onSidebarButtonClick"
-      @item-click="onSidebarItemClick"
+    <SideBar
+      :is-open="true"
+      :loading="false"
+      :available-panels="contentPanels"
+      :panel-context="panelContext"
+      :active-panel="currentSection"
+      @select-panel="onNavigate"
+      @close="closeSidebar"
+      class="content-sidebar"
     >
-      <template #modal>
-        <!-- New Bill Modal -->
-        <NewBillModal
-          v-if="showNewBillModal"
-          :users="users"
-          :payment-modes="paymentModes"
-          :categories="categories"
-          @cancel="showNewBillModal = false"
-          @create-bill="onCreateBill"
-        />
-
-        <!-- Modals -->
-        <NewBillModal
-          v-if="showNewBillModal"
-          :users="users"
-          :payment-modes="paymentModes"
-          :categories="categories"
-          @cancel="showNewBillModal = false"
-          @create-bill="onCreateBill"
-        />
-
-        <NewMemberModal
-          v-if="showNewMemberModal"
-          @cancel="showNewMemberModal = false"
-          @create-member="onCreateMember"
-        />
-
-        <NewCategoryModal
-          v-if="showNewCategoryModal"
-          @cancel="showNewCategoryModal = false"
-          @create-category="onCreateCategory"
-        />
+      <template #rootHeader>
+        <div class="oc-p-s">
+          <oc-button
+            v-if="currentSidebarConfig.showButton"
+            variation="primary"
+            size="small"
+            appearance="filled"
+            @click="onSidebarButtonClick"
+            class="oc-width-1-1"
+          >
+            <oc-icon :name="currentSidebarConfig.buttonIcon || 'plus'" size="small" />
+            {{ currentSidebarConfig.buttonText }}
+          </oc-button>
+        </div>
       </template>
-    </Sidebar>
+    </SideBar>
+
+    <!-- Modals -->
+    <NewBillModal
+      v-if="showNewBillModal"
+      :users="users"
+      :payment-modes="paymentModes"
+      :categories="categories"
+      @cancel="showNewBillModal = false"
+      @create-bill="onCreateBill"
+    />
+
+    <NewMemberModal
+      v-if="showNewMemberModal"
+      @cancel="showNewMemberModal = false"
+      @create-member="onCreateMember"
+    />
+
+    <NewCategoryModal
+      v-if="showNewCategoryModal"
+      @cancel="showNewCategoryModal = false"
+      @create-category="onCreateCategory"
+    />
 
     <!-- Main Content Area -->
     <div class="main-content oc-flex oc-flex-column oc-width-1-1">
@@ -105,24 +120,24 @@
 <script lang="ts">
 import { computed, defineComponent, PropType, ref, watch, nextTick } from 'vue'
 import { Resource } from '@opencloud-eu/web-client'
-import { AppConfigObject, useMessages, useThemeStore } from '@opencloud-eu/web-pkg'
+import { AppConfigObject, useMessages, useThemeStore, SideBar } from '@opencloud-eu/web-pkg'
 import { useGettext } from 'vue3-gettext'
 import { PCSVParser, PCSVData } from './utils/pcsvParser'
 import { SidebarItem, SidebarConfig } from './types/sidebar'
-// Using custom sidebar implementation due to AppSidebar import issues
-import NavigationSidebar from './ui/components/NavigationSidebar.vue'
+import NavigationPanel from './ui/components/panels/NavigationPanel.vue'
+import ContentPanel from './ui/components/panels/ContentPanel.vue'
 import { NewBillModal, NewMemberModal, NewCategoryModal } from './ui/components/modals'
 
 export default defineComponent({
   name: 'App',
   components: {
-    NavigationSidebar,
+    SideBar,
     NewBillModal,
     NewMemberModal,
     NewCategoryModal
   },
   props: {
-    applicationConfig: { type: Object as PropType<AppConfigObject>, required: true },
+    applicationConfig: { type: PropType<AppConfigObject>, required: true },
     currentContent: {
       type: String,
       required: true
@@ -131,7 +146,7 @@ export default defineComponent({
     resource: { type: Object as PropType<Resource>, required: true }
   },
   emits: ['update:currentContent'],
-  setup: (props, { emit }) => {
+  setup(props, { emit }) {
     const textEditor = ref<HTMLTextAreaElement>()
     const editableContent = ref(props.currentContent)
     const originalContent = ref(props.currentContent)
@@ -177,6 +192,7 @@ export default defineComponent({
           currentUser.value.name,
           currentUser.value.opencloud_id
         )
+
         return data
       } catch (error) {
         console.error('Error parsing PCSV:', error)
@@ -202,26 +218,12 @@ export default defineComponent({
       return PCSVParser.getCategories(parsedData.value)
     })
 
-    // Sidebar configuration based on current section
-    const currentSidebarItems = computed((): SidebarItem[] => {
-      switch (currentSection.value) {
-        case 'bills':
-          return bills.value as SidebarItem[]
-        case 'members':
-          return users.value as SidebarItem[]
-        case 'categories':
-          return categories.value as SidebarItem[]
-        case 'statistics':
-          return []
-        default:
-          return []
-      }
-    })
-
-    const currentSidebarConfig = computed((): SidebarConfig => {
-      switch (currentSection.value) {
-        case 'bills':
-          return {
+    // Sidebar configuration map
+    const sidebarConfigMap = computed(
+      (): Record<string, { items: SidebarItem[]; config: SidebarConfig }> => ({
+        bills: {
+          items: bills.value as SidebarItem[],
+          config: {
             title: $gettext('Recent Bills'),
             buttonText: $gettext('New Bill'),
             buttonIcon: 'plus',
@@ -232,8 +234,10 @@ export default defineComponent({
             metaField: 'datetime',
             descriptionField: 'comment'
           }
-        case 'members':
-          return {
+        },
+        members: {
+          items: users.value as SidebarItem[],
+          config: {
             title: $gettext('Members'),
             buttonText: $gettext('Add Member'),
             buttonIcon: 'user-plus',
@@ -244,8 +248,10 @@ export default defineComponent({
             metaField: '',
             descriptionField: ''
           }
-        case 'categories':
-          return {
+        },
+        categories: {
+          items: categories.value as SidebarItem[],
+          config: {
             title: $gettext('Categories'),
             buttonText: $gettext('Add Category'),
             buttonIcon: 'tag',
@@ -256,8 +262,10 @@ export default defineComponent({
             metaField: '',
             descriptionField: ''
           }
-        case 'statistics':
-          return {
+        },
+        statistics: {
+          items: [],
+          config: {
             title: $gettext('Statistics'),
             emptyMessage: $gettext('Statistics will appear here'),
             showButton: false,
@@ -266,17 +274,131 @@ export default defineComponent({
             metaField: '',
             descriptionField: ''
           }
-        default:
-          return {
-            title: $gettext('Content'),
-            emptyMessage: $gettext('No items'),
-            showButton: false,
-            titleField: 'name',
-            subtitleField: '',
-            metaField: '',
-            descriptionField: ''
-          }
+        }
+      })
+    )
+
+    const currentSidebarItems = computed((): SidebarItem[] => {
+      return sidebarConfigMap.value[currentSection.value]?.items || []
+    })
+
+    const currentSidebarConfig = computed((): SidebarConfig => {
+      return (
+        sidebarConfigMap.value[currentSection.value]?.config || {
+          title: $gettext('Content'),
+          emptyMessage: $gettext('No items'),
+          showButton: false,
+          titleField: 'name',
+          subtitleField: '',
+          metaField: '',
+          descriptionField: ''
+        }
+      )
+    })
+
+    // OpenCloud Sidebar Panels
+    const panelContext = computed(() => ({
+      // Add any context needed by panels
+    }))
+
+    const navigationItems = computed(() => [
+      {
+        key: 'bills',
+        label: $gettext('Bills'),
+        icon: 'receipt',
+        count: bills.value.length
+      },
+      {
+        key: 'statistics',
+        label: $gettext('Statistics'),
+        icon: 'chart-bar'
+      },
+      {
+        key: 'members',
+        label: $gettext('Members'),
+        icon: 'users',
+        count: users.value.length
+      },
+      {
+        key: 'categories',
+        label: $gettext('Categories'),
+        icon: 'tag',
+        count: categories.value.length
       }
+    ])
+
+    const navigationPanels = computed(() => [
+      {
+        name: 'navigation',
+        title: () => $gettext('Pare Finance'),
+        isRoot: () => true,
+        isVisible: () => true,
+        component: NavigationPanel,
+        componentAttrs: () => ({
+          navigationItems: navigationItems.value,
+          currentSection: currentSection.value,
+          onNavigate: onNavigate
+        })
+      }
+    ])
+
+    const contentPanels = computed(() => {
+      const allPanels = [
+        {
+          name: 'bills',
+          title: () => $gettext('Bills'),
+          isRoot: () => true,
+          isVisible: () => currentSection.value === 'bills',
+          component: ContentPanel,
+          componentAttrs: () => ({
+            darkTheme: darkTheme.value,
+            items: bills.value,
+            config: sidebarConfigMap.value.bills.config,
+            onItemClick: onSidebarItemClick
+          })
+        },
+        {
+          name: 'members',
+          title: () => $gettext('Members'),
+          isRoot: () => true,
+          isVisible: () => currentSection.value === 'members',
+          component: ContentPanel,
+          componentAttrs: () => ({
+            darkTheme: darkTheme.value,
+            items: users.value,
+            config: sidebarConfigMap.value.members.config,
+            onItemClick: onSidebarItemClick
+          })
+        },
+        {
+          name: 'categories',
+          title: () => $gettext('Categories'),
+          isRoot: () => true,
+          isVisible: () => currentSection.value === 'categories',
+          component: ContentPanel,
+          componentAttrs: () => ({
+            darkTheme: darkTheme.value,
+            items: categories.value,
+            config: sidebarConfigMap.value.categories.config,
+            onItemClick: onSidebarItemClick
+          })
+        },
+        {
+          name: 'statistics',
+          title: () => $gettext('Statistics'),
+          isRoot: () => true,
+          isVisible: () => currentSection.value === 'statistics',
+          component: ContentPanel,
+          componentAttrs: () => ({
+            darkTheme: darkTheme.value,
+            items: [],
+            config: sidebarConfigMap.value.statistics.config,
+            onItemClick: onSidebarItemClick
+          })
+        }
+      ]
+
+      return allPanels.filter((panel) => panel.isVisible())
     })
 
     // Watch for external content changes
@@ -295,7 +417,6 @@ export default defineComponent({
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
-      // Handle any keyboard shortcuts if needed
       // Save is handled by OpenCloud's top bar
     }
 
@@ -385,9 +506,8 @@ export default defineComponent({
       }
     }
 
-    const onContentUpdate = (newContent: string) => {
-      editableContent.value = newContent
-      emit('update:currentContent', newContent)
+    const closeSidebar = () => {
+      // Handle sidebar close if needed
     }
 
     // Focus the editor when component mounts
@@ -416,78 +536,17 @@ export default defineComponent({
       categories,
       currentSidebarItems,
       currentSidebarConfig,
+      navigationPanels,
+      contentPanels,
+      panelContext,
       onContentChange,
       onKeyDown,
-      // Helper functions for item display
-      getItemTitle,
-      getItemSubtitle,
-      getItemMeta,
-      getItemDescription,
-      isNegativeAmount,
-      truncateText,
       onNavigate,
       onSidebarButtonClick,
-      onSidebarItemClick,
       onCreateBill,
       onCreateMember,
       onCreateCategory,
-      onContentUpdate
-    }
-
-    // Helper functions for item display
-    function getItemTitle(item: any): string {
-      return item[currentSidebarConfig.value.titleField] || ''
-    }
-
-    function getItemSubtitle(item: any): string {
-      const config = currentSidebarConfig.value
-      if (!config.subtitleField) return ''
-      const value = item[config.subtitleField]
-
-      // Special formatting for amounts
-      if (typeof value === 'number' && config.subtitleField.includes('amount')) {
-        const prefix = value < 0 ? '-' : ''
-        const absValue = Math.abs(value)
-        return `${prefix}$${absValue.toFixed(2)}`
-      }
-
-      return value || ''
-    }
-
-    function getItemMeta(item: any): string {
-      const config = currentSidebarConfig.value
-      if (!config.metaField) return ''
-      const value = item[config.metaField]
-
-      // Special formatting for dates
-      if ((typeof value === 'string' && value.includes('/')) || value.includes('-')) {
-        try {
-          const date = new Date(value.replace(' ', 'T'))
-          return date.toLocaleDateString()
-        } catch {
-          return value.split(' ')[0] || ''
-        }
-      }
-
-      return value || ''
-    }
-
-    function getItemDescription(item: any): string {
-      const config = currentSidebarConfig.value
-      if (!config.descriptionField) return ''
-      return item[config.descriptionField] || ''
-    }
-
-    function isNegativeAmount(item: any): boolean {
-      const config = currentSidebarConfig.value
-      if (!config.subtitleField?.includes('amount')) return false
-      const value = item[config.subtitleField]
-      return typeof value === 'number' && value < 0
-    }
-
-    function truncateText(text: string, maxLength: number): string {
-      if (text.length <= maxLength) return text
-      return text.substring(0, maxLength) + '...'
+      closeSidebar
     }
   }
 })
@@ -497,6 +556,18 @@ export default defineComponent({
 .oc-pare-app {
   height: 100vh;
   overflow: hidden;
+}
+
+.navigation-sidebar {
+  min-width: 200px !important;
+  width: 200px !important;
+  border-right: 1px solid var(--oc-color-border);
+  background-color: var(--oc-role-surface-container-low);
+}
+
+.content-sidebar {
+  min-width: 280px !important;
+  width: 280px !important;
 }
 
 .main-content {
@@ -529,7 +600,7 @@ export default defineComponent({
 
   &:focus {
     border-color: var(--oc-role-primary);
-    box-shadow: 0 0 0 2px var(--oc-role-primary-muted);
+    box-shadow: 0 0 0 2px var(--oc-role-primary);
   }
 
   &:read-only {
@@ -546,79 +617,5 @@ export default defineComponent({
 .status-bar {
   background-color: var(--oc-role-background-muted);
   min-height: 32px;
-}
-
-// Sidebar content styles
-.content-list {
-  .content-item {
-    background-color: var(--oc-role-background);
-    border: 1px solid var(--oc-color-border);
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-
-    &:hover {
-      background-color: var(--oc-role-surface-container-high);
-    }
-
-    &.content-item-dark {
-      background-color: var(--oc-role-background);
-      border-color: var(--oc-color-border);
-    }
-  }
-}
-
-.item-main {
-  .item-title {
-    color: var(--oc-role-text);
-    line-height: 1.3;
-  }
-
-  .item-subtitle {
-    color: var(--oc-role-primary);
-    font-weight: 600;
-    font-size: 0.9rem;
-
-    &.item-amount-negative {
-      color: var(--oc-role-error);
-    }
-  }
-
-  .item-meta {
-    font-size: 0.75rem;
-  }
-
-  .item-description {
-    line-height: 1.2;
-    font-style: italic;
-  }
-}
-
-// Content sidebar styles
-.content-sidebar {
-  width: 300px;
-  min-width: 300px;
-  max-width: 300px;
-  border-right: 1px solid var(--oc-color-border);
-  display: flex;
-  flex-direction: column;
-  background-color: var(--oc-role-surface-container-low);
-
-  &.content-sidebar-dark {
-    background-color: var(--oc-role-surface-container);
-  }
-}
-
-.sidebar-header {
-  border-bottom: 1px solid var(--oc-color-border);
-  background-color: var(--oc-role-background);
-
-  h3 {
-    color: var(--oc-role-text);
-  }
-}
-
-.sidebar-content {
-  flex: 1;
-  overflow-y: auto;
 }
 </style>

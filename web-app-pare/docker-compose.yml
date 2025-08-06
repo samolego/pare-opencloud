@@ -80,7 +80,7 @@ services:
     volumes:
       - opencloud-config:/etc/opencloud
       - ./dev/docker/opencloud/files:/var/lib/opencloud
-      - ./dist:/web/apps/skeleton
+      - ./dist:/web/apps/pare
     labels:
       - 'traefik.enable=true'
       - 'traefik.http.routers.opencloud.entrypoints=https'
