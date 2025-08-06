@@ -74,8 +74,22 @@ export default defineComponent({
   font-size: var(--oc-font-size-small);
 }
 
-.save-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.save-btn {
+  &:not(:disabled) {
+    background-color: var(--oc-role-secondary);
+    color: var(--oc-role-on-secondary);
+
+    &:hover {
+      background-color: var(--oc-role-secondary-container);
+      color: var(--oc-role-on-secondary-container);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: var(--oc-role-outline-variant);
+    color: var(--oc-role-on-surface-variant);
+  }
 }
 </style>
