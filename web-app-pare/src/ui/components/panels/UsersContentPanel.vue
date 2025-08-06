@@ -4,6 +4,7 @@
     :items="items"
     :config="config"
     :on-item-click="onItemClick"
+    :selected-item-id="selectedItemId"
     :items-per-page="itemsPerPage"
     @page-change="$emit('page-change', $event)"
   >
@@ -70,6 +71,10 @@ export default defineComponent({
     onItemClick: {
       type: Function as PropType<(item: SidebarItem) => void>,
       required: true
+    },
+    selectedItemId: {
+      type: [String, Number],
+      default: null
     },
     itemsPerPage: {
       type: Number,

@@ -385,7 +385,8 @@ export default defineComponent({
             darkTheme: darkTheme.value,
             items: bills.value,
             config: sidebarConfigMap.value.bill.config,
-            onItemClick: onSidebarItemClick
+            onItemClick: onSidebarItemClick,
+            selectedItemId: detailPanel.value.selectedItem?.id || null
           })
         },
         {
@@ -398,7 +399,8 @@ export default defineComponent({
             darkTheme: darkTheme.value,
             items: users.value,
             config: sidebarConfigMap.value.member.config,
-            onItemClick: onSidebarItemClick
+            onItemClick: onSidebarItemClick,
+            selectedItemId: detailPanel.value.selectedItem?.id || null
           })
         },
         {
@@ -411,7 +413,8 @@ export default defineComponent({
             darkTheme: darkTheme.value,
             items: categories.value,
             config: sidebarConfigMap.value.category.config,
-            onItemClick: onSidebarItemClick
+            onItemClick: onSidebarItemClick,
+            selectedItemId: detailPanel.value.selectedItem?.id || null
           })
         },
         {
@@ -424,7 +427,8 @@ export default defineComponent({
             darkTheme: darkTheme.value,
             items: [],
             config: sidebarConfigMap.value.statistics.config,
-            onItemClick: onSidebarItemClick
+            onItemClick: onSidebarItemClick,
+            selectedItemId: detailPanel.value.selectedItem?.id || null
           })
         }
       ]
@@ -449,6 +453,12 @@ export default defineComponent({
 
     const onNavigate = (section: string) => {
       currentSection.value = section
+      // Reset detail panel and selected item when switching sections
+      detailPanel.value = {
+        type: null,
+        mode: 'create',
+        selectedItem: null
+      }
     }
 
     const toggleNavigation = () => {

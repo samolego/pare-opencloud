@@ -10,7 +10,10 @@
           v-for="item in paginatedItems"
           :key="item.id"
           class="content-item oc-p-s oc-mb-xs"
-          :class="{ 'content-item-dark': darkTheme }"
+          :class="{
+            'content-item-dark': darkTheme,
+            'content-item-selected': selectedItemId === item.id
+          }"
           @click="onItemClick(item)"
         >
           <slot name="item" :item="item">
@@ -98,6 +101,10 @@ export default defineComponent({
     onItemClick: {
       type: Function as PropType<(item: SidebarItem) => void>,
       required: true
+    },
+    selectedItemId: {
+      type: [String, Number],
+      default: null
     },
     itemsPerPage: {
       type: Number,
@@ -193,6 +200,24 @@ export default defineComponent({
     &.content-item-dark {
       background-color: var(--oc-role-background);
       border-color: var(--oc-role-outline-variant);
+    }
+
+    &.content-item-selected {
+      background-color: var(--oc-role-primary-container);
+      border-color: var(--oc-role-primary);
+      color: var(--oc-role-on-primary-container);
+
+      .item-title {
+        color: var(--oc-role-on-primary-container);
+      }
+
+      .item-subtitle {
+        color: var(--oc-role-on-primary-container);
+
+        &.item-amount-negative {
+          color: var(--oc-role-error);
+        }
+      }
     }
   }
 }
