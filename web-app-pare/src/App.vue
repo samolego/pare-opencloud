@@ -8,8 +8,33 @@
       :panel-context="panelContext"
       :active-panel="'navigation'"
       @select-panel="onNavigate"
+      @close="closeSidebar"
       class="navigation-sidebar"
+      :class="{ 'navigation-sidebar-collapsed': isNavigationCollapsed }"
     >
+      <template #rootHeader>
+        <div class="oc-p-s oc-flex oc-flex-between oc-flex-middle">
+          <h2 v-if="!isNavigationCollapsed" class="oc-text-bold oc-mb-remove">
+            {{
+              resource.name
+                ? resource.name.slice(0, resource.extension.length) || resource.name
+                : $gettext('Pare Finance')
+            }}
+          </h2>
+          <oc-button
+            appearance="raw"
+            class="oc-p-xs"
+            :aria-label="
+              isNavigationCollapsed
+                ? $gettext('Expand navigation')
+                : $gettext('Collapse navigation')
+            "
+            @click="toggleNavigation"
+          >
+            <oc-icon :name="isNavigationCollapsed ? 'arrow-right-s' : 'arrow-left-s'" />
+          </oc-button>
+        </div>
+      </template>
     </SideBar>
 
     <!-- Content Sidebar -->
@@ -145,6 +170,7 @@ export default defineComponent({
     const originalContent = ref(props.currentContent)
     const lastSaved = ref<string>('')
     const currentSection = ref<string>('bills')
+    const isNavigationCollapsed = ref(false)
 
     // Modals
     const showNewBillModal = ref(false)
@@ -323,16 +349,14 @@ export default defineComponent({
     const navigationPanels = computed(() => [
       {
         name: 'navigation',
-        title: () =>
-          props.resource.name
-            ? props.resource.name.slice(0, props.resource.extension.length) || props.resource.name
-            : $gettext('Pare Finance'),
+        title: () => {},
         isRoot: () => true,
         isVisible: () => true,
         component: NavigationPanel,
         componentAttrs: () => ({
           navigationItems: navigationItems.value,
           currentSection: currentSection.value,
+          collapsed: isNavigationCollapsed.value,
           onNavigate: onNavigate
         })
       }
@@ -418,6 +442,10 @@ export default defineComponent({
 
     const onNavigate = (section: string) => {
       currentSection.value = section
+    }
+
+    const toggleNavigation = () => {
+      isNavigationCollapsed.value = !isNavigationCollapsed.value
     }
 
     const onSidebarButtonClick = () => {
@@ -531,9 +559,11 @@ export default defineComponent({
       navigationPanels,
       contentPanels,
       panelContext,
+      isNavigationCollapsed,
       onContentChange,
       onKeyDown,
       onNavigate,
+      toggleNavigation,
       onSidebarButtonClick,
       onCreateBill,
       onCreateMember,
@@ -554,6 +584,14 @@ export default defineComponent({
   width: 200px !important;
   border-right: 1px solid var(--oc-color-border);
   background-color: var(--oc-role-surface-container-low);
+  transition:
+    width 0.3s ease,
+    min-width 0.3s ease;
+
+  &.navigation-sidebar-collapsed {
+    min-width: 60px !important;
+    width: 60px !important;
+  }
 }
 
 .navigation-sidebar {

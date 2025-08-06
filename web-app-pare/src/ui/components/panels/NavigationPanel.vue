@@ -9,8 +9,10 @@
             :class="{ 'nav-button-active': currentSection === item.key }"
           >
             <oc-icon :name="item.icon" size="small" class="nav-icon" />
-            <span class="nav-text">{{ item.label }}</span>
-            <span v-if="item.count !== undefined" class="nav-count">{{ item.count }}</span>
+            <span v-if="!collapsed" class="nav-text">{{ item.label }}</span>
+            <span v-if="item.count !== undefined && !collapsed" class="nav-count">{{
+              item.count
+            }}</span>
           </button>
         </li>
       </ul>
@@ -38,6 +40,10 @@ export default defineComponent({
     currentSection: {
       type: String,
       required: true
+    },
+    collapsed: {
+      type: Boolean,
+      default: false
     },
     onNavigate: {
       type: Function as PropType<(section: string) => void>,
@@ -67,6 +73,7 @@ export default defineComponent({
 .nav-button {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   width: 100%;
   padding: var(--oc-space-small) var(--oc-space-medium);
   border: none;
@@ -77,6 +84,12 @@ export default defineComponent({
   transition: all 0.2s ease;
   text-align: left;
   font-size: 14px;
+
+  /* Collapsed state */
+  .navigation-sidebar-collapsed & {
+    justify-content: center;
+    padding: var(--oc-space-small);
+  }
 
   &:hover {
     background-color: var(--oc-role-surface-container-high);
@@ -103,6 +116,10 @@ export default defineComponent({
 .nav-icon {
   margin-right: var(--oc-space-small);
   color: var(--oc-role-text);
+
+  .navigation-sidebar-collapsed & {
+    margin-right: 0;
+  }
 }
 
 .nav-text {
