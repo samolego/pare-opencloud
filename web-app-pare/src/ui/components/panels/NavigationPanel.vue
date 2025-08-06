@@ -107,7 +107,7 @@ export default defineComponent({
     height: 40px;
     margin: var(--oc-space-xsmall) auto;
     background: none !important;
-    border-radius: 8px;
+    border-radius: var(--oc-space-small);
   }
 
   &:hover {

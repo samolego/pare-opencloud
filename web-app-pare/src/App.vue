@@ -8,7 +8,6 @@
       :panel-context="panelContext"
       :active-panel="'navigation'"
       @select-panel="onNavigate"
-      @close="closeSidebar"
       class="navigation-sidebar"
       :class="{ 'navigation-sidebar-collapsed': isNavigationCollapsed }"
     >
@@ -16,8 +15,8 @@
         <div class="oc-p-s oc-flex oc-flex-between oc-flex-middle">
           <h2 v-if="!isNavigationCollapsed" class="oc-text-bold oc-mb-remove">
             {{
-              resource.name
-                ? resource.name.slice(0, resource.extension.length) || resource.name
+              resource.name && resource.extension
+                ? resource.name.slice(0, resource.extension.length - 1) || resource.name
                 : $gettext('Pare Finance')
             }}
           </h2>
@@ -220,9 +219,9 @@ export default defineComponent({
     })
 
     const bills = computed(() => {
-      return PCSVParser.getBills(parsedData.value)
-        .sort((a, b) => new Date(b.datetime).getTime() - new Date(a.datetime).getTime())
-        .slice(0, 20) // Show only last 20 bills
+      return PCSVParser.getBills(parsedData.value).sort(
+        (a, b) => new Date(b.datetime).getTime() - new Date(a.datetime).getTime()
+      )
     })
 
     const users = computed(() => {
@@ -314,11 +313,6 @@ export default defineComponent({
         }
       )
     })
-
-    // OpenCloud Sidebar Panels
-    const panelContext = computed(() => ({
-      // Add any context needed by panels
-    }))
 
     const navigationItems = computed(() => [
       {
@@ -558,7 +552,6 @@ export default defineComponent({
       currentSidebarConfig,
       navigationPanels,
       contentPanels,
-      panelContext,
       isNavigationCollapsed,
       onContentChange,
       onKeyDown,
