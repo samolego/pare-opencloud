@@ -222,7 +222,7 @@ export default defineComponent({
     const bills = computed(() => {
       return PCSVParser.getBills(parsedData.value)
         .sort((a, b) => new Date(b.datetime).getTime() - new Date(a.datetime).getTime())
-        .slice(0, 10) // Show only last 10 bills
+        .slice(0, 20) // Show only last 20 bills
     })
 
     const users = computed(() => {
@@ -574,11 +574,6 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
-.oc-pare-app {
-  height: 100vh;
-  overflow: hidden;
-}
-
 .navigation-sidebar {
   min-width: 200px !important;
   width: 200px !important;
