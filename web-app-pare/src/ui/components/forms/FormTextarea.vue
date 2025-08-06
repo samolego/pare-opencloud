@@ -56,57 +56,17 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@import '../../styles/mixins';
+
 .form-textarea {
-  width: 100%;
-  padding: var(--oc-space-small);
-  border: 1px solid var(--oc-role-outline-variant);
-  border-radius: var(--oc-space-small);
-  background-color: var(--oc-role-surface);
-  color: var(--oc-role-on-surface);
-  font-size: var(--oc-font-size-small);
-  font-family: var(--oc-font-family);
-  line-height: 1.4;
+  @include form-control;
+  @include custom-scrollbar;
   resize: vertical;
   min-height: 80px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-
-  &:focus {
-    outline: none;
-    border-color: var(--oc-role-primary);
-    box-shadow: 0 0 0 2px var(--oc-role-primary-container);
-  }
 
   &:disabled,
   &.form-textarea-disabled {
-    background-color: var(--oc-role-surface-container);
-    color: var(--oc-role-on-surface-variant);
-    cursor: not-allowed;
-    opacity: 0.6;
     resize: none;
-  }
-
-  &::placeholder {
-    color: var(--oc-role-on-surface-variant);
-    opacity: 0.7;
-  }
-
-  // Scrollbar styling
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: var(--oc-role-surface-container);
-    border-radius: 4px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: var(--oc-role-outline-variant);
-    border-radius: 4px;
-
-    &:hover {
-      background: var(--oc-role-outline);
-    }
   }
 }
 </style>

@@ -51,19 +51,16 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@import '../../styles/mixins';
+
 .form-field {
-  margin-bottom: var(--oc-space-medium);
+  @include form-field-spacing;
 
   &.form-field-error {
     .form-field-content :deep(input),
     .form-field-content :deep(select),
     .form-field-content :deep(textarea) {
-      border-color: var(--oc-role-error);
-
-      &:focus {
-        border-color: var(--oc-role-error);
-        box-shadow: 0 0 0 2px var(--oc-role-error);
-      }
+      @include form-control-error;
     }
   }
 }

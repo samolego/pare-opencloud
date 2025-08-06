@@ -1,0 +1,63 @@
+// Form control mixins for consistent input, select, and textarea styling
+
+@mixin form-control-base {
+  width: 100%;
+  padding: var(--oc-space-small);
+  border: 1px solid var(--oc-role-outline-variant);
+  border-radius: var(--oc-space-small);
+  background-color: var(--oc-role-surface);
+  color: var(--oc-role-on-surface);
+  font-size: var(--oc-font-size-small);
+  font-family: var(--oc-font-family);
+  line-height: 1.4;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+@mixin form-control-focus {
+  &:focus {
+    outline: none;
+    border-color: var(--oc-role-primary);
+    box-shadow: 0 0 0 2px var(--oc-role-primary-container);
+  }
+}
+
+@mixin form-control-disabled {
+  &:disabled,
+  &.form-control-disabled {
+    background-color: var(--oc-role-surface-container);
+    color: var(--oc-role-on-surface-variant);
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+@mixin form-control-placeholder {
+  &::placeholder {
+    color: var(--oc-role-on-surface-variant);
+    opacity: 0.7;
+  }
+}
+
+@mixin form-control-error {
+  border-color: var(--oc-role-error);
+
+  &:focus {
+    border-color: var(--oc-role-error);
+    box-shadow: 0 0 0 2px var(--oc-role-error);
+  }
+}
+
+// Complete form control styling (combines all mixins)
+@mixin form-control {
+  @include form-control-base;
+  @include form-control-focus;
+  @include form-control-disabled;
+  @include form-control-placeholder;
+}
+
+// Small variant for inline inputs
+@mixin form-control-small {
+  width: 100px;
+  padding: var(--oc-space-xsmall) var(--oc-space-small);
+  text-align: right;
+}

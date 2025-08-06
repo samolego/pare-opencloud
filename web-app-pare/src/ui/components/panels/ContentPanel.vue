@@ -199,6 +199,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@import '../../styles/mixins';
+
 .content-panel {
   position: relative;
   height: 100%;
@@ -217,6 +219,7 @@ export default defineComponent({
 .content-list {
   flex: 1;
   overflow-y: auto;
+  @include custom-scrollbar;
 
   .content-item {
     background-color: var(--oc-role-background);

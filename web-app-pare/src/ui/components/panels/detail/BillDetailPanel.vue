@@ -118,43 +118,9 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@import '../../../styles/mixins';
+
 .bill-detail-panel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background-color: var(--oc-role-surface);
-  border-left: 1px solid var(--oc-role-outline-variant);
-  width: 100%;
-}
-
-.bill-detail-content {
-  flex: 1;
-  overflow-y: auto;
-
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: var(--oc-role-surface-container);
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: var(--oc-role-outline-variant);
-    border-radius: 4px;
-
-    &:hover {
-      background: var(--oc-role-outline);
-    }
-  }
-}
-
-@media (max-width: 768px) {
-  .bill-detail-panel {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 100;
-  }
+  @include detail-panel;
 }
 </style>

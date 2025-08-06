@@ -50,13 +50,10 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@import '../../styles/mixins';
+
 .detail-panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--oc-space-medium);
-  border-bottom: 1px solid var(--oc-role-outline-variant);
-  background-color: var(--oc-role-surface);
+  @include panel-header;
 }
 
 .header-title {
@@ -64,17 +61,11 @@ export default defineComponent({
 }
 
 .title-text {
-  font-size: var(--oc-font-size-large);
-  font-weight: var(--oc-font-weight-semibold);
-  color: var(--oc-role-on-surface);
-  margin: 0;
-  line-height: 1.3;
+  @include panel-header-title;
 }
 
 .header-actions {
-  display: flex;
-  gap: var(--oc-space-small);
-  align-items: center;
+  @include panel-header-actions;
 }
 
 .cancel-btn,

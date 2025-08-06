@@ -76,38 +76,10 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@import '../../styles/mixins';
+
 .form-input {
-  width: 100%;
-  padding: var(--oc-space-small);
-  border: 1px solid var(--oc-role-outline-variant);
-  border-radius: var(--oc-space-small);
-  background-color: var(--oc-role-surface);
-  color: var(--oc-role-on-surface);
-  font-size: var(--oc-font-size-small);
-  font-family: var(--oc-font-family);
-  line-height: 1.4;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-
-  &:focus {
-    outline: none;
-    border-color: var(--oc-role-primary);
-    box-shadow: 0 0 0 2px var(--oc-role-primary-container);
-  }
-
-  &:disabled,
-  &.form-input-disabled {
-    background-color: var(--oc-role-surface-container);
-    color: var(--oc-role-on-surface-variant);
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
-
-  &::placeholder {
-    color: var(--oc-role-on-surface-variant);
-    opacity: 0.7;
-  }
+  @include form-control;
 
   // Special styling for different input types
   &[type='number'] {
@@ -121,9 +93,7 @@ export default defineComponent({
 
   // Small variant for inline inputs
   &.form-input-small {
-    width: 100px;
-    padding: var(--oc-space-xsmall) var(--oc-space-small);
-    text-align: right;
+    @include form-control-small;
   }
 }
 </style>

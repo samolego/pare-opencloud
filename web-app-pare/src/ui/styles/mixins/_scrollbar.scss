@@ -1,0 +1,20 @@
+// Scrollbar mixin for consistent styling across components
+@mixin custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--oc-role-surface-container);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--oc-role-outline-variant);
+    border-radius: 4px;
+
+    &:hover {
+      background: var(--oc-role-outline);
+    }
+  }
+}

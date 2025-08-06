@@ -118,7 +118,9 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@import '../../../styles/mixins';
+
 .category-form {
-  padding: var(--oc-space-medium);
+  @include form-base;
 }
 </style>

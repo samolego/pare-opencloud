@@ -1,0 +1,99 @@
+// Form layout mixins for consistent form structure and responsive behavior
+
+// Base form container
+@mixin form-base {
+  padding: var(--oc-space-medium);
+}
+
+// Large form container (for complex forms like BillForm)
+@mixin form-large {
+  padding: var(--oc-space-large);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+// Form row with 3 columns
+@mixin form-row-3col {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--oc-space-large);
+  margin-bottom: var(--oc-space-medium);
+}
+
+// Form row with 2 columns
+@mixin form-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--oc-space-medium);
+  margin-bottom: var(--oc-space-medium);
+}
+
+// Form row with 1 column
+@mixin form-row-1col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--oc-space-small);
+  margin-bottom: var(--oc-space-medium);
+}
+
+// Form column (prevents overflow)
+@mixin form-column {
+  min-width: 0;
+}
+
+// Responsive form row that adapts from 3col -> 2col -> 1col
+@mixin form-row-responsive {
+  @include form-row-3col;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--oc-space-medium);
+
+    .form-column:nth-child(3) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: var(--oc-space-small);
+  }
+}
+
+// Responsive form container
+@mixin form-responsive {
+  @include form-large;
+
+  @media (max-width: 768px) {
+    padding: var(--oc-space-medium);
+  }
+}
+
+// Form field spacing
+@mixin form-field-spacing {
+  margin-bottom: var(--oc-space-medium);
+}
+
+// Form actions (buttons) container
+@mixin form-actions {
+  display: flex;
+  gap: var(--oc-space-small);
+  align-items: center;
+  justify-content: flex-end;
+  padding-top: var(--oc-space-medium);
+  border-top: 1px solid var(--oc-role-outline-variant);
+  margin-top: var(--oc-space-large);
+}
+
+// Form section divider
+@mixin form-section {
+  padding-top: var(--oc-space-large);
+  margin-top: var(--oc-space-large);
+  border-top: 1px solid var(--oc-role-outline-variant);
+
+  &:first-child {
+    padding-top: 0;
+    margin-top: 0;
+    border-top: none;
+  }
+}

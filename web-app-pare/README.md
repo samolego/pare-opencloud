@@ -1,4 +1,4 @@
-# web-app-skeleton
+# web-app-pare
 This repository provides all the bits and pieces for an easy start to build your own web app or extension for OpenCloud.
 
 ## Getting Started
@@ -31,7 +31,7 @@ Currently local development requires docker and is only supported on Linux and m
 ### Develop Your App
 You can start developing your app by modifying the files in the `src` folder. The development server will automatically reload your changes as long as you keep a running process of `pnpm build:w`. In this setup you currently need a page reload to see your changes.
 
-You should start by rephrasing the app name `skeleton` to your desired app name in the following files:
+You should start by rephrasing the app name `pare` to your desired app name in the following files:
 - package.json
 - vite.config.ts
 - dev/docker/opencloud/apps.yaml (if you need config for your app)

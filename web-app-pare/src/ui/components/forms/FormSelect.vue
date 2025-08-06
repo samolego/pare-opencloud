@@ -12,11 +12,7 @@
     <option v-if="placeholder" value="" disabled>
       {{ placeholder }}
     </option>
-    <option
-      v-for="option in normalizedOptions"
-      :key="option.value"
-      :value="option.value"
-    >
+    <option v-for="option in normalizedOptions" :key="option.value" :value="option.value">
       {{ option.label }}
     </option>
   </select>
@@ -78,7 +74,7 @@ export default defineComponent({
       let value: string | number = target.value
 
       // Convert to number if the original option value was a number
-      const originalOption = this.normalizedOptions.find(opt => String(opt.value) === value)
+      const originalOption = this.normalizedOptions.find((opt) => String(opt.value) === value)
       if (originalOption && typeof originalOption.value === 'number') {
         value = Number(value)
       }
@@ -90,32 +86,11 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@import '../../styles/mixins';
+
 .form-select {
-  width: 100%;
-  padding: var(--oc-space-small);
-  border: 1px solid var(--oc-role-outline-variant);
-  border-radius: var(--oc-space-small);
-  background-color: var(--oc-role-surface);
-  color: var(--oc-role-on-surface);
-  font-size: var(--oc-font-size-small);
-  font-family: var(--oc-font-family);
-  line-height: 1.4;
+  @include form-control;
   cursor: pointer;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-
-  &:focus {
-    outline: none;
-    border-color: var(--oc-role-primary);
-    box-shadow: 0 0 0 2px var(--oc-role-primary-container);
-  }
-
-  &:disabled,
-  &.form-select-disabled {
-    background-color: var(--oc-role-surface-container);
-    color: var(--oc-role-on-surface-variant);
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
 
   option {
     background-color: var(--oc-role-surface);

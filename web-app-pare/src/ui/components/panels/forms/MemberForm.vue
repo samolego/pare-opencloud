@@ -140,7 +140,9 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@import '../../../styles/mixins';
+
 .member-form {
-  padding: var(--oc-space-medium);
+  @include form-base;
 }
 </style>

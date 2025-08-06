@@ -118,7 +118,9 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@import '../../../styles/mixins';
+
 .payment-mode-form {
-  padding: var(--oc-space-medium);
+  @include form-base;
 }
 </style>

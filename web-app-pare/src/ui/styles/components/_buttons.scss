@@ -1,0 +1,129 @@
+// Button component styles and mixins
+// This file can be extended with common button patterns found in the project
+
+// Base button styling
+@mixin button-base {
+  border: none;
+  border-radius: var(--oc-space-small);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: var(--oc-font-size-small);
+  font-weight: var(--oc-font-weight-medium);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--oc-space-xsmall);
+  padding: var(--oc-space-small) var(--oc-space-medium);
+  min-width: 80px;
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--oc-role-primary);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+// Primary button (main actions)
+@mixin button-primary {
+  @include button-base;
+  background-color: var(--oc-role-primary);
+  color: var(--oc-role-on-primary);
+
+  &:hover:not(:disabled) {
+    background-color: var(--oc-role-primary-container);
+    color: var(--oc-role-on-primary-container);
+  }
+
+  &:disabled {
+    background-color: var(--oc-role-outline-variant);
+    color: var(--oc-role-on-surface-variant);
+  }
+}
+
+// Secondary/passive button
+@mixin button-secondary {
+  @include button-base;
+  background-color: transparent;
+  color: var(--oc-role-on-surface);
+  border: 1px solid var(--oc-role-outline-variant);
+
+  &:hover:not(:disabled) {
+    background-color: var(--oc-role-surface-container-high);
+  }
+}
+
+// Pagination button (used in ContentPanel)
+@mixin button-pagination {
+  @include button-base;
+  background-color: var(--oc-role-primary);
+  color: var(--oc-role-on-primary);
+  min-width: 100px;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover:not(:disabled) {
+    background-color: var(--oc-role-primary-container);
+    color: var(--oc-role-on-primary-container);
+  }
+
+  &:disabled,
+  &.pagination-btn-disabled {
+    background-color: var(--oc-role-outline-variant);
+    color: var(--oc-role-on-surface-variant);
+  }
+}
+
+// Navigation button (used in NavigationPanel)
+@mixin button-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  padding: var(--oc-space-small) var(--oc-space-medium);
+  margin: 0;
+  border: none;
+  border-radius: var(--oc-space-small);
+  background: none;
+  color: var(--oc-role-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  font-size: 14px;
+
+  &:hover {
+    background-color: var(--oc-role-surface-container-high);
+    color: var(--oc-role-text);
+  }
+
+  &.nav-button-active {
+    background-color: var(--oc-role-primary);
+    color: var(--oc-role-on-primary);
+    font-weight: 600;
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--oc-role-primary);
+  }
+}
+
+// Small button variant
+@mixin button-small {
+  padding: var(--oc-space-xsmall) var(--oc-space-small);
+  font-size: var(--oc-font-size-xsmall);
+  min-width: 60px;
+}
+
+// Large button variant
+@mixin button-large {
+  padding: var(--oc-space-medium) var(--oc-space-large);
+  font-size: var(--oc-font-size-medium);
+  min-width: 120px;
+}

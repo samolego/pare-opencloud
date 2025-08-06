@@ -421,42 +421,17 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@import '../../../styles/mixins';
+
 .bill-form {
-  padding: var(--oc-space-large);
-  max-width: 1200px;
-  margin: 0 auto;
+  @include form-responsive;
 }
 
 .form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: var(--oc-space-large);
-  margin-bottom: var(--oc-space-medium);
+  @include form-row-responsive;
 }
 
 .form-column {
-  min-width: 0; // Prevent overflow
-}
-
-@media (max-width: 1024px) {
-  .form-row {
-    grid-template-columns: 1fr 1fr;
-    gap: var(--oc-space-medium);
-  }
-
-  .form-column:nth-child(3) {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 768px) {
-  .bill-form {
-    padding: var(--oc-space-medium);
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
-    gap: var(--oc-space-small);
-  }
+  @include form-column;
 }
 </style>
