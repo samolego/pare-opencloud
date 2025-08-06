@@ -83,7 +83,6 @@ export default defineComponent({
       // Use opencloud_id if available, fallback to CSV id for display
       const userId = item.opencloud_id || item.id.toString()
       const avatar = getUserAvatar(userId)
-      console.log(`Avatar for user ${userId}:`, avatar)
       return avatar
     }
 

@@ -91,7 +91,6 @@ export function useUserData() {
    * Preload user data for a list of user IDs
    */
   const preloadUsers = async (userIds: string[]): Promise<void> => {
-    console.log('Preloading users:', userIds)
     const promises = userIds
       .filter((id) => id && !userCache.value[id] && !loadingStates.value[id])
       .map((id) => getUserById(id))
