@@ -26,12 +26,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, computed, ref, inject } from 'vue'
+import { defineComponent, PropType, inject } from 'vue'
 import { Bill, User, PaymentMode, Category, PCSVData } from '../../../../utils/pcsvParser'
+import { useBillDetailPanel } from '../../../../composables/useDetailPanelLogic'
+import { FormMode } from '../../../../types/forms'
 import DetailPanelHeader from '../DetailPanelHeader.vue'
 import { BillForm } from '../forms'
-
-type BillDetailMode = 'create' | 'edit'
 
 export default defineComponent({
   name: 'BillDetailPanel',
@@ -45,7 +45,7 @@ export default defineComponent({
       default: null
     },
     mode: {
-      type: String as PropType<BillDetailMode>,
+      type: String as PropType<FormMode>,
       default: 'create'
     },
     users: {
@@ -63,43 +63,20 @@ export default defineComponent({
   },
   emits: ['cancel', 'create-bill', 'save-bill'],
   setup(props, { emit }) {
-    const canSave = ref(false)
-    const billForm = ref()
+    const {
+      canSave,
+      formRef: billForm,
+      isVisible,
+      panelTitle,
+      computedSaveText: saveText,
+      onValidationChange,
+      onSave,
+      createEventHandlers
+    } = useBillDetailPanel(props.mode)
+
     const parsedData = inject<PCSVData>('parsedData')
 
-    const isVisible = computed(() => {
-      return true
-    })
-
-    const panelTitle = computed(() => {
-      return props.mode === 'create' ? 'New Bill' : 'Edit Bill'
-    })
-
-    const saveText = computed(() => {
-      return props.mode === 'create' ? 'Create Bill' : 'Save Changes'
-    })
-
-    const onValidationChange = (isValid: boolean) => {
-      canSave.value = isValid
-    }
-
-    const onCancel = () => {
-      emit('cancel')
-    }
-
-    const onSave = () => {
-      if (billForm.value && billForm.value.onSubmit) {
-        billForm.value.onSubmit()
-      }
-    }
-
-    const onFormSubmit = (data: any) => {
-      if (props.mode === 'create') {
-        emit('create-bill', data)
-      } else {
-        emit('save-bill', data)
-      }
-    }
+    const { onCancel, onFormSubmit } = createEventHandlers(emit)
 
     return {
       canSave,

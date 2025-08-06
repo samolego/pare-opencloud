@@ -40,12 +40,8 @@
 <script lang="ts">
 import { defineComponent, PropType, ref, computed, watch } from 'vue'
 import { User } from '../../../utils/pcsvParser'
+import { UserSplit } from '../../../types/forms'
 import FormInput from './FormInput.vue'
-
-interface UserSplit {
-  included: boolean
-  amount: string
-}
 
 export default defineComponent({
   name: 'SplitUserControls',

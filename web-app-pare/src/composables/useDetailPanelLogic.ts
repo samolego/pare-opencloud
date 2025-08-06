@@ -1,0 +1,104 @@
+import { ref, computed } from 'vue'
+import type { FormMode } from '../types/forms'
+
+/**
+ * Composable for detail panel logic
+ * Eliminates common patterns across BillDetailPanel, CategoryDetailPanel, etc.
+ */
+export function useDetailPanelLogic<T = any>(mode: FormMode, itemType: string, saveText?: string) {
+  const canSave = ref(false)
+  const formRef = ref()
+
+  const isVisible = computed(() => true)
+
+  const panelTitle = computed(() => {
+    return mode === 'create' ? `New ${itemType}` : `Edit ${itemType}`
+  })
+
+  const computedSaveText = computed(() => {
+    if (saveText) return saveText
+
+    // Generate appropriate save text based on item type and mode
+    if (mode === 'create') {
+      switch (itemType.toLowerCase()) {
+        case 'bill':
+          return 'Create Bill'
+        case 'member':
+          return 'Add Member'
+        case 'category':
+          return 'Add Category'
+        case 'payment mode':
+          return 'Add Payment Mode'
+        default:
+          return 'Create'
+      }
+    } else {
+      return 'Save Changes'
+    }
+  })
+
+  const onValidationChange = (isValid: boolean) => {
+    canSave.value = isValid
+  }
+
+  const onSave = () => {
+    if (formRef.value && formRef.value.onSubmit) {
+      formRef.value.onSubmit()
+    }
+  }
+
+  // Generic event handlers that emit with proper naming
+  const createEventHandlers = (emit: any) => {
+    const onCancel = () => {
+      emit('cancel')
+    }
+
+    const onFormSubmit = (data: T) => {
+      const eventName =
+        mode === 'create'
+          ? `create-${itemType.toLowerCase().replace(' ', '-')}`
+          : `save-${itemType.toLowerCase().replace(' ', '-')}`
+
+      emit(eventName, data)
+    }
+
+    return {
+      onCancel,
+      onFormSubmit
+    }
+  }
+
+  return {
+    canSave,
+    formRef,
+    isVisible,
+    panelTitle,
+    computedSaveText,
+    onValidationChange,
+    onSave,
+    createEventHandlers
+  }
+}
+
+/**
+ * Specialized version for specific panel types with proper typing
+ */
+export function useBillDetailPanel(mode: FormMode) {
+  return useDetailPanelLogic(mode, 'Bill', mode === 'create' ? 'Create Bill' : 'Save Changes')
+}
+
+export function useMemberDetailPanel(mode: FormMode) {
+  return useDetailPanelLogic(mode, 'Member', mode === 'create' ? 'Add Member' : 'Save Changes')
+}
+
+export function useCategoryDetailPanel(mode: FormMode) {
+  return useDetailPanelLogic(mode, 'Category', mode === 'create' ? 'Add Category' : 'Save Changes')
+}
+
+export function usePaymentModeDetailPanel(mode: FormMode) {
+  return useDetailPanelLogic(
+    mode,
+    'Payment Mode',
+    mode === 'create' ? 'Add Payment Mode' : 'Save Changes'
+  )
+}

@@ -22,12 +22,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, computed, ref } from 'vue'
+import { defineComponent, PropType } from 'vue'
 import { Category } from '../../../../utils/pcsvParser'
+import { useCategoryDetailPanel } from '../../../../composables/useDetailPanelLogic'
+import { FormMode } from '../../../../types/forms'
 import DetailPanelHeader from '../DetailPanelHeader.vue'
 import { CategoryForm } from '../forms'
-
-type CategoryDetailMode = 'create' | 'edit'
 
 export default defineComponent({
   name: 'CategoryDetailPanel',
@@ -41,48 +41,24 @@ export default defineComponent({
       default: null
     },
     mode: {
-      type: String as PropType<CategoryDetailMode>,
+      type: String as PropType<FormMode>,
       default: 'create'
     }
   },
   emits: ['cancel', 'create-category', 'save-category'],
   setup(props, { emit }) {
-    const canSave = ref(false)
-    const categoryForm = ref()
+    const {
+      canSave,
+      formRef: categoryForm,
+      isVisible,
+      panelTitle,
+      computedSaveText: saveText,
+      onValidationChange,
+      onSave,
+      createEventHandlers
+    } = useCategoryDetailPanel(props.mode)
 
-    const isVisible = computed(() => {
-      return true
-    })
-
-    const panelTitle = computed(() => {
-      return props.mode === 'create' ? 'New Category' : 'Edit Category'
-    })
-
-    const saveText = computed(() => {
-      return props.mode === 'create' ? 'Add Category' : 'Save Changes'
-    })
-
-    const onValidationChange = (isValid: boolean) => {
-      canSave.value = isValid
-    }
-
-    const onCancel = () => {
-      emit('cancel')
-    }
-
-    const onSave = () => {
-      if (categoryForm.value && categoryForm.value.onSubmit) {
-        categoryForm.value.onSubmit()
-      }
-    }
-
-    const onFormSubmit = (data: any) => {
-      if (props.mode === 'create') {
-        emit('create-category', data)
-      } else {
-        emit('save-category', data)
-      }
-    }
+    const { onCancel, onFormSubmit } = createEventHandlers(emit)
 
     return {
       canSave,

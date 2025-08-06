@@ -1,27 +1,19 @@
 <template>
-  <div class="category-form">
+  <div class="category-form" ref="formRef">
     <form @submit.prevent="onSubmit">
       <!-- Name -->
       <FormField label="Category Name" required :error="errors.name">
-        <FormInput
-          v-model="localForm.name"
-          placeholder="Enter category name..."
-          required
-          ref="nameInput"
-        />
+        <FormInput v-model="localForm.name" placeholder="Enter category name..." required />
       </FormField>
     </form>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, reactive, ref, computed, watch, nextTick } from 'vue'
+import { defineComponent, PropType, watch } from 'vue'
 import { Category } from '../../../../utils/pcsvParser'
+import { useNameOnlyForm, useFormValidationEmits } from '../../../../composables/useSimpleForm'
 import { FormField, FormInput } from '../../forms'
-
-interface CategoryFormData {
-  name: string
-}
 
 export default defineComponent({
   name: 'CategoryForm',
@@ -41,76 +33,39 @@ export default defineComponent({
   },
   emits: ['submit', 'validation-change'],
   setup(props, { emit }) {
-    const nameInput = ref<HTMLInputElement>()
+    const form = useNameOnlyForm(props.category?.name || '', props.mode, 'Category name')
 
-    const localForm = reactive<CategoryFormData>({
-      name: ''
-    })
-
-    const errors = ref<{ [key: string]: string }>({})
-
-    // Initialize form data
+    // Initialize form data when category changes
     const initializeForm = () => {
       if (props.category) {
-        localForm.name = props.category.name
+        form.updateForm({ name: props.category.name })
       } else {
-        localForm.name = ''
+        form.resetForm()
       }
-
-      // Focus name input for new categories
-      if (props.mode === 'create') {
-        nextTick(() => {
-          if (nameInput.value) {
-            nameInput.value.focus()
-          }
-        })
-      }
+      form.autoFocus()
     }
 
     // Watch for category changes
     watch(() => props.category, initializeForm, { immediate: true })
     watch(() => props.mode, initializeForm)
 
-    // Validation
-    const validateForm = () => {
-      const newErrors: { [key: string]: string } = {}
-
-      if (!localForm.name.trim()) {
-        newErrors.name = 'Category name is required'
-      }
-
-      errors.value = newErrors
-      return Object.keys(newErrors).length === 0
-    }
-
-    const isValid = computed(() => {
-      validateForm()
-      return Object.keys(errors.value).length === 0
-    })
-
-    // Watch for validation changes
-    watch(
-      isValid,
-      (valid) => {
-        emit('validation-change', valid)
-      },
-      { immediate: true }
-    )
+    // Handle validation change emissions
+    useFormValidationEmits(form.isValid, emit)
 
     const onSubmit = () => {
-      if (!validateForm()) return
+      if (!form.validateForm()) return
 
       const category: Omit<Category, 'id'> = {
-        name: localForm.name.trim()
+        name: form.localForm.name.trim()
       }
 
       emit('submit', category)
     }
 
     return {
-      localForm,
-      errors,
-      nameInput,
+      formRef: form.formRef,
+      localForm: form.localForm,
+      errors: form.errors,
       onSubmit
     }
   }

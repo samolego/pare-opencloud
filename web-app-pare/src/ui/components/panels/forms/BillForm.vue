@@ -128,25 +128,8 @@ import {
   PCSVData,
   PCSVParser
 } from '../../../../utils/pcsvParser'
+import { UserSplit, BillFormData, ValidationErrors } from '../../../../types/forms'
 import { FormField, FormInput, FormSelect, FormTextarea, SplitUserControls } from '../../forms'
-
-interface BillFormData {
-  description: string
-  total_amount: string
-  who_paid_id: number | null
-  date: string
-  time: string
-  repeat: string
-  payment_mode_id: number | null
-  category_id: number | null
-  comment: string
-  file_link: string
-}
-
-interface UserSplit {
-  included: boolean
-  amount: string
-}
 
 export default defineComponent({
   name: 'BillForm',
@@ -321,7 +304,7 @@ export default defineComponent({
 
     // Validation
     const validateForm = () => {
-      const newErrors: { [key: string]: string } = {}
+      const newErrors: ValidationErrors = {}
 
       if (!localForm.description.trim()) {
         newErrors.description = 'Description is required'

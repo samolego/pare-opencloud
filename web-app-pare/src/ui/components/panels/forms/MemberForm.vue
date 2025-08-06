@@ -1,14 +1,9 @@
 <template>
-  <div class="member-form">
+  <div class="member-form" ref="formRef">
     <form @submit.prevent="onSubmit">
       <!-- Name -->
       <FormField label="Name" required :error="errors.name">
-        <FormInput
-          v-model="localForm.name"
-          placeholder="Enter member name..."
-          required
-          ref="nameInput"
-        />
+        <FormInput v-model="localForm.name" placeholder="Enter member name..." required />
       </FormField>
 
       <!-- OpenCloud ID -->
@@ -27,14 +22,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, reactive, ref, computed, watch, nextTick } from 'vue'
+import { defineComponent, PropType, watch } from 'vue'
 import { User } from '../../../../utils/pcsvParser'
+import { useSimpleForm, useFormValidationEmits } from '../../../../composables/useSimpleForm'
+import { MemberFormData, ValidationErrors } from '../../../../types/forms'
 import { FormField, FormInput } from '../../forms'
-
-interface MemberFormData {
-  name: string
-  opencloud_id: string
-}
 
 export default defineComponent({
   name: 'MemberForm',
@@ -54,85 +46,64 @@ export default defineComponent({
   },
   emits: ['submit', 'validation-change'],
   setup(props, { emit }) {
-    const nameInput = ref<HTMLInputElement>()
+    // Custom validator for member form
+    const memberValidator = (data: MemberFormData): ValidationErrors => {
+      const errors: ValidationErrors = {}
 
-    const localForm = reactive<MemberFormData>({
-      name: '',
-      opencloud_id: ''
-    })
+      if (!data.name.trim()) {
+        errors.name = 'Name is required'
+      }
 
-    const errors = ref<{ [key: string]: string }>({})
+      // Validate OpenCloud ID format if provided
+      if (data.opencloud_id && data.opencloud_id.trim()) {
+        // todo - test via API if user exists
+      }
 
-    // Initialize form data
+      return errors
+    }
+
+    const initialData: MemberFormData = {
+      name: props.member?.name || '',
+      opencloud_id: props.member?.opencloud_id || ''
+    }
+
+    const form = useSimpleForm(initialData, memberValidator, props.mode)
+
+    // Initialize form data when member changes
     const initializeForm = () => {
       if (props.member) {
-        localForm.name = props.member.name
-        localForm.opencloud_id = props.member.opencloud_id || ''
-      } else {
-        localForm.name = ''
-        localForm.opencloud_id = ''
-      }
-
-      // Focus name input for new members
-      if (props.mode === 'create') {
-        nextTick(() => {
-          if (nameInput.value) {
-            nameInput.value.focus()
-          }
+        form.updateForm({
+          name: props.member.name,
+          opencloud_id: props.member.opencloud_id || ''
         })
+      } else {
+        form.resetForm()
       }
+      form.autoFocus()
     }
 
     // Watch for member changes
     watch(() => props.member, initializeForm, { immediate: true })
     watch(() => props.mode, initializeForm)
 
-    // Validation
-    const validateForm = () => {
-      const newErrors: { [key: string]: string } = {}
-
-      if (!localForm.name.trim()) {
-        newErrors.name = 'Name is required'
-      }
-
-      // Validate OpenCloud ID format if provided
-      if (localForm.opencloud_id && localForm.opencloud_id.trim()) {
-        // todo - test via API if user exists
-      }
-
-      errors.value = newErrors
-      return Object.keys(newErrors).length === 0
-    }
-
-    const isValid = computed(() => {
-      validateForm()
-      return Object.keys(errors.value).length === 0
-    })
-
-    // Watch for validation changes
-    watch(
-      isValid,
-      (valid) => {
-        emit('validation-change', valid)
-      },
-      { immediate: true }
-    )
+    // Handle validation change emissions
+    useFormValidationEmits(form.isValid, emit)
 
     const onSubmit = () => {
-      if (!validateForm()) return
+      if (!form.validateForm()) return
 
       const member: Omit<User, 'id'> = {
-        name: localForm.name.trim(),
-        opencloud_id: localForm.opencloud_id.trim() || null
+        name: form.localForm.name.trim(),
+        opencloud_id: form.localForm.opencloud_id.trim() || null
       }
 
       emit('submit', member)
     }
 
     return {
-      localForm,
-      errors,
-      nameInput,
+      formRef: form.formRef,
+      localForm: form.localForm,
+      errors: form.errors,
       onSubmit
     }
   }

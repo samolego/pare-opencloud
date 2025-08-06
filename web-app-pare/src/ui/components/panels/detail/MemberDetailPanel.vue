@@ -22,12 +22,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, computed, ref } from 'vue'
+import { defineComponent, PropType } from 'vue'
 import { User } from '../../../../utils/pcsvParser'
+import { useMemberDetailPanel } from '../../../../composables/useDetailPanelLogic'
+import { FormMode } from '../../../../types/forms'
 import DetailPanelHeader from '../DetailPanelHeader.vue'
 import { MemberForm } from '../forms'
-
-type MemberDetailMode = 'create' | 'edit'
 
 export default defineComponent({
   name: 'MemberDetailPanel',
@@ -41,48 +41,24 @@ export default defineComponent({
       default: null
     },
     mode: {
-      type: String as PropType<MemberDetailMode>,
+      type: String as PropType<FormMode>,
       default: 'create'
     }
   },
   emits: ['cancel', 'create-member', 'save-member'],
   setup(props, { emit }) {
-    const canSave = ref(false)
-    const memberForm = ref()
+    const {
+      canSave,
+      formRef: memberForm,
+      isVisible,
+      panelTitle,
+      computedSaveText: saveText,
+      onValidationChange,
+      onSave,
+      createEventHandlers
+    } = useMemberDetailPanel(props.mode)
 
-    const isVisible = computed(() => {
-      return true
-    })
-
-    const panelTitle = computed(() => {
-      return props.mode === 'create' ? 'New Member' : 'Edit Member'
-    })
-
-    const saveText = computed(() => {
-      return props.mode === 'create' ? 'Add Member' : 'Save Changes'
-    })
-
-    const onValidationChange = (isValid: boolean) => {
-      canSave.value = isValid
-    }
-
-    const onCancel = () => {
-      emit('cancel')
-    }
-
-    const onSave = () => {
-      if (memberForm.value && memberForm.value.onSubmit) {
-        memberForm.value.onSubmit()
-      }
-    }
-
-    const onFormSubmit = (data: any) => {
-      if (props.mode === 'create') {
-        emit('create-member', data)
-      } else {
-        emit('save-member', data)
-      }
-    }
+    const { onCancel, onFormSubmit } = createEventHandlers(emit)
 
     return {
       canSave,

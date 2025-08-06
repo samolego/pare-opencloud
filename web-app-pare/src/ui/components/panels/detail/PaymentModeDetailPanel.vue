@@ -22,12 +22,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, computed, ref } from 'vue'
+import { defineComponent, PropType } from 'vue'
 import { PaymentMode } from '../../../../utils/pcsvParser'
+import { usePaymentModeDetailPanel } from '../../../../composables/useDetailPanelLogic'
+import { FormMode } from '../../../../types/forms'
 import DetailPanelHeader from '../DetailPanelHeader.vue'
 import { PaymentModeForm } from '../forms'
-
-type PaymentModeDetailMode = 'create' | 'edit'
 
 export default defineComponent({
   name: 'PaymentModeDetailPanel',
@@ -41,48 +41,24 @@ export default defineComponent({
       default: null
     },
     mode: {
-      type: String as PropType<PaymentModeDetailMode>,
+      type: String as PropType<FormMode>,
       default: 'create'
     }
   },
   emits: ['cancel', 'create-payment-mode', 'save-payment-mode'],
   setup(props, { emit }) {
-    const canSave = ref(false)
-    const paymentModeForm = ref()
+    const {
+      canSave,
+      formRef: paymentModeForm,
+      isVisible,
+      panelTitle,
+      computedSaveText: saveText,
+      onValidationChange,
+      onSave,
+      createEventHandlers
+    } = usePaymentModeDetailPanel(props.mode)
 
-    const isVisible = computed(() => {
-      return true
-    })
-
-    const panelTitle = computed(() => {
-      return props.mode === 'create' ? 'New Payment Mode' : 'Edit Payment Mode'
-    })
-
-    const saveText = computed(() => {
-      return props.mode === 'create' ? 'Add Payment Mode' : 'Save Changes'
-    })
-
-    const onValidationChange = (isValid: boolean) => {
-      canSave.value = isValid
-    }
-
-    const onCancel = () => {
-      emit('cancel')
-    }
-
-    const onSave = () => {
-      if (paymentModeForm.value && paymentModeForm.value.onSubmit) {
-        paymentModeForm.value.onSubmit()
-      }
-    }
-
-    const onFormSubmit = (data: any) => {
-      if (props.mode === 'create') {
-        emit('create-payment-mode', data)
-      } else {
-        emit('save-payment-mode', data)
-      }
-    }
+    const { onCancel, onFormSubmit } = createEventHandlers(emit)
 
     return {
       canSave,

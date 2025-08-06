@@ -78,6 +78,7 @@
 <script lang="ts">
 import { defineComponent, PropType, ref, computed } from 'vue'
 import { SidebarItem, SidebarConfig } from '../../../types/sidebar'
+import { useContentItemFormatting } from '../../../composables/useContentItemFormatting'
 
 export default defineComponent({
   name: 'ContentPanel',
@@ -106,6 +107,8 @@ export default defineComponent({
   emits: ['page-change'],
   setup(props, { emit }) {
     const currentPage = ref(1)
+    const { getItemSubtitle, getItemMeta, getItemDescription, isNegativeAmount, truncateText } =
+      useContentItemFormatting()
 
     const totalPages = computed(() => {
       return Math.ceil(props.items.length / props.itemsPerPage)
@@ -135,57 +138,12 @@ export default defineComponent({
       return item[props.config.titleField] || ''
     }
 
-    const getItemSubtitle = (item: SidebarItem): string => {
-      if (!props.config.subtitleField) return ''
-      const value = item[props.config.subtitleField]
-
-      if (typeof value === 'number' && props.config.subtitleField.includes('amount')) {
-        const prefix = value < 0 ? '-' : ''
-        const absValue = Math.abs(value)
-        return `${prefix}$${absValue.toFixed(2)}`
-      }
-
-      return value || ''
-    }
-
-    const getItemMeta = (item: SidebarItem): string => {
-      if (!props.config.metaField) return ''
-      const value = item[props.config.metaField]
-
-      if ((typeof value === 'string' && value.includes('/')) || value.includes('-')) {
-        try {
-          const date = new Date(value.replace(' ', 'T'))
-          return date.toLocaleDateString()
-        } catch {
-          return value.split(' ')[0] || ''
-        }
-      }
-
-      return value || ''
-    }
-
-    const getItemDescription = (item: SidebarItem): string => {
-      if (!props.config.descriptionField) return ''
-      return item[props.config.descriptionField] || ''
-    }
-
-    const isNegativeAmount = (item: SidebarItem): boolean => {
-      if (!props.config.subtitleField?.includes('amount')) return false
-      const value = item[props.config.subtitleField]
-      return typeof value === 'number' && value < 0
-    }
-
-    const truncateText = (text: string, maxLength: number): string => {
-      if (text.length <= maxLength) return text
-      return text.substring(0, maxLength) + '...'
-    }
-
     return {
       getItemTitle,
-      getItemSubtitle,
-      getItemMeta,
-      getItemDescription,
-      isNegativeAmount,
+      getItemSubtitle: (item: SidebarItem) => getItemSubtitle(item, props.config),
+      getItemMeta: (item: SidebarItem) => getItemMeta(item, props.config),
+      getItemDescription: (item: SidebarItem) => getItemDescription(item, props.config),
+      isNegativeAmount: (item: SidebarItem) => isNegativeAmount(item, props.config),
       truncateText,
       emptyMessage: props.config.emptyMessage,
       currentPage,
