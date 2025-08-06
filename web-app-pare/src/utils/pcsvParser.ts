@@ -47,7 +47,10 @@ export interface BillSplit {
 
 export class PCSVParser {
   static parse(content: string): PCSVData {
-    const lines = content.split('\n').map(line => line.trim()).filter(line => line.length > 0)
+    const lines = content
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
     const tables: { [tableName: string]: PCSVTable } = {}
 
     let currentTable: PCSVTable | null = null
@@ -97,7 +100,7 @@ export class PCSVParser {
       lines.push(table.headers.join(','))
 
       for (const row of table.rows) {
-        lines.push(row.map(cell => this.escapeCSVCell(cell)).join(','))
+        lines.push(row.map((cell) => this.escapeCSVCell(cell)).join(','))
       }
 
       lines.push('') // Empty line between tables
@@ -106,7 +109,11 @@ export class PCSVParser {
     return lines.join('\n')
   }
 
-  static ensureDefaultTables(data: PCSVData, currentUserName: string, currentUserOpenCloudId: string | null): PCSVData {
+  static ensureDefaultTables(
+    data: PCSVData,
+    currentUserName: string,
+    currentUserOpenCloudId: string | null
+  ): PCSVData {
     // Ensure users table
     if (!data.tables.users) {
       data.tables.users = {
@@ -118,17 +125,13 @@ export class PCSVParser {
 
     // Add current user if not exists
     const usersTable = data.tables.users
-    const hasCurrentUser = usersTable.rows.some(row =>
-      row[2] === currentUserOpenCloudId || row[1] === currentUserName
+    const hasCurrentUser = usersTable.rows.some(
+      (row) => row[2] === currentUserOpenCloudId || row[1] === currentUserName
     )
 
     if (!hasCurrentUser) {
       const nextUserId = this.getNextId(usersTable, 0)
-      usersTable.rows.push([
-        nextUserId.toString(),
-        currentUserName,
-        currentUserOpenCloudId || ''
-      ])
+      usersTable.rows.push([nextUserId.toString(), currentUserName, currentUserOpenCloudId || ''])
     }
 
     // Ensure payment_mode table
@@ -167,7 +170,18 @@ export class PCSVParser {
     if (!data.tables.bills) {
       data.tables.bills = {
         name: 'bills',
-        headers: ['id', 'description', 'total_amount', 'who_paid_id', 'datetime', 'repeat', 'payment_mode_id', 'category_id', 'comment', 'file_link'],
+        headers: [
+          'id',
+          'description',
+          'total_amount',
+          'who_paid_id',
+          'datetime',
+          'repeat',
+          'payment_mode_id',
+          'category_id',
+          'comment',
+          'file_link'
+        ],
         rows: []
       }
     }
@@ -184,7 +198,11 @@ export class PCSVParser {
     return data
   }
 
-  static addBill(data: PCSVData, bill: Omit<Bill, 'id'>, splits: Omit<BillSplit, 'id' | 'bill_id'>[]): PCSVData {
+  static addBill(
+    data: PCSVData,
+    bill: Omit<Bill, 'id'>,
+    splits: Omit<BillSplit, 'id' | 'bill_id'>[]
+  ): PCSVData {
     const billsTable = data.tables.bills
     const billSplitsTable = data.tables.bill_splits
 
@@ -224,7 +242,7 @@ export class PCSVParser {
     const billsTable = data.tables.bills
     if (!billsTable) return []
 
-    return billsTable.rows.map(row => ({
+    return billsTable.rows.map((row) => ({
       id: parseInt(row[0]),
       description: row[1],
       total_amount: parseFloat(row[2]),
@@ -238,11 +256,84 @@ export class PCSVParser {
     }))
   }
 
+  static getBillSplits(data: PCSVData, billId: number): BillSplit[] {
+    const billSplitsTable = data.tables.bill_splits
+    if (!billSplitsTable || !billSplitsTable.rows) {
+      return []
+    }
+
+    return billSplitsTable.rows
+      .filter((row) => row && row.length >= 5 && parseInt(row[1]) === billId)
+      .map((row) => ({
+        id: parseInt(row[0]) || 0,
+        bill_id: parseInt(row[1]) || 0,
+        user_id: parseInt(row[2]) || 0,
+        amount: parseFloat(row[3]) || 0,
+        included: parseInt(row[4]) || 0
+      }))
+  }
+
+  static updateBill(
+    data: PCSVData,
+    billId: number,
+    bill: Omit<Bill, 'id'>,
+    splits: Omit<BillSplit, 'id' | 'bill_id'>[]
+  ): PCSVData {
+    const billsTable = data.tables.bills
+    const billSplitsTable = data.tables.bill_splits
+
+    // Find and update the bill
+    const billRowIndex = billsTable.rows.findIndex((row) => parseInt(row[0]) === billId)
+    if (billRowIndex !== -1) {
+      billsTable.rows[billRowIndex] = [
+        billId.toString(),
+        bill.description,
+        bill.total_amount.toString(),
+        bill.who_paid_id.toString(),
+        bill.datetime,
+        bill.repeat || '',
+        bill.payment_mode_id?.toString() || '',
+        bill.category_id?.toString() || '',
+        bill.comment || '',
+        bill.file_link || ''
+      ]
+    }
+
+    // Remove existing splits for this bill
+    billSplitsTable.rows = billSplitsTable.rows.filter((row) => parseInt(row[1]) !== billId)
+
+    // Add new splits
+    for (const split of splits) {
+      const splitId = this.getNextId(billSplitsTable, 0)
+      billSplitsTable.rows.push([
+        splitId.toString(),
+        billId.toString(),
+        split.user_id.toString(),
+        split.amount.toString(),
+        split.included.toString()
+      ])
+    }
+
+    return data
+  }
+
+  static updateUser(data: PCSVData, userId: number, user: Omit<User, 'id'>): PCSVData {
+    const usersTable = data.tables.users
+
+    // Find and update the user
+    const userRowIndex = usersTable.rows.findIndex((row) => parseInt(row[0]) === userId)
+    if (userRowIndex !== -1) {
+      usersTable.rows[userRowIndex] = [userId.toString(), user.name, user.opencloud_id || '']
+    }
+
+    return data
+  }
+
   static getUsers(data: PCSVData): User[] {
     const usersTable = data.tables.users
     if (!usersTable) return []
 
-    return usersTable.rows.map(row => ({
+    return usersTable.rows.map((row) => ({
       id: parseInt(row[0]),
       name: row[1],
       opencloud_id: row[2] || null
@@ -253,17 +344,51 @@ export class PCSVParser {
     const paymentTable = data.tables.payment_mode
     if (!paymentTable) return []
 
-    return paymentTable.rows.map(row => ({
+    return paymentTable.rows.map((row) => ({
       id: parseInt(row[0]),
       name: row[1]
     }))
+  }
+
+  static updateCategory(
+    data: PCSVData,
+    categoryId: number,
+    category: Omit<Category, 'id'>
+  ): PCSVData {
+    const categoryTable = data.tables.category
+
+    // Find and update the category
+    const categoryRowIndex = categoryTable.rows.findIndex((row) => parseInt(row[0]) === categoryId)
+    if (categoryRowIndex !== -1) {
+      categoryTable.rows[categoryRowIndex] = [categoryId.toString(), category.name]
+    }
+
+    return data
+  }
+
+  static updatePaymentMode(
+    data: PCSVData,
+    paymentModeId: number,
+    paymentMode: Omit<PaymentMode, 'id'>
+  ): PCSVData {
+    const paymentModeTable = data.tables.payment_mode
+
+    // Find and update the payment mode
+    const paymentModeRowIndex = paymentModeTable.rows.findIndex(
+      (row) => parseInt(row[0]) === paymentModeId
+    )
+    if (paymentModeRowIndex !== -1) {
+      paymentModeTable.rows[paymentModeRowIndex] = [paymentModeId.toString(), paymentMode.name]
+    }
+
+    return data
   }
 
   static getCategories(data: PCSVData): Category[] {
     const categoryTable = data.tables.category
     if (!categoryTable) return []
 
-    return categoryTable.rows.map(row => ({
+    return categoryTable.rows.map((row) => ({
       id: parseInt(row[0]),
       name: row[1]
     }))

@@ -1,0 +1,90 @@
+<template>
+  <div class="detail-panel-header">
+    <div class="header-title">
+      <h2 class="title-text">{{ title }}</h2>
+    </div>
+    <div class="header-actions">
+      <oc-button variation="passive" @click="$emit('cancel')" class="cancel-btn">
+        Cancel
+      </oc-button>
+      <oc-button variation="primary" :disabled="!canSave" @click="$emit('save')" class="save-btn">
+        {{ computedSaveText }}
+      </oc-button>
+    </div>
+  </div>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'DetailPanelHeader',
+  props: {
+    title: {
+      type: String,
+      required: true
+    },
+    canSave: {
+      type: Boolean,
+      default: true
+    },
+    isCreating: {
+      type: Boolean,
+      default: false
+    },
+    saveText: {
+      type: String,
+      default: ''
+    }
+  },
+  computed: {
+    computedSaveText() {
+      if (this.saveText) {
+        return this.saveText
+      }
+      return this.isCreating ? 'Create' : 'Save'
+    }
+  },
+  emits: ['cancel', 'save']
+})
+</script>
+
+<style lang="scss" scoped>
+.detail-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--oc-space-medium);
+  border-bottom: 1px solid var(--oc-role-outline-variant);
+  background-color: var(--oc-role-surface);
+}
+
+.header-title {
+  flex: 1;
+}
+
+.title-text {
+  font-size: var(--oc-font-size-large);
+  font-weight: var(--oc-font-weight-semibold);
+  color: var(--oc-role-on-surface);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.header-actions {
+  display: flex;
+  gap: var(--oc-space-small);
+  align-items: center;
+}
+
+.cancel-btn,
+.save-btn {
+  min-width: 80px;
+  font-size: var(--oc-font-size-small);
+}
+
+.save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+</style>

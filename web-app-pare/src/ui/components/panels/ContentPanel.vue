@@ -11,7 +11,7 @@
           :key="item.id"
           class="content-item oc-p-s oc-mb-xs"
           :class="{ 'content-item-dark': darkTheme }"
-          @click="props.onItemClick(item)"
+          @click="onItemClick(item)"
         >
           <slot name="item" :item="item">
             <div class="item-main">

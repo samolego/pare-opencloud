@@ -64,71 +64,62 @@
       </template>
     </SideBar>
 
-    <!-- Modals -->
-    <NewBillModal
-      v-if="showNewBillModal"
-      :users="users"
-      :payment-modes="paymentModes"
-      :categories="categories"
-      @cancel="showNewBillModal = false"
-      @create-bill="onCreateBill"
-    />
-
-    <NewMemberModal
-      v-if="showNewMemberModal"
-      @cancel="showNewMemberModal = false"
-      @create-member="onCreateMember"
-    />
-
-    <NewCategoryModal
-      v-if="showNewCategoryModal"
-      @cancel="showNewCategoryModal = false"
-      @create-category="onCreateCategory"
-    />
-
     <!-- Main Content Area -->
-    <div class="main-content oc-flex oc-flex-column oc-width-1-1">
-      <!-- Header -->
-      <div class="content-header oc-p-s oc-border-b">
-        <div class="oc-flex oc-flex-between oc-flex-middle">
-          <h2 class="oc-text-bold">{{ resource.name }}</h2>
-          <div class="oc-flex oc-flex-middle oc-text-small oc-text-muted">
-            <span v-if="hasUnsavedChanges" class="oc-mr-s">{{ $gettext('Unsaved changes') }}</span>
-            <span>{{ $gettext('Lines: %{lines}', { lines: lineCount }) }}</span>
-            <span class="oc-ml-s">{{
-              $gettext('Characters: %{chars}', { chars: characterCount })
-            }}</span>
-          </div>
-        </div>
-      </div>
+    <div class="main-content oc-flex oc-width-1-1">
+      <!-- Bill Detail Panel -->
+      <BillDetailPanel
+        v-if="detailPanel.type === 'bill'"
+        :key="`bill-${detailPanel.mode}-${detailPanel.selectedItem?.id || 'new'}`"
+        :bill="detailPanel.selectedItem"
+        :mode="detailPanel.mode"
+        :users="users"
+        :payment-modes="paymentModes"
+        :categories="categories"
+        :parsed-data="parsedData"
+        @cancel="onDetailPanelCancel"
+        @create-bill="onCreateBill"
+        @save-bill="onSaveBill"
+      />
 
-      <!-- Editor Area -->
-      <div class="editor-container oc-flex-1 oc-p-s">
-        <textarea
-          ref="textEditor"
-          v-model="editableContent"
-          class="text-editor oc-width-1-1 oc-height-1-1"
-          :class="{ 'text-editor-dark': darkTheme }"
-          :readonly="isReadOnly"
-          :placeholder="
-            $gettext(
-              'Enter your CSV content here...\n\nExample:\nDate,Description,Amount,Category\n2024-01-15,Grocery Store,-45.50,Food\n2024-01-16,Salary,2500.00,Income'
-            )
-          "
-          @input="onContentChange"
-          @keydown="onKeyDown"
-        />
-      </div>
+      <!-- Member Detail Panel -->
+      <MemberDetailPanel
+        v-else-if="detailPanel.type === 'member'"
+        :key="`member-${detailPanel.mode}-${detailPanel.selectedItem?.id || 'new'}`"
+        :member="detailPanel.selectedItem"
+        :mode="detailPanel.mode"
+        @cancel="onDetailPanelCancel"
+        @create-member="onCreateMember"
+        @save-member="onSaveMember"
+      />
 
-      <!-- Status Bar -->
-      <div
-        class="status-bar oc-p-xs oc-flex oc-flex-between oc-text-small oc-text-muted oc-border-t"
-      >
-        <div>
-          {{ $gettext('Ready') }}
-        </div>
-        <div v-if="lastSaved">
-          {{ $gettext('Last saved: %{time}', { time: lastSaved }) }}
+      <!-- Category Detail Panel -->
+      <CategoryDetailPanel
+        v-else-if="detailPanel.type === 'category'"
+        :key="`category-${detailPanel.mode}-${detailPanel.selectedItem?.id || 'new'}`"
+        :category="detailPanel.selectedItem"
+        :mode="detailPanel.mode"
+        @cancel="onDetailPanelCancel"
+        @create-category="onCreateCategory"
+        @save-category="onSaveCategory"
+      />
+
+      <!-- Payment Mode Detail Panel -->
+      <PaymentModeDetailPanel
+        v-else-if="detailPanel.type === 'payment-mode'"
+        :key="`payment-mode-${detailPanel.mode}-${detailPanel.selectedItem?.id || 'new'}`"
+        :payment-mode="detailPanel.selectedItem"
+        :mode="detailPanel.mode"
+        @cancel="onDetailPanelCancel"
+        @create-payment-mode="onCreatePaymentMode"
+        @save-payment-mode="onSavePaymentMode"
+      />
+
+      <!-- Empty state when no panel is selected -->
+      <div v-else class="empty-detail-state">
+        <div class="empty-state-content">
+          <oc-icon name="file-text" size="large" />
+          <h3>Select an item to view details</h3>
+          <p>Choose an item from the list or create a new one to get started.</p>
         </div>
       </div>
     </div>
@@ -136,7 +127,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, PropType, ref, watch, nextTick, onMounted } from 'vue'
+import { computed, defineComponent, ref, watch, onMounted } from 'vue'
 import { Resource } from '@opencloud-eu/web-client'
 import { AppConfigObject, useMessages, useThemeStore, SideBar } from '@opencloud-eu/web-pkg'
 import { useGettext } from 'vue3-gettext'
@@ -146,26 +137,30 @@ import { useUser } from './composables/useUser'
 import NavigationPanel from './ui/components/panels/NavigationPanel.vue'
 import ContentPanel from './ui/components/panels/ContentPanel.vue'
 import UsersContentPanel from './ui/components/panels/UsersContentPanel.vue'
-import { NewBillModal, NewMemberModal, NewCategoryModal } from './ui/components/modals'
+import {
+  BillDetailPanel,
+  MemberDetailPanel,
+  CategoryDetailPanel,
+  PaymentModeDetailPanel
+} from './ui/components/panels/detail'
 
 export default defineComponent({
   name: 'App',
   components: {
     SideBar,
-    ContentPanel,
-    UsersContentPanel,
-    NewBillModal,
-    NewMemberModal,
-    NewCategoryModal
+    BillDetailPanel,
+    MemberDetailPanel,
+    CategoryDetailPanel,
+    PaymentModeDetailPanel
   },
   props: {
-    applicationConfig: { type: PropType<AppConfigObject>, required: true },
+    applicationConfig: { type: Object, required: true },
     currentContent: {
       type: String,
       required: true
     },
     isReadOnly: { type: Boolean, required: false, default: false },
-    resource: { type: Object as PropType<Resource>, required: true }
+    resource: { type: Object, required: true }
   },
   emits: ['update:currentContent'],
   setup(props, { emit }) {
@@ -176,10 +171,16 @@ export default defineComponent({
     const currentSection = ref<string>('bills')
     const isNavigationCollapsed = ref(true)
 
-    // Modals
-    const showNewBillModal = ref(false)
-    const showNewMemberModal = ref(false)
-    const showNewCategoryModal = ref(false)
+    // Detail Panel State
+    const detailPanel = ref<{
+      type: 'bill' | 'member' | 'category' | 'payment-mode' | null
+      mode: 'create' | 'edit'
+      selectedItem: any
+    }>({
+      type: null,
+      mode: 'create',
+      selectedItem: null
+    })
 
     const { $gettext } = useGettext()
     const { showMessage } = useMessages()
@@ -208,7 +209,9 @@ export default defineComponent({
     })
 
     // Parse PCSV data
-    const parsedData = computed(() => {
+    const parsedData = ref<PCSVData>({ tables: {} })
+
+    const updateParsedData = () => {
       try {
         let data = PCSVParser.parse(editableContent.value)
         data = PCSVParser.ensureDefaultTables(
@@ -216,13 +219,16 @@ export default defineComponent({
           currentUser.value?.name || 'Current User',
           currentUser.value?.opencloud_id || null
         )
-
-        return data
+        parsedData.value = data
       } catch (error) {
         console.error('Error parsing PCSV:', error)
-        return { tables: {} } as PCSVData
+        parsedData.value = { tables: {} } as PCSVData
       }
-    })
+    }
+
+    // Update parsed data when content changes
+    watch(editableContent, updateParsedData, { immediate: true })
+    watch(() => currentUser.value, updateParsedData)
 
     const bills = computed(() => {
       return PCSVParser.getBills(parsedData.value).sort(
@@ -319,8 +325,6 @@ export default defineComponent({
         }
       )
     })
-
-    const isDevMode = import.meta.env.MODE === 'development'
 
     const navigationItems = computed(() => {
       const items = [
@@ -442,10 +446,6 @@ export default defineComponent({
       emit('update:currentContent', editableContent.value)
     }
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      // Save is handled by OpenCloud's top bar
-    }
-
     const onNavigate = (section: string) => {
       currentSection.value = section
     }
@@ -455,22 +455,43 @@ export default defineComponent({
     }
 
     const onSidebarButtonClick = () => {
-      switch (currentSection.value) {
-        case 'bills':
-          showNewBillModal.value = true
-          break
-        case 'members':
-          showNewMemberModal.value = true
-          break
-        case 'categories':
-          showNewCategoryModal.value = true
-          break
+      detailPanel.value = {
+        type: currentSection.value as any,
+        mode: 'create',
+        selectedItem: null
       }
     }
 
     const onSidebarItemClick = (item: SidebarItem) => {
-      console.log('Item clicked:', item)
-      // TODO: Handle item selection (e.g., edit item)
+      let itemType: 'bill' | 'member' | 'category' | 'payment-mode'
+
+      switch (currentSection.value) {
+        case 'bills':
+          itemType = 'bill'
+          break
+        case 'members':
+          itemType = 'member'
+          break
+        case 'categories':
+          itemType = 'category'
+          break
+        default:
+          itemType = 'bill'
+      }
+
+      detailPanel.value = {
+        type: itemType,
+        mode: 'edit',
+        selectedItem: item
+      }
+    }
+
+    const onDetailPanelCancel = () => {
+      detailPanel.value = {
+        type: null,
+        mode: 'create',
+        selectedItem: null
+      }
     }
 
     const onCreateBill = (data: { bill: any; splits: any[] }) => {
@@ -480,7 +501,7 @@ export default defineComponent({
         const newContent = PCSVParser.generate(updatedData)
         editableContent.value = newContent
         emit('update:currentContent', newContent)
-        showNewBillModal.value = false
+        onDetailPanelCancel()
 
         showMessage({
           title: $gettext('Bill created'),
@@ -502,7 +523,7 @@ export default defineComponent({
         const newContent = PCSVParser.generate(updatedData)
         editableContent.value = newContent
         emit('update:currentContent', newContent)
-        showNewMemberModal.value = false
+        onDetailPanelCancel()
 
         showMessage({
           title: $gettext('Member added'),
@@ -515,7 +536,7 @@ export default defineComponent({
 
     const onCreateCategory = (data: { name: string }) => {
       try {
-        let updatedData = { ...parsedData.value }
+        const updatedData = { ...parsedData.value }
         const categoriesTable = updatedData.tables.category
         const nextCategoryId =
           Math.max(...categoriesTable.rows.map((row) => parseInt(row[0])), 0) + 1
@@ -525,7 +546,7 @@ export default defineComponent({
         const newContent = PCSVParser.generate(updatedData)
         editableContent.value = newContent
         emit('update:currentContent', newContent)
-        showNewCategoryModal.value = false
+        onDetailPanelCancel()
 
         showMessage({
           title: $gettext('Category added'),
@@ -536,12 +557,132 @@ export default defineComponent({
       }
     }
 
-    // Focus the editor when component mounts
-    nextTick(() => {
-      if (textEditor.value && !props.isReadOnly) {
-        textEditor.value.focus()
+    const onCreatePaymentMode = (data: { name: string }) => {
+      try {
+        const updatedData = { ...parsedData.value }
+        const paymentModesTable = updatedData.tables.payment_mode
+        const nextPaymentModeId =
+          Math.max(...paymentModesTable.rows.map((row) => parseInt(row[0])), 0) + 1
+
+        paymentModesTable.rows.push([nextPaymentModeId.toString(), data.name])
+
+        const newContent = PCSVParser.generate(updatedData)
+        editableContent.value = newContent
+        emit('update:currentContent', newContent)
+        onDetailPanelCancel()
+
+        showMessage({
+          title: $gettext('Payment mode added'),
+          desc: $gettext('New payment mode has been added successfully')
+        })
+      } catch (error) {
+        console.error('Error creating payment mode:', error)
       }
-    })
+    }
+
+    const onSaveBill = (data: any) => {
+      try {
+        const { selectedItem } = detailPanel.value
+        if (selectedItem && selectedItem.id) {
+          let updatedData = { ...parsedData.value }
+          updatedData = PCSVParser.updateBill(updatedData, selectedItem.id, data.bill, data.splits)
+
+          const newContent = PCSVParser.generate(updatedData)
+          editableContent.value = newContent
+          emit('update:currentContent', newContent)
+          onDetailPanelCancel()
+
+          showMessage({
+            title: $gettext('Bill updated'),
+            desc: $gettext('Your bill has been updated successfully')
+          })
+        }
+      } catch (error) {
+        console.error('Error saving bill:', error)
+        showMessage({
+          title: $gettext('Error saving bill'),
+          desc: $gettext('There was an error saving your changes. Please try again.')
+        })
+      }
+    }
+
+    const onSaveMember = (data: any) => {
+      try {
+        const { selectedItem } = detailPanel.value
+        if (selectedItem && selectedItem.id) {
+          let updatedData = { ...parsedData.value }
+          updatedData = PCSVParser.updateUser(updatedData, selectedItem.id, data)
+
+          const newContent = PCSVParser.generate(updatedData)
+          editableContent.value = newContent
+          emit('update:currentContent', newContent)
+          onDetailPanelCancel()
+
+          showMessage({
+            title: $gettext('Member updated'),
+            desc: $gettext('Member has been updated successfully')
+          })
+        }
+      } catch (error) {
+        console.error('Error saving member:', error)
+        showMessage({
+          title: $gettext('Error saving member'),
+          desc: $gettext('There was an error saving your changes. Please try again.')
+        })
+      }
+    }
+
+    const onSaveCategory = (data: any) => {
+      try {
+        const { selectedItem } = detailPanel.value
+        if (selectedItem && selectedItem.id) {
+          let updatedData = { ...parsedData.value }
+          updatedData = PCSVParser.updateCategory(updatedData, selectedItem.id, data)
+
+          const newContent = PCSVParser.generate(updatedData)
+          editableContent.value = newContent
+          emit('update:currentContent', newContent)
+          onDetailPanelCancel()
+
+          showMessage({
+            title: $gettext('Category updated'),
+            desc: $gettext('Category has been updated successfully')
+          })
+        }
+      } catch (error) {
+        console.error('Error saving category:', error)
+        showMessage({
+          title: $gettext('Error saving category'),
+          desc: $gettext('There was an error saving your changes. Please try again.')
+        })
+      }
+    }
+
+    const onSavePaymentMode = (data: any) => {
+      try {
+        const { selectedItem } = detailPanel.value
+        if (selectedItem && selectedItem.id) {
+          let updatedData = { ...parsedData.value }
+          updatedData = PCSVParser.updatePaymentMode(updatedData, selectedItem.id, data)
+
+          const newContent = PCSVParser.generate(updatedData)
+          editableContent.value = newContent
+          emit('update:currentContent', newContent)
+          onDetailPanelCancel()
+
+          showMessage({
+            title: $gettext('Payment mode updated'),
+            desc: $gettext('Payment mode has been updated successfully')
+          })
+        }
+      } catch (error) {
+        console.error('Error saving payment mode:', error)
+        showMessage({
+          title: $gettext('Error saving payment mode'),
+          desc: $gettext('There was an error saving your changes. Please try again.')
+        })
+      }
+    }
 
     return {
       textEditor,
@@ -553,9 +694,7 @@ export default defineComponent({
       lastSaved,
       currentUser,
       currentSection,
-      showNewBillModal,
-      showNewMemberModal,
-      showNewCategoryModal,
+      detailPanel,
       bills,
       users,
       paymentModes,
@@ -566,13 +705,19 @@ export default defineComponent({
       contentPanels,
       isNavigationCollapsed,
       onContentChange,
-      onKeyDown,
       onNavigate,
       toggleNavigation,
       onSidebarButtonClick,
+      onSidebarItemClick,
+      onDetailPanelCancel,
       onCreateBill,
       onCreateMember,
-      onCreateCategory
+      onCreateCategory,
+      onCreatePaymentMode,
+      onSaveBill,
+      onSaveMember,
+      onSaveCategory,
+      onSavePaymentMode
     }
   }
 })
@@ -621,48 +766,40 @@ export default defineComponent({
   flex: 1;
   min-width: 0; // Prevent flex item from growing beyond container
   background-color: var(--oc-role-background);
+  height: 100vh;
 }
 
-.content-header {
-  background-color: var(--oc-role-background);
-  min-height: 60px;
+.empty-detail-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  padding: var(--oc-space-large);
 }
 
-.editor-container {
-  position: relative;
-  overflow: hidden;
-}
+.empty-state-content {
+  text-align: center;
+  max-width: 300px;
 
-.text-editor {
-  border: 1px solid var(--oc-color-border);
-  border-radius: var(--oc-border-radius-medium);
-  padding: var(--oc-space-medium);
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  resize: none;
-  outline: none;
-  background-color: var(--oc-role-background);
-  color: var(--oc-role-text);
-
-  &:focus {
-    border-color: var(--oc-role-primary);
-    box-shadow: 0 0 0 2px var(--oc-role-primary);
+  svg {
+    color: var(--oc-role-on-surface-variant);
+    margin-bottom: var(--oc-space-medium);
+    opacity: 0.6;
   }
 
-  &:read-only {
-    background-color: var(--oc-role-background-muted);
-    cursor: not-allowed;
+  h3 {
+    font-size: var(--oc-font-size-large);
+    font-weight: var(--oc-font-weight-semibold);
+    color: var(--oc-role-on-surface);
+    margin: 0 0 var(--oc-space-small) 0;
   }
 
-  &.text-editor-dark {
-    background-color: var(--oc-role-background);
-    border-color: var(--oc-color-border);
+  p {
+    font-size: var(--oc-font-size-small);
+    color: var(--oc-role-on-surface-variant);
+    margin: 0;
+    line-height: 1.4;
   }
-}
-
-.status-bar {
-  background-color: var(--oc-role-background-muted);
-  min-height: 32px;
 }
 </style>

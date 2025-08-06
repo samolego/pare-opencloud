@@ -10,10 +10,11 @@
     <template #item="{ item }">
       <div class="user-item-content">
         <div class="item-header oc-flex oc-flex-middle oc-gap-s">
-          <oc-avatar
-            :user-name="getEnhancedItemTitle(item)"
-            :src="getItemAvatar(item)"
-            :width="36"
+          <user-avatar :user-name="getEnhancedItemTitle(item)" :user-id="item.openncloud_id" />
+          <user-avatar
+            :user-name="'admin'"
+            :user-id="'b55381e1-e24f-4fea-bfba-653a20ff9e06'"
+            :width="'80'"
           />
           <div class="item-title oc-text-bold oc-text-small">
             {{ getEnhancedItemTitle(item) }}
