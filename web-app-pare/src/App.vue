@@ -16,7 +16,8 @@
           <h2 v-if="!isNavigationCollapsed" class="oc-text-bold oc-mb-remove">
             {{
               resource.name && resource.extension
-                ? resource.name.slice(0, resource.extension.length - 1) || resource.name
+                ? resource.name.slice(0, resource.name.length - resource.extension.length - 1) ||
+                  resource.name
                 : $gettext('Pare Finance')
             }}
           </h2>
