@@ -59,15 +59,28 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 .navigation-panel {
-  padding: var(--oc-space-small);
+  padding: 0;
+
+  /* Add padding only when not collapsed */
+  .navigation-sidebar:not(.navigation-sidebar-collapsed) & {
+    padding: var(--oc-space-small);
+  }
 }
 
 .nav-list {
   list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .nav-item {
-  margin-bottom: var(--oc-space-xsmall);
+  margin: 0;
+  padding: 0;
+
+  /* Add margin only when not collapsed */
+  .navigation-sidebar:not(.navigation-sidebar-collapsed) & {
+    margin-bottom: var(--oc-space-xsmall);
+  }
 }
 
 .nav-button {
@@ -76,6 +89,7 @@ export default defineComponent({
   justify-content: flex-start;
   width: 100%;
   padding: var(--oc-space-small) var(--oc-space-medium);
+  margin: 0;
   border: none;
   border-radius: var(--oc-space-small);
   background: none;
@@ -89,6 +103,11 @@ export default defineComponent({
   .navigation-sidebar-collapsed & {
     justify-content: center;
     padding: var(--oc-space-small);
+    width: 40px;
+    height: 40px;
+    margin: var(--oc-space-xsmall) auto;
+    background: none !important;
+    border-radius: 8px;
   }
 
   &:hover {
@@ -105,6 +124,10 @@ export default defineComponent({
     .nav-count {
       color: var(--oc-role-on-primary);
     }
+
+    .navigation-sidebar-collapsed & {
+      background-color: var(--oc-role-primary) !important;
+    }
   }
 
   &:focus {
@@ -119,6 +142,9 @@ export default defineComponent({
 
   .navigation-sidebar-collapsed & {
     margin-right: 0;
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
   }
 }
 

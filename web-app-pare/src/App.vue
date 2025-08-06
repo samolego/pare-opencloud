@@ -170,7 +170,7 @@ export default defineComponent({
     const originalContent = ref(props.currentContent)
     const lastSaved = ref<string>('')
     const currentSection = ref<string>('bills')
-    const isNavigationCollapsed = ref(false)
+    const isNavigationCollapsed = ref(true)
 
     // Modals
     const showNewBillModal = ref(false)
@@ -324,24 +324,24 @@ export default defineComponent({
       {
         key: 'bills',
         label: $gettext('Bills'),
-        icon: 'receipt',
+        icon: 'bill',
         count: bills.value.length
       },
       {
         key: 'statistics',
         label: $gettext('Statistics'),
-        icon: 'chart-bar'
+        icon: 'bar-chart'
       },
       {
         key: 'members',
         label: $gettext('Members'),
-        icon: 'users',
+        icon: 'user',
         count: users.value.length
       },
       {
         key: 'categories',
         label: $gettext('Categories'),
-        icon: 'tag',
+        icon: 'folder',
         count: categories.value.length
       }
     ])
@@ -583,14 +583,18 @@ export default defineComponent({
   min-width: 200px !important;
   width: 200px !important;
   border-right: 1px solid var(--oc-color-border);
-  background-color: var(--oc-role-surface-container-low);
+  background-color: var(--oc-role-surface-container);
   transition:
     width 0.3s ease,
     min-width 0.3s ease;
 
   &.navigation-sidebar-collapsed {
-    min-width: 60px !important;
-    width: 60px !important;
+    min-width: 56px !important;
+    width: 56px !important;
+  }
+
+  .sidebar-panel {
+    background-color: var(--oc-role-surface-container) !important;
   }
 }
 
