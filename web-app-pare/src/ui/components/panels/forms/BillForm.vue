@@ -5,22 +5,9 @@
       <div class="bill-form-section">
         <div class="section-header">
           <div class="section-header-icon">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14,2 14,8 20,8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10,9 9,9 8,9"></polyline>
-            </svg>
+            <oc-icon name="file-text" size="medium" />
           </div>
-          <h2 class="section-title">Bill Details</h2>
+          <h2 class="section-title">Bill: {{ localForm.description }}</h2>
         </div>
 
         <div class="section-content">
@@ -41,17 +28,7 @@
               <FormField label="Total Amount" required :error="errors.total_amount">
                 <div class="amount-input-wrapper">
                   <div class="amount-currency">
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <line x1="12" y1="1" x2="12" y2="23"></line>
-                      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                    </svg>
+                    <oc-icon name="money-euro-circle" size="small" />
                   </div>
                   <FormInput
                     v-model="localForm.total_amount"
@@ -68,19 +45,7 @@
               <FormField label="Category" :error="errors.category_id">
                 <div class="select-input-wrapper">
                   <div class="select-icon">
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path
-                        d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"
-                      ></path>
-                      <line x1="7" y1="7" x2="7.01" y2="7"></line>
-                    </svg>
+                    <oc-icon name="price-tag" size="small" />
                   </div>
                   <FormSelect
                     v-model="localForm.category_id"
@@ -99,19 +64,7 @@
               <FormField label="Date" required :error="errors.date">
                 <div class="input-wrapper">
                   <div class="input-icon">
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                      <line x1="16" y1="2" x2="16" y2="6"></line>
-                      <line x1="8" y1="2" x2="8" y2="6"></line>
-                      <line x1="3" y1="10" x2="21" y2="10"></line>
-                    </svg>
+                    <oc-icon name="calendar" size="small" />
                   </div>
                   <FormInput
                     v-model="localForm.date"
@@ -126,17 +79,7 @@
               <FormField label="Time" required :error="errors.time">
                 <div class="input-wrapper">
                   <div class="input-icon">
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <polyline points="12,6 12,12 16,14"></polyline>
-                    </svg>
+                    <oc-icon name="time" size="small" />
                   </div>
                   <FormInput
                     v-model="localForm.time"
@@ -155,17 +98,7 @@
       <div class="bill-form-section">
         <div class="section-header">
           <div class="section-header-icon">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-              <line x1="1" y1="10" x2="23" y2="10"></line>
-            </svg>
+            <oc-icon name="bank-card" size="medium" />
           </div>
           <h2 class="section-title">Payment Details</h2>
         </div>
@@ -199,20 +132,7 @@
       <div class="bill-form-section">
         <div class="section-header">
           <div class="section-header-icon">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14,2 14,8 20,8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10,9 9,9 8,9"></polyline>
-            </svg>
+            <oc-icon name="info-card" size="medium" />
           </div>
           <h2 class="section-title">Additional Details</h2>
         </div>
@@ -245,17 +165,7 @@
             >
               <div class="input-wrapper">
                 <div class="input-icon">
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                  </svg>
+                  <oc-icon name="link" size="small" />
                 </div>
                 <FormInput
                   v-model="localForm.file_link"
