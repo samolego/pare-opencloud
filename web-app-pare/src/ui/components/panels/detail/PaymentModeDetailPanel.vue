@@ -10,13 +10,15 @@
     />
 
     <div class="payment-mode-detail-content">
-      <PaymentModeForm
-        ref="paymentModeForm"
-        :payment-mode="paymentMode"
-        :mode="mode"
-        @submit="onFormSubmit"
-        @validation-change="onValidationChange"
-      />
+      <FormSection title="Payment Method Information" icon="bank-card">
+        <PaymentModeForm
+          ref="paymentModeForm"
+          :payment-mode="paymentMode"
+          :mode="mode"
+          @submit="onFormSubmit"
+          @validation-change="onValidationChange"
+        />
+      </FormSection>
     </div>
   </div>
 </template>
@@ -28,12 +30,14 @@ import { usePaymentModeDetailPanel } from '../../../../composables/useDetailPane
 import { FormMode } from '../../../../types/forms'
 import DetailPanelHeader from '../DetailPanelHeader.vue'
 import { PaymentModeForm } from '../forms'
+import { FormSection } from '../../forms'
 
 export default defineComponent({
   name: 'PaymentModeDetailPanel',
   components: {
     DetailPanelHeader,
-    PaymentModeForm
+    PaymentModeForm,
+    FormSection
   },
   props: {
     paymentMode: {
@@ -80,5 +84,13 @@ export default defineComponent({
 
 .payment-mode-detail-panel {
   @include detail-panel;
+}
+
+.payment-mode-detail-content {
+  padding: var(--oc-space-large);
+
+  @media (max-width: 1024px) {
+    padding: var(--oc-space-medium);
+  }
 }
 </style>

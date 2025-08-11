@@ -1,0 +1,81 @@
+// Utility classes for common spacing and layout needs
+
+// Padding utilities
+.p-small {
+  padding: var(--oc-space-small);
+}
+
+.p-medium {
+  padding: var(--oc-space-medium);
+}
+
+.p-large {
+  padding: var(--oc-space-large);
+}
+
+.p-xlarge {
+  padding: var(--oc-space-xlarge);
+}
+
+// Padding directional utilities
+.pt-small { padding-top: var(--oc-space-small); }
+.pt-medium { padding-top: var(--oc-space-medium); }
+.pt-large { padding-top: var(--oc-space-large); }
+
+.pb-small { padding-bottom: var(--oc-space-small); }
+.pb-medium { padding-bottom: var(--oc-space-medium); }
+.pb-large { padding-bottom: var(--oc-space-large); }
+
+.pl-small { padding-left: var(--oc-space-small); }
+.pl-medium { padding-left: var(--oc-space-medium); }
+.pl-large { padding-left: var(--oc-space-large); }
+
+.pr-small { padding-right: var(--oc-space-small); }
+.pr-medium { padding-right: var(--oc-space-medium); }
+.pr-large { padding-right: var(--oc-space-large); }
+
+// Margin utilities
+.m-small {
+  margin: var(--oc-space-small);
+}
+
+.m-medium {
+  margin: var(--oc-space-medium);
+}
+
+.m-large {
+  margin: var(--oc-space-large);
+}
+
+.m-xlarge {
+  margin: var(--oc-space-xlarge);
+}
+
+// Margin directional utilities
+.mt-small { margin-top: var(--oc-space-small); }
+.mt-medium { margin-top: var(--oc-space-medium); }
+.mt-large { margin-top: var(--oc-space-large); }
+
+.mb-small { margin-bottom: var(--oc-space-small); }
+.mb-medium { margin-bottom: var(--oc-space-medium); }
+.mb-large { margin-bottom: var(--oc-space-large); }
+
+.ml-small { margin-left: var(--oc-space-small); }
+.ml-medium { margin-left: var(--oc-space-medium); }
+.ml-large { margin-left: var(--oc-space-large); }
+
+.mr-small { margin-right: var(--oc-space-small); }
+.mr-medium { margin-right: var(--oc-space-medium); }
+.mr-large { margin-right: var(--oc-space-large); }
+
+// Responsive padding utilities for mobile
+@media (max-width: 1024px) {
+  .p-large {
+    padding: var(--oc-space-medium);
+  }
+
+  .pt-large { padding-top: var(--oc-space-medium); }
+  .pb-large { padding-bottom: var(--oc-space-medium); }
+  .pl-large { padding-left: var(--oc-space-medium); }
+  .pr-large { padding-right: var(--oc-space-medium); }
+}

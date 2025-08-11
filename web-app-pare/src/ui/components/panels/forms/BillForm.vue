@@ -1,184 +1,145 @@
 <template>
   <div class="bill-form">
-    <form @submit.prevent="onSubmit">
-      <!-- Bill Details Section -->
-      <div class="bill-form-section">
-        <div class="section-header">
-          <div class="section-header-icon">
-            <oc-icon name="file-text" size="medium" />
-          </div>
-          <h2 class="section-title">Bill: {{ localForm.description }}</h2>
-        </div>
-
-        <div class="section-content">
-          <!-- Description - Full width -->
-          <div class="form-field-full">
-            <FormField label="What was this for?" required :error="errors.description">
-              <FormInput
-                v-model="localForm.description"
-                placeholder="e.g., Dinner at Italian restaurant"
-                required
-              />
-            </FormField>
-          </div>
-
-          <!-- Amount and Category Row -->
-          <div class="form-row">
-            <div class="form-column">
-              <FormField label="Total Amount" required :error="errors.total_amount">
-                <div class="amount-input-wrapper">
-                  <div class="amount-currency">
-                    <oc-icon name="money-euro-circle" size="small" />
-                  </div>
-                  <FormInput
-                    v-model="localForm.total_amount"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    required
-                    class="amount-input"
-                  />
-                </div>
-              </FormField>
-            </div>
-            <div class="form-column">
-              <FormField label="Category" :error="errors.category_id">
-                <div class="select-input-wrapper">
-                  <div class="select-icon">
-                    <oc-icon name="price-tag" size="small" />
-                  </div>
-                  <FormSelect
-                    v-model="localForm.category_id"
-                    :options="categoryOptions"
-                    placeholder="Select category..."
-                    class="select-with-icon"
-                  />
-                </div>
-              </FormField>
-            </div>
-          </div>
-
-          <!-- Date and Time Row -->
-          <div class="form-row">
-            <div class="form-column">
-              <FormField label="Date" required :error="errors.date">
-                <div class="input-wrapper">
-                  <div class="input-icon">
-                    <oc-icon name="calendar" size="small" />
-                  </div>
-                  <FormInput
-                    v-model="localForm.date"
-                    type="date"
-                    required
-                    class="input-with-icon"
-                  />
-                </div>
-              </FormField>
-            </div>
-            <div class="form-column">
-              <FormField label="Time" required :error="errors.time">
-                <div class="input-wrapper">
-                  <div class="input-icon">
-                    <oc-icon name="time" size="small" />
-                  </div>
-                  <FormInput
-                    v-model="localForm.time"
-                    type="time"
-                    required
-                    class="input-with-icon"
-                  />
-                </div>
-              </FormField>
-            </div>
-          </div>
-        </div>
+    <!-- Bill Details Section -->
+    <FormSection :title="`Bill: ${localForm.description}`" icon="file-text">
+      <!-- Description - Full width -->
+      <div class="form-field-full">
+        <FormField label="What was this for?" required :error="errors.description">
+          <FormInput
+            v-model="localForm.description"
+            placeholder="e.g., Dinner at Italian restaurant"
+            required
+          />
+        </FormField>
       </div>
 
-      <!-- Payment Details Section -->
-      <div class="bill-form-section">
-        <div class="section-header">
-          <div class="section-header-icon">
-            <oc-icon name="bank-card" size="medium" />
-          </div>
-          <h2 class="section-title">Payment Details</h2>
-        </div>
-
-        <div class="section-content">
-          <div class="form-row">
-            <div class="form-column">
-              <FormField label="Who paid initially?" required :error="errors.who_paid_id">
-                <FormSelect
-                  v-model="localForm.who_paid_id"
-                  :options="userOptions"
-                  placeholder="Select user..."
-                  required
-                />
-              </FormField>
-            </div>
-            <div class="form-column">
-              <FormField label="Payment Method" :error="errors.payment_mode_id">
-                <FormSelect
-                  v-model="localForm.payment_mode_id"
-                  :options="paymentModeOptions"
-                  placeholder="Select payment mode..."
-                />
-              </FormField>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Additional Details Section -->
-      <div class="bill-form-section">
-        <div class="section-header">
-          <div class="section-header-icon">
-            <oc-icon name="info-card" size="medium" />
-          </div>
-          <h2 class="section-title">Additional Details</h2>
-        </div>
-
-        <div class="section-content">
-          <!-- Repeat Field -->
-          <div class="form-field-full">
-            <FormField label="Repeat" :error="errors.repeat">
-              <FormSelect v-model="localForm.repeat" :options="repeatOptions" />
-            </FormField>
-          </div>
-
-          <!-- Comment -->
-          <div class="form-field-full">
-            <FormField label="Notes / Comments" :error="errors.comment">
-              <FormTextarea
-                v-model="localForm.comment"
-                placeholder="Add any additional notes about this bill..."
-                :rows="3"
-              />
-            </FormField>
-          </div>
-
-          <!-- File link -->
-          <div class="form-field-full">
-            <FormField
-              label="Receipt / Document Link"
-              help-text="Optional: Link to receipt or document"
-              :error="errors.file_link"
-            >
-              <div class="input-wrapper">
-                <div class="input-icon">
-                  <oc-icon name="link" size="small" />
-                </div>
-                <FormInput
-                  v-model="localForm.file_link"
-                  type="url"
-                  placeholder="https://example.com/receipt.pdf"
-                  class="input-with-icon"
-                />
+      <!-- Amount and Category Row -->
+      <div class="form-row">
+        <div class="form-column">
+          <FormField label="Total Amount" required :error="errors.total_amount">
+            <div class="amount-input-wrapper">
+              <div class="amount-currency">
+                <oc-icon name="money-euro-circle" size="small" />
               </div>
-            </FormField>
-          </div>
+              <FormInput
+                v-model="localForm.total_amount"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                required
+                class="amount-input"
+              />
+            </div>
+          </FormField>
+        </div>
+        <div class="form-column">
+          <FormField label="Category" :error="errors.category_id">
+            <div class="select-input-wrapper">
+              <div class="select-icon">
+                <oc-icon name="price-tag" size="small" />
+              </div>
+              <FormSelect
+                v-model="localForm.category_id"
+                :options="categoryOptions"
+                placeholder="Select category..."
+                class="select-with-icon"
+              />
+            </div>
+          </FormField>
         </div>
       </div>
-    </form>
+
+      <!-- Date and Time Row -->
+      <div class="form-row">
+        <div class="form-column">
+          <FormField label="Date" required :error="errors.date">
+            <div class="input-wrapper">
+              <div class="input-icon">
+                <oc-icon name="calendar" size="small" />
+              </div>
+              <FormInput v-model="localForm.date" type="date" required class="input-with-icon" />
+            </div>
+          </FormField>
+        </div>
+        <div class="form-column">
+          <FormField label="Time" required :error="errors.time">
+            <div class="input-wrapper">
+              <div class="input-icon">
+                <oc-icon name="time" size="small" />
+              </div>
+              <FormInput v-model="localForm.time" type="time" required class="input-with-icon" />
+            </div>
+          </FormField>
+        </div>
+      </div>
+    </FormSection>
+
+    <!-- Payment Details Section -->
+    <FormSection title="Payment Details" icon="bank-card">
+      <div class="form-row">
+        <div class="form-column">
+          <FormField label="Who paid initially?" required :error="errors.who_paid_id">
+            <FormSelect
+              v-model="localForm.who_paid_id"
+              :options="userOptions"
+              placeholder="Select user..."
+              required
+            />
+          </FormField>
+        </div>
+        <div class="form-column">
+          <FormField label="Payment Method" :error="errors.payment_mode_id">
+            <FormSelect
+              v-model="localForm.payment_mode_id"
+              :options="paymentModeOptions"
+              placeholder="Select payment mode..."
+            />
+          </FormField>
+        </div>
+      </div>
+    </FormSection>
+
+    <!-- Additional Details Section -->
+    <FormSection title="Additional Details" icon="info-card">
+      <!-- Repeat Field -->
+      <div class="form-field-full">
+        <FormField label="Repeat" :error="errors.repeat">
+          <FormSelect v-model="localForm.repeat" :options="repeatOptions" />
+        </FormField>
+      </div>
+
+      <!-- Comment -->
+      <div class="form-field-full">
+        <FormField label="Notes / Comments" :error="errors.comment">
+          <FormTextarea
+            v-model="localForm.comment"
+            placeholder="Add any additional notes about this bill..."
+            :rows="3"
+          />
+        </FormField>
+      </div>
+
+      <!-- File link -->
+      <div class="form-field-full">
+        <FormField
+          label="Receipt / Document Link"
+          help-text="Optional: Link to receipt or document"
+          :error="errors.file_link"
+        >
+          <div class="input-wrapper">
+            <div class="input-icon">
+              <oc-icon name="link" size="small" />
+            </div>
+            <FormInput
+              v-model="localForm.file_link"
+              type="url"
+              placeholder="https://example.com/receipt.pdf"
+              class="input-with-icon"
+            />
+          </div>
+        </FormField>
+      </div>
+    </FormSection>
   </div>
 </template>
 
@@ -194,7 +155,7 @@ import {
   PCSVParser
 } from '../../../../utils/pcsvParser'
 import { UserSplit, BillFormData, ValidationErrors } from '../../../../types/forms'
-import { FormField, FormInput, FormSelect, FormTextarea } from '../../forms'
+import { FormField, FormInput, FormSelect, FormTextarea, FormSection } from '../../forms'
 
 export default defineComponent({
   name: 'BillForm',
@@ -202,7 +163,8 @@ export default defineComponent({
     FormField,
     FormInput,
     FormSelect,
-    FormTextarea
+    FormTextarea,
+    FormSection
   },
   props: {
     bill: {
@@ -609,39 +571,6 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   gap: var(--oc-space-large);
-}
-
-.bill-form-section {
-  background-color: var(--oc-role-surface-container);
-  border: 1px solid var(--oc-role-outline-variant);
-  border-radius: var(--oc-space-medium);
-  overflow: hidden;
-  flex-shrink: 0;
-  margin-bottom: var(--oc-space-large);
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  gap: var(--oc-space-medium);
-  padding: var(--oc-space-large);
-  background-color: var(--oc-role-surface-container-high);
-  border-bottom: 1px solid var(--oc-role-outline-variant);
-}
-
-.section-header-icon {
-  color: var(--oc-role-primary);
-}
-
-.section-title {
-  font-size: var(--oc-font-size-large);
-  font-weight: var(--oc-font-weight-semibold);
-  color: var(--oc-role-on-surface);
-  margin: 0;
-}
-
-.section-content {
-  padding: var(--oc-space-medium);
 }
 
 .form-row {

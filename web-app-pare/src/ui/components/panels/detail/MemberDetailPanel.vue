@@ -10,13 +10,15 @@
     />
 
     <div class="member-detail-content">
-      <MemberForm
-        ref="memberForm"
-        :member="member"
-        :mode="mode"
-        @submit="onFormSubmit"
-        @validation-change="onValidationChange"
-      />
+      <FormSection title="Member Information" icon="user">
+        <MemberForm
+          ref="memberForm"
+          :member="member"
+          :mode="mode"
+          @submit="onFormSubmit"
+          @validation-change="onValidationChange"
+        />
+      </FormSection>
     </div>
   </div>
 </template>
@@ -28,12 +30,14 @@ import { useMemberDetailPanel } from '../../../../composables/useDetailPanelLogi
 import { FormMode } from '../../../../types/forms'
 import DetailPanelHeader from '../DetailPanelHeader.vue'
 import { MemberForm } from '../forms'
+import { FormSection } from '../../forms'
 
 export default defineComponent({
   name: 'MemberDetailPanel',
   components: {
     DetailPanelHeader,
-    MemberForm
+    MemberForm,
+    FormSection
   },
   props: {
     member: {
@@ -80,5 +84,13 @@ export default defineComponent({
 
 .member-detail-panel {
   @include detail-panel;
+}
+
+.member-detail-content {
+  padding: var(--oc-space-large);
+
+  @media (max-width: 1024px) {
+    padding: var(--oc-space-medium);
+  }
 }
 </style>
