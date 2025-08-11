@@ -4,7 +4,7 @@
       <div class="split-user-info">
         <input
           :id="`user-${user.id}`"
-          :checked="userSplits[user.id].included"
+          :checked="isUserIncluded(user.id)"
           type="checkbox"
           class="split-user-checkbox"
           @change="onSplitIncludedChange(user.id)"
@@ -15,10 +15,10 @@
       </div>
       <div class="split-user-amount">
         <FormInput
-          :model-value="userSplits[user.id].amount"
+          :model-value="getUserAmount(user.id)"
           type="number"
           step="0.01"
-          :disabled="!userSplits[user.id].included"
+          :disabled="!isUserIncluded(user.id)"
           class="split-amount-input"
           @update:model-value="(value) => onSplitAmountChange(user.id, value)"
         />
@@ -38,10 +38,15 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, ref, computed, watch } from 'vue'
+import { defineComponent, PropType, computed, watch } from 'vue'
 import { User } from '../../../utils/pcsvParser'
 import { UserSplit } from '../../../types/forms'
 import FormInput from './FormInput.vue'
+
+// Extended UserSplit with included property for component communication
+interface UserSplitWithInclusion extends UserSplit {
+  included: boolean
+}
 
 export default defineComponent({
   name: 'SplitUserControls',
@@ -54,7 +59,7 @@ export default defineComponent({
       required: true
     },
     modelValue: {
-      type: Object as PropType<{ [userId: number]: UserSplit }>,
+      type: Object as PropType<{ [userId: number]: UserSplitWithInclusion }>,
       required: true
     },
     totalAmount: {
@@ -64,20 +69,16 @@ export default defineComponent({
   },
   emits: ['update:modelValue'],
   setup(props, { emit }) {
-    // Use computed to directly access modelValue instead of local copy
-    const userSplits = computed(() => {
-      const splits: { [userId: number]: UserSplit } = {}
-      props.users.forEach((user) => {
-        splits[user.id] = {
-          included: props.modelValue[user.id]?.included || false,
-          amount: props.modelValue[user.id]?.amount || '0.00'
-        }
-      })
-      return splits
-    })
+    const isUserIncluded = (userId: number): boolean => {
+      return props.modelValue[userId]?.included || false
+    }
+
+    const getUserAmount = (userId: number): string => {
+      return props.modelValue[userId]?.amount || '0.00'
+    }
 
     const totalSplitAmount = computed(() => {
-      return Object.values(userSplits.value)
+      return Object.values(props.modelValue)
         .filter((split) => split.included)
         .reduce((sum, split) => sum + parseFloat(split.amount || '0'), 0)
     })
@@ -88,9 +89,15 @@ export default defineComponent({
 
     const onSplitIncludedChange = (userId: number) => {
       const newSplits = { ...props.modelValue }
+
+      // Initialize user split if it doesn't exist
+      if (!newSplits[userId]) {
+        newSplits[userId] = { amount: '0.00', included: false }
+      }
+
       newSplits[userId].included = !newSplits[userId].included
 
-      // If switching to equal splits, recalculate amounts
+      // If switching to included and we have a total amount, recalculate equal splits
       if (newSplits[userId].included && props.totalAmount > 0) {
         calculateEqualSplits(newSplits)
       } else if (!newSplits[userId].included) {
@@ -102,21 +109,30 @@ export default defineComponent({
 
     const onSplitAmountChange = (userId: number, amount: string) => {
       const newSplits = { ...props.modelValue }
+
+      // Initialize user split if it doesn't exist
+      if (!newSplits[userId]) {
+        newSplits[userId] = { amount: '0.00', included: false }
+      }
+
       newSplits[userId].amount = amount
       emit('update:modelValue', newSplits)
     }
 
-    const calculateEqualSplits = (splits: { [userId: number]: UserSplit }) => {
+    const calculateEqualSplits = (splits: { [userId: number]: UserSplitWithInclusion }) => {
       if (props.totalAmount <= 0) return
 
-      const includedUsers = Object.entries(splits).filter(([_, split]) => split.included)
+      const includedUserIds = Object.entries(splits)
+        .filter(([, split]) => split.included)
+        .map(([userId]) => parseInt(userId))
 
-      if (includedUsers.length === 0) return
+      if (includedUserIds.length === 0) return
 
-      const equalAmount = props.totalAmount / includedUsers.length
+      const equalAmount = props.totalAmount / includedUserIds.length
 
-      includedUsers.forEach(([userId, split]) => {
-        splits[parseInt(userId)].amount = equalAmount.toFixed(2)
+      // Set equal amounts for included users
+      includedUserIds.forEach((userId) => {
+        splits[userId].amount = equalAmount.toFixed(2)
       })
 
       // Set excluded users to 0
@@ -127,12 +143,20 @@ export default defineComponent({
       })
     }
 
-    // Auto-calculate splits when total amount changes
+    // Auto-calculate splits when total amount changes and we have included users
     watch(
       () => props.totalAmount,
       () => {
         if (props.totalAmount > 0) {
           const newSplits = { ...props.modelValue }
+
+          // Ensure all users have split entries
+          props.users.forEach((user) => {
+            if (!newSplits[user.id]) {
+              newSplits[user.id] = { amount: '0.00', included: false }
+            }
+          })
+
           calculateEqualSplits(newSplits)
           emit('update:modelValue', newSplits)
         }
@@ -140,7 +164,8 @@ export default defineComponent({
     )
 
     return {
-      userSplits,
+      isUserIncluded,
+      getUserAmount,
       totalSplitAmount,
       splitDifference,
       onSplitIncludedChange,

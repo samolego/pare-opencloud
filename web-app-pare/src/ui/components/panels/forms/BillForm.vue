@@ -246,6 +246,7 @@ export default defineComponent({
     })
 
     const userSplits = ref<{ [userId: number]: UserSplit }>({})
+    const includedUsers = ref<Set<number>>(new Set())
     const errors = ref<ValidationErrors>({})
 
     // Initialize form data
@@ -281,20 +282,16 @@ export default defineComponent({
 
     // Initialize user splits
     const initializeUserSplits = () => {
-      Object.keys(userSplits.value).forEach((userId) => {
-        const user = props.users.find((u) => u.id === parseInt(userId)) || {
-          name: 'Deleted user',
-          id: parseInt(userId)
-        }
+      // Initialize all users with default amounts first
+      props.users.forEach((user) => {
         if (!userSplits.value[user.id]) {
           userSplits.value[user.id] = {
-            included: false,
             amount: '0.00'
           }
         }
       })
 
-      // Load bill splits after userSplits is initialized
+      // Load bill splits for existing bills
       if (props.bill && props.parsedData) {
         loadBillSplits()
       }
@@ -308,23 +305,51 @@ export default defineComponent({
 
       const billSplits = PCSVParser.getBillSplits(props.parsedData, props.bill.id)
 
-      console.debug(userSplits.value)
-      console.debug(billSplits)
+      // Clear included users set
+      includedUsers.value.clear()
 
       // Update userSplits with the loaded data
       billSplits.forEach((split) => {
-        console.debug('SPLIT: ' + split.id)
-        console.debug(split)
         if (userSplits.value[split.user_id]) {
-          userSplits.value[split.user_id].included = split.included === 1
+          includedUsers.value.add(split.user_id)
           userSplits.value[split.user_id].amount = split.amount.toFixed(2)
+        }
+      })
+
+      // Set excluded users to 0.00
+      props.users.forEach((user) => {
+        if (!includedUsers.value.has(user.id)) {
+          userSplits.value[user.id].amount = '0.00'
         }
       })
     }
 
     // Watch for bill changes
     watch(() => props.bill, initializeForm, { immediate: true })
-    watch(() => props.users, initializeUserSplits, { immediate: true })
+
+    // Watch for users changes and reinitialize splits
+    watch(
+      () => props.users,
+      () => {
+        initializeUserSplits()
+        // Trigger auto-inclusion for new bills after users are available
+        if (!props.bill && localForm.who_paid_id) {
+          const totalAmount = parseFloat(localForm.total_amount) || 0
+          includedUsers.value.clear()
+          includedUsers.value.add(localForm.who_paid_id)
+
+          if (userSplits.value[localForm.who_paid_id]) {
+            userSplits.value[localForm.who_paid_id].amount = totalAmount.toFixed(2)
+            props.users.forEach((user) => {
+              if (user.id !== localForm.who_paid_id) {
+                userSplits.value[user.id].amount = '0.00'
+              }
+            })
+          }
+        }
+      },
+      { immediate: true }
+    )
 
     // Watch for parsedData availability - retry loading splits when it becomes available
     watch(
@@ -347,9 +372,17 @@ export default defineComponent({
 
     // Emit splits changes to parent for sidebar
     watch(
-      [userSplits, () => localForm.total_amount],
+      [userSplits, includedUsers, () => localForm.total_amount],
       () => {
-        emit('splits-change', userSplits.value, parseFloat(localForm.total_amount) || 0)
+        // Create splits data with inclusion info for sidebar
+        const splitsWithInclusion: { [userId: number]: UserSplit & { included: boolean } } = {}
+        props.users.forEach((user) => {
+          splitsWithInclusion[user.id] = {
+            amount: userSplits.value[user.id]?.amount || '0.00',
+            included: includedUsers.value.has(user.id)
+          }
+        })
+        emit('splits-change', splitsWithInclusion, parseFloat(localForm.total_amount) || 0)
       },
       { deep: true, immediate: true }
     )
@@ -399,14 +432,33 @@ export default defineComponent({
         newErrors.time = 'Time is required'
       }
 
-      // Validate splits
+      // Validate splits - only validate if there are included users and a valid total amount
       const totalAmount = parseFloat(localForm.total_amount) || 0
-      const splitAmount = Object.values(userSplits.value)
-        .filter((split) => split.included)
-        .reduce((sum, split) => sum + parseFloat(split.amount || '0'), 0)
+      const includedUserCount = includedUsers.value.size
 
-      if (Math.abs(splitAmount - totalAmount) > 0.01) {
-        newErrors.splits = 'Split amounts must equal total amount'
+      if (totalAmount > 0 && includedUserCount > 0) {
+        const splitAmount = props.users
+          .filter((user) => includedUsers.value.has(user.id))
+          .reduce((sum, user) => sum + parseFloat(userSplits.value[user.id]?.amount || '0'), 0)
+
+        if (Math.abs(splitAmount - totalAmount) > 0.01) {
+          newErrors.splits = 'Split amounts must equal total amount'
+        }
+      } else if (totalAmount > 0 && includedUserCount === 0) {
+        newErrors.splits = 'Please select at least one user to split the bill'
+      }
+
+      // Special case: if only payer is included and amount matches, this is valid
+      if (
+        totalAmount > 0 &&
+        includedUserCount === 1 &&
+        localForm.who_paid_id &&
+        includedUsers.value.has(localForm.who_paid_id)
+      ) {
+        const payerAmount = parseFloat(userSplits.value[localForm.who_paid_id]?.amount || '0')
+        if (Math.abs(payerAmount - totalAmount) <= 0.01) {
+          delete newErrors.splits
+        }
       }
 
       // Validate URL if provided
@@ -423,9 +475,64 @@ export default defineComponent({
     }
 
     const isValid = computed(() => {
-      validateForm()
       return Object.keys(errors.value).length === 0
     })
+
+    // Watch for form changes to trigger validation
+    watch(
+      [
+        () => localForm.description,
+        () => localForm.total_amount,
+        () => localForm.who_paid_id,
+        () => localForm.date,
+        () => localForm.time,
+        () => localForm.file_link,
+        userSplits,
+        includedUsers
+      ],
+      () => {
+        validateForm()
+      },
+      { deep: true, immediate: true }
+    )
+
+    // Watch for who_paid_id changes to auto-include the payer
+    watch(
+      () => localForm.who_paid_id,
+      (newWhoPaidId) => {
+        if (!props.bill && newWhoPaidId && userSplits.value[newWhoPaidId]) {
+          // Clear all included users and include only the payer
+          includedUsers.value.clear()
+          includedUsers.value.add(newWhoPaidId)
+
+          // Set the full amount to the person who paid
+          const totalAmount = parseFloat(localForm.total_amount) || 0
+          props.users.forEach((user) => {
+            if (user.id === newWhoPaidId) {
+              userSplits.value[user.id].amount = totalAmount.toFixed(2)
+            } else {
+              userSplits.value[user.id].amount = '0.00'
+            }
+          })
+        }
+      }
+    )
+
+    // Watch for total amount changes to update the payer's amount for new bills
+    watch(
+      () => localForm.total_amount,
+      (newAmount) => {
+        if (
+          !props.bill &&
+          localForm.who_paid_id &&
+          includedUsers.value.has(localForm.who_paid_id) &&
+          userSplits.value[localForm.who_paid_id]
+        ) {
+          const totalAmount = parseFloat(newAmount) || 0
+          userSplits.value[localForm.who_paid_id].amount = totalAmount.toFixed(2)
+        }
+      }
+    )
 
     // Watch for validation changes
     watch(
@@ -451,11 +558,10 @@ export default defineComponent({
         file_link: localForm.file_link
       }
 
-      const splits: Omit<BillSplit, 'id' | 'bill_id'>[] = Object.entries(userSplits.value).map(
-        ([userId, split]) => ({
-          user_id: parseInt(userId),
-          amount: parseFloat(split.amount),
-          included: split.included ? 1 : 0
+      const splits: Omit<BillSplit, 'id' | 'bill_id'>[] = Array.from(includedUsers.value).map(
+        (userId) => ({
+          user_id: userId,
+          amount: parseFloat(userSplits.value[userId]?.amount || '0')
         })
       )
 
@@ -463,8 +569,17 @@ export default defineComponent({
     }
 
     // Method to update splits from parent (sidebar)
-    const updateSplits = (newSplits: { [userId: number]: UserSplit }) => {
-      userSplits.value = { ...newSplits }
+    const updateSplits = (newSplits: { [userId: number]: UserSplit & { included: boolean } }) => {
+      // Clear and rebuild included users
+      includedUsers.value.clear()
+
+      Object.entries(newSplits).forEach(([userId, split]) => {
+        const id = parseInt(userId)
+        userSplits.value[id] = { amount: split.amount }
+        if (split.included) {
+          includedUsers.value.add(id)
+        }
+      })
     }
 
     // Expose methods to parent component

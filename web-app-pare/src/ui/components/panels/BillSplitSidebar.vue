@@ -44,6 +44,11 @@ import { User } from '../../../utils/pcsvParser'
 import { UserSplit } from '../../../types/forms'
 import { SplitUserControls } from '../forms'
 
+// Extended UserSplit with included property for component communication
+interface UserSplitWithInclusion extends UserSplit {
+  included: boolean
+}
+
 type SplitMode = 'equal' | 'custom'
 
 interface SplitModeOption {
@@ -66,7 +71,7 @@ export default defineComponent({
       default: 0
     },
     modelValue: {
-      type: Object as PropType<{ [userId: number]: UserSplit }>,
+      type: Object as PropType<{ [userId: number]: UserSplitWithInclusion }>,
       default: () => ({})
     }
   },
@@ -115,7 +120,7 @@ export default defineComponent({
       // The SplitUserControls component will handle the actual split calculation
     }
 
-    const onSplitsUpdate = (splits: { [userId: number]: UserSplit }) => {
+    const onSplitsUpdate = (splits: { [userId: number]: UserSplitWithInclusion }) => {
       emit('update:model-value', splits)
     }
 

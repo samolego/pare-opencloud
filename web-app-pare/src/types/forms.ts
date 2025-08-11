@@ -1,7 +1,6 @@
 // Common form types used across components
 
 export interface UserSplit {
-  included: boolean
   amount: string
 }
 

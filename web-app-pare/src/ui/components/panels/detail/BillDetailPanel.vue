@@ -37,11 +37,16 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, inject, ref } from 'vue'
+import { defineComponent, PropType, inject, ref, watch, nextTick } from 'vue'
 import { Bill, User, PaymentMode, Category, PCSVData } from '../../../../utils/pcsvParser'
 import { useBillDetailPanel } from '../../../../composables/useDetailPanelLogic'
 import { FormMode } from '../../../../types/forms'
 import { UserSplit } from '../../../../types/forms'
+
+// Extended UserSplit with included property for component communication
+interface UserSplitWithInclusion extends UserSplit {
+  included: boolean
+}
 import DetailPanelHeader from '../DetailPanelHeader.vue'
 import { BillForm } from '../forms'
 import BillSplitSidebar from '../BillSplitSidebar.vue'
@@ -93,14 +98,35 @@ export default defineComponent({
 
     const parsedData = inject<PCSVData>('parsedData')
     const totalAmount = ref(0)
-    const userSplits = ref<{ [userId: number]: UserSplit }>({})
+    const userSplits = ref<{ [userId: number]: UserSplitWithInclusion }>({})
+    const isUpdatingFromForm = ref(false)
 
     const { onCancel, onFormSubmit } = createEventHandlers(emit)
 
-    const onSplitsChange = (splits: { [userId: number]: UserSplit }, amount: number) => {
+    const onSplitsChange = (
+      splits: { [userId: number]: UserSplitWithInclusion },
+      amount: number
+    ) => {
+      isUpdatingFromForm.value = true
       userSplits.value = splits
       totalAmount.value = amount
+      nextTick(() => {
+        isUpdatingFromForm.value = false
+      })
     }
+
+    // Watch for sidebar changes and update the form (but not when form is updating us)
+    watch(
+      userSplits,
+      (newSplits) => {
+        if (!isUpdatingFromForm.value) {
+          if (billForm.value && billForm.value.updateSplits) {
+            billForm.value.updateSplits(newSplits)
+          }
+        }
+      },
+      { deep: true }
+    )
 
     return {
       canSave,
