@@ -56,7 +56,7 @@ Defines how each bill is split among users.
 **Structure:**
 ```
 TABLE,bill_splits
-id,bill_id,user_id,amount,included
+id,bill_id,user_id,amount
 ```
 
 **Fields:**
@@ -64,18 +64,17 @@ id,bill_id,user_id,amount,included
 - `bill_id`: Reference to bills table (integer)
 - `user_id`: Reference to users table (integer)
 - `amount`: Amount this user owes for this bill (decimal)
-- `included`: Whether this user is included in the bill split (1 for yes, 0 for no)
 
 **Example:**
 ```
 TABLE,bill_splits
-id,bill_id,user_id,amount,included
-1,1,1,2666.67,1
-2,1,2,2666.67,1
-3,1,3,2666.67,1
-4,1,4,0,0
-5,1,5,0,0
-6,2,1,45.50,1
+id,bill_id,user_id,amount
+1,1,1,2666.67
+2,1,2,2666.67
+3,1,3,2666.67
+4,1,4,0
+5,1,5,0
+6,2,1,45.50
 ```
 
 ### 3. Users Table
@@ -219,9 +218,9 @@ id,description,total_amount,who_paid_id,datetime,repeat,payment_mode_id,category
 2,Coffee supplies,25.00,2,22/01/1981 09:15,Weekly,2,2,Keep the crew caffeinated,
 
 TABLE,bill_splits
-id,bill_id,user_id,amount,included
-1,1,1,4000.00,1
-2,1,2,4000.00,1
-3,2,1,12.50,1
-4,2,2,12.50,1
+id,bill_id,user_id,amount
+1,1,1,4000.00
+2,1,2,4000.00
+3,2,1,12.50
+4,2,2,12.50
 ```

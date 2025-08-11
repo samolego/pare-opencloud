@@ -42,7 +42,6 @@ export interface BillSplit {
   bill_id: number
   user_id: number
   amount: number
-  included: number
 }
 
 export class PCSVParser {
@@ -190,7 +189,7 @@ export class PCSVParser {
     if (!data.tables.bill_splits) {
       data.tables.bill_splits = {
         name: 'bill_splits',
-        headers: ['id', 'bill_id', 'user_id', 'amount', 'included'],
+        headers: ['id', 'bill_id', 'user_id', 'amount'],
         rows: []
       }
     }
@@ -230,8 +229,7 @@ export class PCSVParser {
         splitId.toString(),
         billId.toString(),
         split.user_id.toString(),
-        split.amount.toString(),
-        split.included.toString()
+        split.amount.toString()
       ])
     }
 
@@ -263,13 +261,12 @@ export class PCSVParser {
     }
 
     return billSplitsTable.rows
-      .filter((row) => row && row.length >= 5 && parseInt(row[1]) === billId)
+      .filter((row) => row && row.length >= 4 && parseInt(row[1]) === billId)
       .map((row) => ({
         id: parseInt(row[0]) || 0,
         bill_id: parseInt(row[1]) || 0,
         user_id: parseInt(row[2]) || 0,
-        amount: parseFloat(row[3]) || 0,
-        included: parseInt(row[4]) || 0
+        amount: parseFloat(row[3]) || 0
       }))
   }
 
@@ -309,8 +306,7 @@ export class PCSVParser {
         splitId.toString(),
         billId.toString(),
         split.user_id.toString(),
-        split.amount.toString(),
-        split.included.toString()
+        split.amount.toString()
       ])
     }
 
