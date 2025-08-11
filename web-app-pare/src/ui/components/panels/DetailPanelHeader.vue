@@ -70,7 +70,6 @@ export default defineComponent({
 
 .cancel-btn,
 .save-btn {
-  min-width: 80px;
   font-size: var(--oc-font-size-small);
 }
 
