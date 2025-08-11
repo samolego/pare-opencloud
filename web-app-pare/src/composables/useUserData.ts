@@ -96,6 +96,9 @@ export function useUserData() {
       .map((id) => getUserById(id))
 
     await Promise.all(promises)
+
+    console.log(`Preloaded ${promises.length} users`)
+    console.log(userCache.value)
   }
 
   /**

@@ -12,22 +12,17 @@
     <template #item="{ item }">
       <div class="user-item-content">
         <div class="item-header oc-flex oc-flex-middle oc-gap-s">
-          <user-avatar :user-name="getEnhancedItemTitle(item)" :user-id="item.openncloud_id" />
-          <user-avatar
-            :user-name="'admin'"
-            :user-id="'b55381e1-e24f-4fea-bfba-653a20ff9e06'"
-            :width="'80'"
-          />
+          <user-avatar :user-name="getEnhancedItemTitle(item)" :user-id="item.opencloud_id" />
           <div class="item-title oc-text-bold oc-text-small">
             {{ getEnhancedItemTitle(item) }}
           </div>
         </div>
         <div class="item-details oc-flex oc-flex-between oc-flex-middle oc-mt-xs">
-          <div class="item-subtitle">
-            {{ item.opencloud_id || '' }}
+          <div class="item-subtitle" :class="getBalanceClass(item)">
+            {{ getBalanceDisplay(item) }}
           </div>
           <div class="oc-text-muted oc-text-xsmall" @click="onItemDelete(item)">
-            <oc-icon :name="'delete-bin-7'" />
+            <oc-icon name="delete-bin-7" />
           </div>
         </div>
         <div v-if="getItemDescription(item)" class="item-description oc-text-xsmall oc-mt-xs">
@@ -35,20 +30,29 @@
         </div>
       </div>
     </template>
+
+    <!-- Settlement Action Footer -->
+    <template #footer>
+      <SettlementAction @settlement-created="onSettlementCreated" />
+    </template>
   </ContentPanel>
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, onMounted, watch } from 'vue'
+import { defineComponent, PropType, onMounted, watch, inject, type Ref } from 'vue'
 import { SidebarItem, SidebarConfig } from '../../../types/sidebar'
 import { useUserData } from '../../../composables/useUserData'
 import { useContentItemFormatting } from '../../../composables/useContentItemFormatting'
+import { useSettlement } from '../../../composables/useSettlement'
 import ContentPanel from './ContentPanel.vue'
+import SettlementAction from '../SettlementAction.vue'
+import type { PCSVData } from '../../../utils/pcsvParser'
 
 export default defineComponent({
   name: 'UsersContentPanel',
   components: {
-    ContentPanel
+    ContentPanel,
+    SettlementAction
   },
   props: {
     darkTheme: {
@@ -80,11 +84,15 @@ export default defineComponent({
       default: 20
     }
   },
-  emits: ['page-change'],
-  setup(props) {
+  emits: ['page-change', 'settlement-created'],
+  setup(props, { emit }) {
     const { getUserAvatar, getUserDisplayName, preloadUsers } = useUserData()
     const { getItemSubtitle, getItemDescription, isNegativeAmount, truncateText } =
       useContentItemFormatting()
+
+    // Get parsed data from parent component
+    const parsedData = inject<Ref<PCSVData>>('parsedData')
+    const { getUserBalance, formatBalance } = useSettlement(parsedData)
 
     const getItemAvatar = (item: SidebarItem): string => {
       // Use opencloud_id if available, fallback to CSV id for display
@@ -99,6 +107,34 @@ export default defineComponent({
         return getUserDisplayName(item.opencloud_id)
       }
       return item[props.config.titleField] || ''
+    }
+
+    const getBalanceDisplay = (item: SidebarItem): string => {
+      if (!parsedData?.value) return ''
+
+      const userBalance = getUserBalance(Number(item.id))
+      if (!userBalance) return ''
+
+      const formattedBalance = formatBalance(userBalance.balance)
+
+      return `${formattedBalance}`
+    }
+
+    const getBalanceClass = (item: SidebarItem): string => {
+      if (!parsedData?.value) return ''
+
+      const userBalance = getUserBalance(Number(item.id))
+      if (!userBalance) return ''
+
+      if (Math.abs(userBalance.balance) < 0.01) {
+        return 'item-balance-settled'
+      }
+
+      return userBalance.balance > 0 ? 'item-balance-credit' : 'item-balance-debt'
+    }
+
+    const onSettlementCreated = (settlementResult: any) => {
+      emit('settlement-created', settlementResult)
     }
 
     // Preload user data when items change
@@ -129,7 +165,10 @@ export default defineComponent({
       isNegativeAmount: (item: SidebarItem) => isNegativeAmount(item, props.config),
       truncateText,
       getItemAvatar,
-      getEnhancedItemTitle
+      getEnhancedItemTitle,
+      getBalanceDisplay,
+      getBalanceClass,
+      onSettlementCreated
     }
   }
 })
@@ -154,6 +193,18 @@ export default defineComponent({
 
     &.item-amount-negative {
       color: var(--oc-role-error);
+    }
+
+    &.item-balance-credit {
+      color: var(--oc-role-success);
+    }
+
+    &.item-balance-debt {
+      color: var(--oc-role-error);
+    }
+
+    &.item-balance-settled {
+      color: var(--oc-role-on-surface-muted);
     }
   }
 

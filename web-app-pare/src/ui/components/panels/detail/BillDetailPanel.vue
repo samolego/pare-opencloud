@@ -12,7 +12,7 @@
     <div class="bill-detail-content">
       <div class="bill-detail-grid">
         <!-- Main Content -->
-        <div class="bill-detail-main">
+        <div class="bill-detail-main oc-p-l">
           <BillForm
             ref="billForm"
             :bill="bill"
@@ -176,11 +176,6 @@ export default defineComponent({
 .bill-detail-main {
   overflow-y: auto;
   @include custom-scrollbar;
-  padding: var(--oc-space-large);
-
-  @media (max-width: 1024px) {
-    padding: var(--oc-space-medium);
-  }
 }
 
 .bill-detail-sidebar {

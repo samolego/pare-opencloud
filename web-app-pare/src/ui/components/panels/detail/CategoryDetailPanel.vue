@@ -9,7 +9,7 @@
       @save="onSave"
     />
 
-    <div class="category-detail-content">
+    <div class="oc-p-l">
       <FormSection title="Category Information" icon="price-tag">
         <CategoryForm
           ref="categoryForm"
@@ -84,13 +84,5 @@ export default defineComponent({
 
 .category-detail-panel {
   @include detail-panel;
-}
-
-.category-detail-content {
-  padding: var(--oc-space-large);
-
-  @media (max-width: 1024px) {
-    padding: var(--oc-space-medium);
-  }
 }
 </style>

@@ -7,7 +7,7 @@
       <h2 class="section-title">{{ title }}</h2>
     </div>
 
-    <div class="section-content">
+    <div class="oc-p-m">
       <slot />
     </div>
   </div>
@@ -61,9 +61,5 @@ export default defineComponent({
   font-weight: var(--oc-font-weight-semibold);
   color: var(--oc-role-on-surface);
   margin: 0;
-}
-
-.section-content {
-  padding: var(--oc-space-medium);
 }
 </style>

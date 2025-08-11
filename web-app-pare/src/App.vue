@@ -390,7 +390,8 @@ export default defineComponent({
             config: sidebarConfigMap.value.member.config,
             onItemClick: onSidebarItemClick,
             onItemDelete: onSidebarItemDelete,
-            selectedItemId: detailPanel.value.selectedItem?.id || null
+            selectedItemId: detailPanel.value.selectedItem?.id || null,
+            onSettlementCreated
           })
         },
         {
@@ -718,6 +719,30 @@ export default defineComponent({
       }
     }
 
+    const onSettlementCreated = (settlementResult: any) => {
+      try {
+        // The settlement bills have already been added to parsedData by the composable
+        // Just need to update the content and show a success message
+        const newContent = PCSVParser.generate(parsedData.value)
+        editableContent.value = newContent
+        emit('update:currentContent', newContent)
+
+        showMessage({
+          title: $gettext('Settlement Complete'),
+          desc: $gettext(
+            `${settlementResult.settlementBills.length} settlement bills created successfully`
+          )
+        })
+      } catch (error) {
+        console.error('Error updating content after settlement:', error)
+        showMessage({
+          title: $gettext('Settlement Error'),
+          desc: $gettext('Failed to update content after creating settlement bills'),
+          status: 'danger'
+        })
+      }
+    }
+
     return {
       textEditor,
       editableContent,
@@ -749,7 +774,8 @@ export default defineComponent({
       onSaveBill,
       onSaveMember,
       onSaveCategory,
-      onSavePaymentMode
+      onSavePaymentMode,
+      onSettlementCreated
     }
   }
 })

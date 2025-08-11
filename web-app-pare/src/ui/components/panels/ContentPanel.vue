@@ -34,7 +34,7 @@
                   {{ getItemSubtitle(item) || '' }}
                 </div>
                 <div class="oc-text-muted oc-text-xsmall" @click="onItemDelete(item)">
-                  <oc-icon :name="'delete-bin-7'" />
+                  <oc-icon name="delete-bin-7" />
                 </div>
               </div>
               <div
@@ -76,6 +76,11 @@
           Page {{ currentPage }} of {{ totalPages }} ({{ items.length }} items)
         </div>
       </div>
+    </div>
+
+    <!-- Footer slot -->
+    <div v-if="$slots.footer" class="content-footer">
+      <slot name="footer"></slot>
     </div>
   </div>
 </template>
@@ -303,5 +308,10 @@ export default defineComponent({
 .pagination-info {
   font-weight: var(--oc-font-weight-medium);
   color: var(--oc-role-on-surface-variant);
+}
+
+.content-footer {
+  border-top: 1px solid var(--oc-role-outline-variant);
+  margin-top: auto;
 }
 </style>
