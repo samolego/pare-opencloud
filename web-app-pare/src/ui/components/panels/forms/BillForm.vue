@@ -251,17 +251,17 @@ export default defineComponent({
     // Initialize form data
     const initializeForm = () => {
       if (props.bill) {
-        localForm.description = props.bill.description
+        localForm.description = props.bill.description || ''
         localForm.total_amount = props.bill.total_amount.toString()
-        localForm.who_paid_id = props.bill.who_paid_id
+        localForm.who_paid_id = props.bill.who_paid_id || null
 
         const [date, time] = props.bill.datetime.split(' ')
         localForm.date = date
-        localForm.time = time || '12:00'
+        localForm.time = time || null
 
         localForm.repeat = props.bill.repeat || 'None'
-        localForm.payment_mode_id = props.bill.payment_mode_id
-        localForm.category_id = props.bill.category_id
+        localForm.payment_mode_id = props.bill.payment_mode_id || null
+        localForm.category_id = props.bill.category_id || null
         localForm.comment = props.bill.comment || ''
         localForm.file_link = props.bill.file_link || ''
       } else {
@@ -281,20 +281,16 @@ export default defineComponent({
 
     // Initialize user splits
     const initializeUserSplits = () => {
-      props.users.forEach((user) => {
+      Object.keys(userSplits.value).forEach((userId) => {
+        const user = props.users.find((u) => u.id === parseInt(userId)) || {
+          name: 'Deleted user',
+          id: parseInt(userId)
+        }
         if (!userSplits.value[user.id]) {
           userSplits.value[user.id] = {
             included: false,
             amount: '0.00'
           }
-        }
-      })
-
-      // Remove any users that no longer exist
-      Object.keys(userSplits.value).forEach((userId) => {
-        const userExists = props.users.some((user) => user.id === parseInt(userId))
-        if (!userExists) {
-          delete userSplits.value[parseInt(userId)]
         }
       })
 
@@ -312,8 +308,13 @@ export default defineComponent({
 
       const billSplits = PCSVParser.getBillSplits(props.parsedData, props.bill.id)
 
+      console.debug(userSplits.value)
+      console.debug(billSplits)
+
       // Update userSplits with the loaded data
       billSplits.forEach((split) => {
+        console.debug('SPLIT: ' + split.id)
+        console.debug(split)
         if (userSplits.value[split.user_id]) {
           userSplits.value[split.user_id].included = split.included === 1
           userSplits.value[split.user_id].amount = split.amount.toFixed(2)

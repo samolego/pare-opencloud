@@ -18,21 +18,23 @@
         >
           <slot name="item" :item="item">
             <div class="item-main">
-              <div class="item-title oc-text-bold oc-text-small">
-                {{ getItemTitle(item) }}
+              <div class="item-header oc-flex oc-flex-between oc-flex-middle">
+                <div class="item-title oc-text-bold oc-text-small">
+                  {{ getItemTitle(item) }}
+                </div>
+                <div v-if="getItemMeta(item)" class="oc-text-muted oc-text-xsmall">
+                  {{ getItemMeta(item) }}
+                </div>
               </div>
-              <div
-                v-if="getItemSubtitle(item)"
-                class="item-details oc-flex oc-flex-between oc-flex-middle oc-mt-xs"
-              >
+              <div class="item-details oc-flex oc-flex-between oc-flex-middle oc-mt-xs">
                 <div
                   class="item-subtitle"
                   :class="{ 'item-amount-negative': isNegativeAmount(item) }"
                 >
-                  {{ getItemSubtitle(item) }}
+                  {{ getItemSubtitle(item) || '' }}
                 </div>
-                <div v-if="getItemMeta(item)" class="item-meta oc-text-muted oc-text-xsmall">
-                  {{ getItemMeta(item) }}
+                <div class="oc-text-muted oc-text-xsmall" @click="onItemDelete(item)">
+                  <oc-icon :name="'delete-bin-7'" />
                 </div>
               </div>
               <div
@@ -99,6 +101,10 @@ export default defineComponent({
       required: true
     },
     onItemClick: {
+      type: Function as PropType<(item: SidebarItem) => void>,
+      required: true
+    },
+    onItemDelete: {
       type: Function as PropType<(item: SidebarItem) => void>,
       required: true
     },
@@ -238,12 +244,7 @@ export default defineComponent({
     }
   }
 
-  .item-meta {
-    font-size: var(--oc-font-size-xsmall);
-  }
-
   .item-description {
-    line-height: 1.2;
     font-style: italic;
   }
 }

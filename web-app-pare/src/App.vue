@@ -194,18 +194,6 @@ export default defineComponent({
       return themeStore.currentTheme.isDark
     })
 
-    const hasUnsavedChanges = computed(() => {
-      return editableContent.value !== originalContent.value
-    })
-
-    const lineCount = computed(() => {
-      return editableContent.value.split('\n').length
-    })
-
-    const characterCount = computed(() => {
-      return editableContent.value.length
-    })
-
     // Parse PCSV data
     const parsedData = ref<PCSVData>({ tables: {} })
 
@@ -386,6 +374,7 @@ export default defineComponent({
             items: bills.value,
             config: sidebarConfigMap.value.bill.config,
             onItemClick: onSidebarItemClick,
+            onItemDelete: onSidebarItemDelete,
             selectedItemId: detailPanel.value.selectedItem?.id || null
           })
         },
@@ -400,6 +389,7 @@ export default defineComponent({
             items: users.value,
             config: sidebarConfigMap.value.member.config,
             onItemClick: onSidebarItemClick,
+            onItemDelete: onSidebarItemDelete,
             selectedItemId: detailPanel.value.selectedItem?.id || null
           })
         },
@@ -414,6 +404,7 @@ export default defineComponent({
             items: categories.value,
             config: sidebarConfigMap.value.category.config,
             onItemClick: onSidebarItemClick,
+            onItemDelete: onSidebarItemDelete,
             selectedItemId: detailPanel.value.selectedItem?.id || null
           })
         },
@@ -428,6 +419,7 @@ export default defineComponent({
             items: [],
             config: sidebarConfigMap.value.statistics.config,
             onItemClick: onSidebarItemClick,
+            onItemDelete: onSidebarItemDelete,
             selectedItemId: detailPanel.value.selectedItem?.id || null
           })
         }
@@ -478,6 +470,53 @@ export default defineComponent({
         type: currentSection.value as 'bill' | 'member' | 'category',
         mode: 'edit',
         selectedItem: item
+      }
+    }
+
+    const onSidebarItemDelete = (item: SidebarItem) => {
+      try {
+        let updatedData = { ...parsedData.value }
+
+        if (currentSection.value === 'bill') {
+          updatedData = PCSVParser.deleteBill(updatedData, item.id)
+          showMessage({
+            title: $gettext('Bill deleted'),
+            desc: $gettext('The bill has been deleted successfully')
+          })
+        } else if (currentSection.value === 'member') {
+          updatedData = PCSVParser.deleteUser(updatedData, item.id)
+          showMessage({
+            title: $gettext('Member deleted'),
+            desc: $gettext('The member has been deleted successfully')
+          })
+        } else if (currentSection.value === 'category') {
+          updatedData = PCSVParser.deleteCategory(updatedData, item.id)
+          showMessage({
+            title: $gettext('Category deleted'),
+            desc: $gettext('The category has been deleted successfully')
+          })
+        } else if (currentSection.value === 'payment-mode') {
+          updatedData = PCSVParser.deletePaymentMode(updatedData, item.id)
+          showMessage({
+            title: $gettext('Payment mode deleted'),
+            desc: $gettext('The payment mode has been deleted successfully')
+          })
+        }
+
+        const newContent = PCSVParser.generate(updatedData)
+        editableContent.value = newContent
+        emit('update:currentContent', newContent)
+
+        // Close detail panel if the deleted item was selected
+        if (detailPanel.value.selectedItem?.id === item.id) {
+          onDetailPanelCancel()
+        }
+      } catch (error) {
+        console.error('Error deleting item:', error)
+        showMessage({
+          title: $gettext('Error'),
+          desc: $gettext('Failed to delete the item')
+        })
       }
     }
 
@@ -682,9 +721,6 @@ export default defineComponent({
     return {
       textEditor,
       editableContent,
-      hasUnsavedChanges,
-      lineCount,
-      characterCount,
       darkTheme,
       lastSaved,
       currentUser,
@@ -704,6 +740,7 @@ export default defineComponent({
       toggleNavigation,
       onSidebarButtonClick,
       onSidebarItemClick,
+      onSidebarItemDelete,
       onDetailPanelCancel,
       onCreateBill,
       onCreateMember,

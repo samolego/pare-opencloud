@@ -135,11 +135,7 @@ export default defineComponent({
 .bill-split-sidebar {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 100%;
   background-color: var(--oc-role-surface-container);
-  min-width: 300px;
-  overflow: hidden;
 }
 
 .split-header {

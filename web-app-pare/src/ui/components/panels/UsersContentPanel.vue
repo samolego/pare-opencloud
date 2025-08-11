@@ -6,6 +6,7 @@
     :on-item-click="onItemClick"
     :selected-item-id="selectedItemId"
     :items-per-page="itemsPerPage"
+    :on-item-delete="onItemDelete"
     @page-change="$emit('page-change', $event)"
   >
     <template #item="{ item }">
@@ -21,21 +22,15 @@
             {{ getEnhancedItemTitle(item) }}
           </div>
         </div>
-        <div
-          v-if="getItemSubtitle(item)"
-          class="item-details oc-flex oc-flex-between oc-flex-middle oc-mt-xs"
-        >
-          <div class="item-subtitle" :class="{ 'item-amount-negative': isNegativeAmount(item) }">
-            {{ getItemSubtitle(item) }}
+        <div class="item-details oc-flex oc-flex-between oc-flex-middle oc-mt-xs">
+          <div class="item-subtitle">
+            {{ item.opencloud_id || '' }}
           </div>
-          <div v-if="getItemMeta(item)" class="item-meta oc-text-muted oc-text-xsmall">
-            {{ getItemMeta(item) }}
+          <div class="oc-text-muted oc-text-xsmall" @click="onItemDelete(item)">
+            <oc-icon :name="'delete-bin-7'" />
           </div>
         </div>
-        <div
-          v-if="getItemDescription(item)"
-          class="item-description oc-text-muted oc-text-xsmall oc-mt-xs"
-        >
+        <div v-if="getItemDescription(item)" class="item-description oc-text-xsmall oc-mt-xs">
           {{ truncateText(getItemDescription(item), 50) }}
         </div>
       </div>
@@ -72,6 +67,10 @@ export default defineComponent({
       type: Function as PropType<(item: SidebarItem) => void>,
       required: true
     },
+    onItemDelete: {
+      type: Function as PropType<(item: SidebarItem) => void>,
+      required: true
+    },
     selectedItemId: {
       type: [String, Number],
       default: null
@@ -83,8 +82,8 @@ export default defineComponent({
   },
   emits: ['page-change'],
   setup(props) {
-    const { getCachedUser, getUserAvatar, getUserDisplayName, preloadUsers } = useUserData()
-    const { getItemSubtitle, getItemMeta, getItemDescription, isNegativeAmount, truncateText } =
+    const { getUserAvatar, getUserDisplayName, preloadUsers } = useUserData()
+    const { getItemSubtitle, getItemDescription, isNegativeAmount, truncateText } =
       useContentItemFormatting()
 
     const getItemAvatar = (item: SidebarItem): string => {
@@ -126,7 +125,6 @@ export default defineComponent({
 
     return {
       getItemSubtitle: (item: SidebarItem) => getItemSubtitle(item, props.config),
-      getItemMeta: (item: SidebarItem) => getItemMeta(item, props.config),
       getItemDescription: (item: SidebarItem) => getItemDescription(item, props.config),
       isNegativeAmount: (item: SidebarItem) => isNegativeAmount(item, props.config),
       truncateText,

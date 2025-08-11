@@ -394,6 +394,48 @@ export class PCSVParser {
     }))
   }
 
+  static deleteBill(data: PCSVData, billId: number): PCSVData {
+    const billsTable = data.tables.bills
+    const billSplitsTable = data.tables.bill_splits
+
+    // Remove the bill
+    billsTable.rows = billsTable.rows.filter((row) => parseInt(row[0]) !== billId)
+
+    // Remove all splits for this bill
+    billSplitsTable.rows = billSplitsTable.rows.filter((row) => parseInt(row[1]) !== billId)
+
+    return data
+  }
+
+  static deleteUser(data: PCSVData, userId: number): PCSVData {
+    const usersTable = data.tables.users
+
+    // Remove the user
+    usersTable.rows = usersTable.rows.filter((row) => parseInt(row[0]) !== userId)
+
+    return data
+  }
+
+  static deletePaymentMode(data: PCSVData, paymentModeId: number): PCSVData {
+    const paymentModeTable = data.tables.payment_mode
+
+    // Remove the payment mode
+    paymentModeTable.rows = paymentModeTable.rows.filter(
+      (row) => parseInt(row[0]) !== paymentModeId
+    )
+
+    return data
+  }
+
+  static deleteCategory(data: PCSVData, categoryId: number): PCSVData {
+    const categoryTable = data.tables.category
+
+    // Remove the category
+    categoryTable.rows = categoryTable.rows.filter((row) => parseInt(row[0]) !== categoryId)
+
+    return data
+  }
+
   private static parseCSVLine(line: string): string[] {
     const result: string[] = []
     let current = ''

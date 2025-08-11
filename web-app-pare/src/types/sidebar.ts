@@ -1,5 +1,5 @@
 export interface SidebarItem {
-  id: number | string
+  id: number
   [key: string]: any
 }
 
