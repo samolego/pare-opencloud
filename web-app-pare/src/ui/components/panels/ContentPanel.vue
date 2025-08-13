@@ -86,7 +86,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, ref, computed } from 'vue'
+import { defineComponent, PropType, ref, computed, watch } from 'vue'
 import { SidebarItem, SidebarConfig } from '../../../types/sidebar'
 import { useContentItemFormatting } from '../../../composables/useContentItemFormatting'
 
@@ -136,6 +136,14 @@ export default defineComponent({
       const start = (currentPage.value - 1) * props.itemsPerPage
       const end = start + props.itemsPerPage
       return props.items.slice(start, end)
+    })
+
+    // Watch for changes in totalPages and adjust currentPage if necessary
+    watch(totalPages, (newTotalPages) => {
+      if (currentPage.value > newTotalPages && newTotalPages > 0) {
+        currentPage.value = newTotalPages
+        emit('page-change', currentPage.value)
+      }
     })
 
     const goToNextPage = () => {
