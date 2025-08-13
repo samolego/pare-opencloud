@@ -229,7 +229,6 @@ export class PCSVParser {
       }
     }
 
-    // Balances table is optional - will be created when needed
     console.log('PCSVParser: Ensured default tables')
 
     return data
@@ -272,11 +271,8 @@ export class PCSVParser {
       ])
     }
 
-    // Invalidate balance cache since data has changed
-    if (data.tables.balances) {
-      console.log('PCSVParser: Clearing balance cache due to new bill')
-      data.tables.balances.rows = []
-    }
+    // Update user balances incrementally
+    this.applyBalanceChanges(data, bill.who_paid_id, bill.total_amount, splits, 1)
 
     console.log(`PCSVParser: Added bill ${billId} with ${splits.length} splits`)
     return { data, billId }
@@ -347,6 +343,16 @@ export class PCSVParser {
     const billsTable = data.tables.bills
     const billSplitsTable = data.tables.bill_splits
 
+    // Get old bill and splits for balance reversal
+    const oldBills = this.getBills(data)
+    const oldBill = oldBills.find((b) => b.id === billId)
+    const oldSplits = this.getBillSplits(data, billId)
+
+    // Reverse old balance changes if bill exists
+    if (oldBill && oldSplits.length > 0) {
+      this.applyBalanceChanges(data, oldBill.who_paid_id, oldBill.total_amount, oldSplits, -1)
+    }
+
     // Find and update the bill
     const billRowIndex = billsTable.rows.findIndex((row) => parseInt(row[0]) === billId)
     if (billRowIndex !== -1) {
@@ -377,6 +383,9 @@ export class PCSVParser {
         split.amount.toString()
       ])
     }
+
+    // Apply new balance changes
+    this.applyBalanceChanges(data, bill.who_paid_id, bill.total_amount, splits, 1)
 
     console.log(`PCSVParser: Updated bill ${billId}`)
     return { data, billId }
@@ -470,6 +479,16 @@ export class PCSVParser {
     const billsTable = data.tables.bills
     const billSplitsTable = data.tables.bill_splits
 
+    // Get bill and splits for balance reversal before deletion
+    const bills = this.getBills(data)
+    const bill = bills.find((b) => b.id === billId)
+    const splits = this.getBillSplits(data, billId)
+
+    // Reverse balance changes if bill exists
+    if (bill && splits.length > 0) {
+      this.applyBalanceChanges(data, bill.who_paid_id, bill.total_amount, splits, -1)
+    }
+
     // Remove the bill
     billsTable.rows = billsTable.rows.filter((row) => parseInt(row[0]) !== billId)
 
@@ -545,6 +564,51 @@ export class PCSVParser {
       return `"${cell.replace(/"/g, '""')}"`
     }
     return cell
+  }
+
+  /**
+   * Apply balance changes for a bill (generic method that handles both adding and reversing)
+   * @param data - PCSV data
+   * @param whoPaidId - User who paid the bill
+   * @param totalAmount - Total amount of the bill
+   * @param splits - How the bill is split among users
+   * @param direction - 1 for adding bill, -1 for reversing bill
+   */
+  private static applyBalanceChanges(
+    data: PCSVData,
+    whoPaidId: number,
+    totalAmount: number,
+    splits: (Omit<BillSplit, 'id' | 'bill_id'> | BillSplit)[],
+    direction: 1 | -1
+  ): void {
+    const usersTable = data.tables.users
+    if (!usersTable) {
+      console.error('PCSVParser: No users table found for balance update')
+      return
+    }
+
+    // Update balance for user who paid
+    const payerRowIndex = usersTable.rows.findIndex((row) => parseInt(row[0]) === whoPaidId)
+    if (payerRowIndex !== -1) {
+      const currentBalance = parseFloat(usersTable.rows[payerRowIndex][3]) || 0
+      const newBalance = currentBalance + totalAmount * direction
+      usersTable.rows[payerRowIndex][3] = newBalance.toFixed(2)
+    }
+
+    // Update balances for users who owe money
+    splits.forEach((split) => {
+      const userRowIndex = usersTable.rows.findIndex((row) => parseInt(row[0]) === split.user_id)
+      if (userRowIndex !== -1) {
+        const currentBalance = parseFloat(usersTable.rows[userRowIndex][3]) || 0
+        const newBalance = currentBalance - split.amount * direction
+        usersTable.rows[userRowIndex][3] = newBalance.toFixed(2)
+      }
+    })
+
+    const action = direction === 1 ? 'Applied' : 'Reversed'
+    console.log(
+      `PCSVParser: ${action} balance changes for bill - payer: ${whoPaidId}, splits: ${splits.length}`
+    )
   }
 
   private static getNextId(table: PCSVTable, columnIndex: number): number {

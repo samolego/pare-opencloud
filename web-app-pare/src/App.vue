@@ -220,9 +220,7 @@ export default defineComponent({
     provide('parsedData', parsedData)
 
     const bills = computed(() => {
-      return PCSVParser.getBills(parsedData.value).sort(
-        (a, b) => new Date(b.datetime).getTime() - new Date(a.datetime).getTime()
-      )
+      return PCSVParser.getBills(parsedData.value).sort((a, b) => b.timestamp - a.timestamp)
     })
 
     const users = computed(() => {
@@ -250,7 +248,7 @@ export default defineComponent({
             showCreateNewButton: true,
             titleField: 'description',
             subtitleField: 'total_amount',
-            metaField: 'datetime',
+            metaField: 'timestamp',
             descriptionField: 'comment'
           }
         },

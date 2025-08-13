@@ -23,13 +23,13 @@ export function useContentItemFormatting() {
     if (!config.metaField) return ''
     const value = item[config.metaField]
 
-    // Special formatting for dates
-    if ((typeof value === 'string' && value.includes('/')) || value.includes('-')) {
+    // Special formatting for timestamps (Unix timestamp in milliseconds)
+    if (typeof value === 'number' && value > 1000000000000) {
       try {
-        const date = new Date(value.replace(' ', 'T'))
+        const date = new Date(value)
         return date.toLocaleDateString()
       } catch {
-        return value.split(' ')[0] || ''
+        return value.toString()
       }
     }
 

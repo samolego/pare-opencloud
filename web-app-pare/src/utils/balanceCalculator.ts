@@ -77,23 +77,23 @@ export class BalanceCalculator {
 
     const users = PCSVParser.getUsers(data)
 
-    // Check if all users have cached balances
-    const hasCachedBalances = users.every((user) => user.balance !== null)
+    // Check if all users have stored balances
+    const hasStoredBalances = users.every((user) => user.balance !== null)
 
-    if (hasCachedBalances && users.length > 0) {
-      console.log('BalanceCalculator: Found cached balances in users table')
+    if (hasStoredBalances && users.length > 0) {
+      console.log('BalanceCalculator: Found stored balances in users table')
       const userBalances = users.map((user) => ({
         userId: user.id,
         name: user.name,
         balance: user.balance || 0
       }))
 
-      console.log('BalanceCalculator: Returning cached balances', { count: userBalances.length })
+      console.log('BalanceCalculator: Returning stored balances', { count: userBalances.length })
       return userBalances
     }
 
-    // No cached balances, calculate from scratch
-    console.log('BalanceCalculator: No cached balances, calculating from scratch')
+    // No stored balances, calculate from scratch
+    console.log('BalanceCalculator: No stored balances, calculating from scratch')
 
     // Use setTimeout to yield to event loop for large datasets
     await new Promise((resolve) => setTimeout(resolve, 0))
@@ -109,18 +109,18 @@ export class BalanceCalculator {
 
     const balances = this.calculateUserBalances(input)
 
-    // Cache the results
-    await this.saveBalancesToCache(data, balances)
+    // Save the results to users table
+    await this.saveBalancesToUsers(data, balances)
 
     return balances
   }
 
   /**
-   * Save calculated balances to cache
+   * Save calculated balances to users table
    * @param data - PCSV data
    * @param balances - Calculated balances
    */
-  static async saveBalancesToCache(data: PCSVData, balances: UserBalance[]): Promise<void> {
+  static async saveBalancesToUsers(data: PCSVData, balances: UserBalance[]): Promise<void> {
     console.log('BalanceCalculator: Saving balances to users table')
 
     // Update each user's balance in the users table
@@ -138,16 +138,16 @@ export class BalanceCalculator {
       }
     })
 
-    console.log('BalanceCalculator: Balances cached successfully in users table')
+    console.log('BalanceCalculator: Balances saved successfully to users table')
   }
 
   /**
-   * Force recalculation of balances (ignores cache)
+   * Force recalculation of balances (clears existing balance data)
    * @param data - PCSV data
    * @returns Promise<UserBalance[]>
    */
   static async forceRecalculateBalances(data: PCSVData): Promise<UserBalance[]> {
-    console.log('BalanceCalculator: Force recalculating balances (ignoring cache)')
+    console.log('BalanceCalculator: Force recalculating balances (clearing existing data)')
 
     // Clear existing balances in users table to force recalculation
     const usersTable = data.tables.users
@@ -174,8 +174,8 @@ export class BalanceCalculator {
 
     const balances = this.calculateUserBalances(input)
 
-    // Cache the results
-    await this.saveBalancesToCache(data, balances)
+    // Save the results to users table
+    await this.saveBalancesToUsers(data, balances)
 
     return balances
   }

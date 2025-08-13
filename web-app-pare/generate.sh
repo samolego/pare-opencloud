@@ -10,7 +10,7 @@ OUTPUT_FILE="bills_data.pcsv"
 
 # Generate users table
 echo "TABLE,users" >> "$OUTPUT_FILE"
-echo "id,name,opencloud_id" >> "$OUTPUT_FILE"
+echo "id,name,opencloud_id,balance" >> "$OUTPUT_FILE"
 
 users=(
     "Alice Johnson" "Bob Smith" "Charlie Brown" "Diana Prince" "Edward Norton"
@@ -20,7 +20,7 @@ users=(
 )
 
 for i in {1..20}; do
-    echo "$i,${users[$i-1]}," >> "$OUTPUT_FILE"
+    echo "$i,${users[$i-1]},,0.00" >> "$OUTPUT_FILE"
 done
 echo "" >> "$OUTPUT_FILE"
 
@@ -58,7 +58,7 @@ echo "" >> "$OUTPUT_FILE"
 
 # Generate bills table
 echo "TABLE,bills" >> "$OUTPUT_FILE"
-echo "id,description,total_amount,who_paid_id,datetime,repeat,payment_mode_id,category_id,comment,file_link" >> "$OUTPUT_FILE"
+echo "id,description,total_amount,who_paid_id,timestamp,repeat,payment_mode_id,category_id,comment,file_link" >> "$OUTPUT_FILE"
 
 items=(
     "Lunch at restaurant" "Uber ride" "Electricity bill" "Movie tickets" "Amazon order"
@@ -81,17 +81,18 @@ for item_idx in {0..19}; do
             # Random user who paid (1-20)
             who_paid=$((RANDOM % 20 + 1))
 
-            # Generate time (hours 9-22, minutes 00-59)
+            # Generate timestamp (Unix timestamp in milliseconds)
+            # Base date: 2025-08-06 with random time
             hour=$((RANDOM % 14 + 9))
             minute=$((RANDOM % 60))
-            datetime="${current_date} $(printf "%02d:%02d" $hour $minute)"
+            timestamp=$(date -d "${current_date} $(printf "%02d:%02d" $hour $minute)" +%s)000
 
             # Random comment (sometimes empty)
             comments=("Great service" "Expensive but worth it" "Split evenly" "Emergency purchase" "Regular expense" "")
             comment_idx=$((RANDOM % 6))
             comment="${comments[$comment_idx]}"
 
-            echo "$bill_id,${items[$item_idx]},$amount,$who_paid,$datetime,None,$payment_idx,$category_idx,$comment," >> "$OUTPUT_FILE"
+            echo "$bill_id,${items[$item_idx]},$amount,$who_paid,$timestamp,None,$payment_idx,$category_idx,$comment," >> "$OUTPUT_FILE"
             ((bill_id++))
         done
     done
@@ -100,7 +101,7 @@ echo "" >> "$OUTPUT_FILE"
 
 # Generate bill_splits table
 echo "TABLE,bill_splits" >> "$OUTPUT_FILE"
-echo "id,bill_id,user_id,amount,included" >> "$OUTPUT_FILE"
+echo "id,bill_id,user_id,amount" >> "$OUTPUT_FILE"
 
 split_id=1
 total_bills=$((20 * 20 * 20))  # 8000 bills
@@ -136,20 +137,11 @@ for bill_id in $(seq 1 $total_bills); do
             ((user_amount++))
         fi
 
-        echo "$split_id,$bill_id,$user_id,$user_amount,1" >> "$OUTPUT_FILE"
+        echo "$split_id,$bill_id,$user_id,$user_amount" >> "$OUTPUT_FILE"
         ((split_id++))
     done
 
-    # Add some excluded users (randomly)
-    num_excluded=$((RANDOM % 3))
-    for ((j=0; j<num_excluded; j++)); do
-        excluded_user=$((RANDOM % 20 + 1))
-        # Make sure this user wasn't already included
-        if [[ ! " ${users_in_split[@]} " =~ " ${excluded_user} " ]]; then
-            echo "$split_id,$bill_id,$excluded_user,0,0" >> "$OUTPUT_FILE"
-            ((split_id++))
-        fi
-    done
+
 done
 
 echo "Bills file generated successfully: $OUTPUT_FILE"
