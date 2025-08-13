@@ -39,7 +39,7 @@
               </div>
               <div
                 v-if="getItemDescription(item)"
-                class="item-description oc-text-muted oc-text-xsmall oc-mt-xs"
+                class="item-description oc-text-muted oc-text-small oc-mt-xs"
               >
                 {{ truncateText(getItemDescription(item), 50) }}
               </div>
@@ -50,30 +50,56 @@
 
       <!-- Pagination Controls - Floating at bottom -->
       <div v-if="items.length > 0 && totalPages > 1" class="pagination-controls">
-        <div class="pagination-buttons oc-flex oc-flex-between oc-flex-middle">
+        <div class="oc-flex oc-flex-center oc-flex-middle">
           <button
             class="pagination-btn"
-            :class="{ 'pagination-btn-disabled': currentPage === 1 }"
             :disabled="currentPage === 1"
-            @click="goToPreviousPage"
+            @click="goToFirstPage"
+            title="First page"
           >
-            <oc-icon name="arrow-left-s" />
-            Previous
+            <oc-icon name="skip-back" />
           </button>
 
           <button
+            class="pagination-btn oc-ml-s"
+            :disabled="currentPage === 1"
+            @click="goToPreviousPage"
+            title="Previous page"
+          >
+            <oc-icon name="arrow-left-s" />
+          </button>
+
+          <input
+            v-model="pageInputValue"
+            type="number"
+            class="page-input oc-ml-s oc-mr-s"
+            :min="1"
+            :max="totalPages"
+            @change="onPageInputChange"
+            @blur="onPageInputChange"
+          />
+
+          <button
             class="pagination-btn"
-            :class="{ 'pagination-btn-disabled': currentPage === totalPages }"
             :disabled="currentPage === totalPages"
             @click="goToNextPage"
+            title="Next page"
           >
-            Next
             <oc-icon name="arrow-right-s" />
+          </button>
+
+          <button
+            class="pagination-btn oc-ml-s"
+            :disabled="currentPage === totalPages"
+            @click="goToLastPage"
+            title="Last page"
+          >
+            <oc-icon name="skip-forward" />
           </button>
         </div>
 
-        <div class="pagination-info oc-text-small oc-text-muted oc-text-center">
-          Page {{ currentPage }} of {{ totalPages }} ({{ items.length }} items)
+        <div class="oc-text-small oc-text-muted oc-text-center oc-mt-s">
+          {{ totalPages }} pages, {{ items.length }} items
         </div>
       </div>
     </div>
@@ -125,6 +151,7 @@ export default defineComponent({
   emits: ['page-change'],
   setup(props, { emit }) {
     const currentPage = ref(1)
+    const pageInputValue = ref(1)
     const { getItemSubtitle, getItemMeta, getItemDescription, isNegativeAmount, truncateText } =
       useContentItemFormatting()
 
@@ -142,9 +169,33 @@ export default defineComponent({
     watch(totalPages, (newTotalPages) => {
       if (currentPage.value > newTotalPages && newTotalPages > 0) {
         currentPage.value = newTotalPages
+        pageInputValue.value = newTotalPages
         emit('page-change', currentPage.value)
       }
     })
+
+    // Watch currentPage to update input value
+    watch(
+      currentPage,
+      (newPage) => {
+        pageInputValue.value = newPage
+      },
+      { immediate: true }
+    )
+
+    const goToFirstPage = () => {
+      if (currentPage.value > 1) {
+        currentPage.value = 1
+        emit('page-change', currentPage.value)
+      }
+    }
+
+    const goToLastPage = () => {
+      if (currentPage.value < totalPages.value) {
+        currentPage.value = totalPages.value
+        emit('page-change', currentPage.value)
+      }
+    }
 
     const goToNextPage = () => {
       if (currentPage.value < totalPages.value) {
@@ -157,6 +208,17 @@ export default defineComponent({
       if (currentPage.value > 1) {
         currentPage.value--
         emit('page-change', currentPage.value)
+      }
+    }
+
+    const onPageInputChange = () => {
+      const inputValue = parseInt(pageInputValue.value.toString())
+      if (inputValue >= 1 && inputValue <= totalPages.value) {
+        currentPage.value = inputValue
+        emit('page-change', currentPage.value)
+      } else {
+        // Reset input to current page if invalid
+        pageInputValue.value = currentPage.value
       }
     }
 
@@ -175,8 +237,12 @@ export default defineComponent({
       currentPage,
       totalPages,
       paginatedItems,
+      pageInputValue,
+      goToFirstPage,
+      goToLastPage,
       goToNextPage,
-      goToPreviousPage
+      goToPreviousPage,
+      onPageInputChange
     }
   }
 })
@@ -197,7 +263,7 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding-bottom: 100px; // Space for floating pagination
+  padding-bottom: 120px; // Space for floating pagination
 }
 
 .content-list {
@@ -271,11 +337,7 @@ export default defineComponent({
   border-radius: var(--oc-space-small);
   padding: var(--oc-space-medium);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 100;
-}
-
-.pagination-buttons {
-  margin-bottom: var(--oc-space-small);
+  z-index: 1000;
 }
 
 .pagination-btn {
@@ -285,27 +347,19 @@ export default defineComponent({
   border-radius: var(--oc-space-small);
   cursor: pointer;
   transition: all 0.2s ease;
-  padding: var(--oc-space-small) var(--oc-space-medium);
+  padding: var(--oc-space-small);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--oc-space-xsmall);
-  font-size: var(--oc-font-size-small);
-  font-weight: var(--oc-font-weight-medium);
-  min-width: 100px;
-
-  svg {
-    width: 16px;
-    height: 16px;
-  }
+  min-width: 36px;
+  height: 36px;
 
   &:hover:not(:disabled) {
     background-color: var(--oc-role-primary-container);
     color: var(--oc-role-on-primary-container);
   }
 
-  &:disabled,
-  &.pagination-btn-disabled {
+  &:disabled {
     background-color: var(--oc-role-outline-variant);
     color: var(--oc-role-on-surface-variant);
     cursor: not-allowed;
@@ -313,9 +367,40 @@ export default defineComponent({
   }
 }
 
-.pagination-info {
-  font-weight: var(--oc-font-weight-medium);
-  color: var(--oc-role-on-surface-variant);
+.page-input {
+  width: 50px;
+  padding: var(--oc-space-xsmall) var(--oc-space-small);
+  border: 1px solid var(--oc-role-outline-variant);
+  border-radius: var(--oc-space-small);
+  background-color: var(--oc-role-surface);
+  color: var(--oc-role-on-surface);
+  font-size: var(--oc-font-size-small);
+  text-align: center;
+
+  &:focus {
+    outline: none;
+    border-color: var(--oc-role-primary);
+    box-shadow: 0 0 0 2px var(--oc-role-primary-container);
+  }
+}
+
+// Custom styles for input number field
+input[type='number'] {
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  &[type='number'] {
+    -moz-appearance: textfield;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--oc-role-primary) !important;
+    box-shadow: 0 0 0 2px var(--oc-role-primary-container);
+  }
 }
 
 .content-footer {

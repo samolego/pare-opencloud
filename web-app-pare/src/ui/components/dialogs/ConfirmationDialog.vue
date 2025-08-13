@@ -22,7 +22,7 @@
             <div class="oc-modal-body-actions-grid">
               <button
                 type="button"
-                class="oc-button oc-rounded oc-button-m oc-button-justify-content-center oc-button-gap-m oc-button-secondary oc-button-outline oc-button-secondary-outline oc-modal-body-actions-cancel oc-ml-s"
+                class="oc-button oc-rounded oc-button-m oc-button-justify-content-center oc-button-gap-m oc-button-outline oc-modal-body-actions-cancel oc-ml-s"
                 @click="onCancel"
               >
                 {{ cancelText }}
@@ -30,7 +30,7 @@
 
               <button
                 type="button"
-                class="oc-button oc-rounded oc-button-m oc-button-justify-content-center oc-button-gap-m oc-button-secondary oc-button-filled oc-button-secondary-filled oc-modal-body-actions-confirm oc-ml-s delete-button"
+                class="oc-button oc-rounded oc-button-m oc-button-justify-content-center oc-button-gap-m oc-button-filled oc-modal-body-actions-confirm oc-ml-s delete-button"
                 @click="onConfirm"
               >
                 {{ confirmText }}
