@@ -19,10 +19,10 @@
           <slot name="item" :item="item">
             <div class="item-main">
               <div class="item-header oc-flex oc-flex-between oc-flex-middle">
-                <div class="item-title oc-text-bold oc-text-small">
+                <div class="item-title oc-text-bold oc-text-medium">
                   {{ getItemTitle(item) }}
                 </div>
-                <div v-if="getItemMeta(item)" class="oc-text-muted oc-text-xsmall">
+                <div v-if="getItemMeta(item)" class="oc-text-muted oc-text-small">
                   {{ getItemMeta(item) }}
                 </div>
               </div>

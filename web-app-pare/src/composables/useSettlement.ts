@@ -137,14 +137,14 @@ export function useSettlement(parsedData: Ref<PCSVData> | undefined) {
   }
 
   /**
-   * Create settlement bills and add them to the data
+   * Generic method to create settlement bills from transactions
    */
-  const createSettlementBills = async (
+  const createBillsFromTransactions = (
+    transactions: any[],
     date?: string,
     time?: string
   ): Promise<SettlementResult | null> => {
-    if (!parsedData?.value) {
-      error.value = 'No data available'
+    if (!parsedData?.value || transactions.length === 0) {
       return Promise.resolve(null)
     }
 
@@ -152,21 +152,19 @@ export function useSettlement(parsedData: Ref<PCSVData> | undefined) {
     error.value = null
 
     try {
-      // Generate settlement plan
-      const settlement = generateSettlement()
-      if (!settlement) {
-        return Promise.resolve(null)
-      }
+      // Convert transactions to settlement bills
+      const now = new Date()
+      const settlementDate = date || now.toISOString().split('T')[0]
+      const settlementTime = time || now.toTimeString().split(' ')[0].slice(0, 5)
 
-      // Convert to settlement bills
-      const settlementBills = SettlementAlgorithm.createSettlementBills(settlement, date, time)
-
-      if (settlementBills.length === 0) {
-        return Promise.resolve({
-          settlement,
-          settlementBills: []
-        })
-      }
+      const settlementBills = transactions.map((transaction) => ({
+        description: `Settlement: ${transaction.fromUserName} → ${transaction.toUserName}`,
+        fromUserId: transaction.fromUserId,
+        toUserId: transaction.toUserId,
+        amount: transaction.amount,
+        date: settlementDate,
+        time: settlementTime
+      }))
 
       // Add each settlement bill to the data
       let updatedData = { ...parsedData.value }
@@ -201,6 +199,13 @@ export function useSettlement(parsedData: Ref<PCSVData> | undefined) {
       // Update the parsed data
       parsedData.value = updatedData
 
+      // Create a settlement object for the result
+      const settlement = {
+        transactions,
+        totalTransactions: transactions.length,
+        balancesBeforeSettlement: userBalances.value
+      }
+
       return Promise.resolve({
         settlement,
         settlementBills
@@ -211,6 +216,56 @@ export function useSettlement(parsedData: Ref<PCSVData> | undefined) {
       return Promise.resolve(null)
     } finally {
       isCalculating.value = false
+    }
+  }
+
+  /**
+   * Create settlement bills for all transactions
+   */
+  const createSettlementBills = async (
+    date?: string,
+    time?: string
+  ): Promise<SettlementResult | null> => {
+    if (!parsedData?.value) {
+      error.value = 'No data available'
+      return Promise.resolve(null)
+    }
+
+    try {
+      // Generate settlement plan
+      const settlement = generateSettlement()
+      if (!settlement) {
+        return Promise.resolve(null)
+      }
+
+      return await createBillsFromTransactions(settlement.transactions, date, time)
+    } catch (err) {
+      console.error('Error creating settlement bills:', err)
+      error.value = err instanceof Error ? err.message : 'Unknown error creating settlement bills'
+      return Promise.resolve(null)
+    }
+  }
+
+  /**
+   * Create settlement bill for a single transaction
+   */
+  const createIndividualSettlementBill = async (
+    transaction: any,
+    date?: string,
+    time?: string
+  ): Promise<SettlementResult | null> => {
+    if (!parsedData?.value) {
+      error.value = 'No data available'
+      return Promise.resolve(null)
+    }
+
+    try {
+      return await createBillsFromTransactions([transaction], date, time)
+    } catch (err) {
+      console.error('Error creating individual settlement bill:', err)
+      error.value =
+        err instanceof Error ? err.message : 'Unknown error creating individual settlement bill'
+      return Promise.resolve(null)
     }
   }
 
@@ -276,6 +331,7 @@ export function useSettlement(parsedData: Ref<PCSVData> | undefined) {
     formatBalance,
     generateSettlement,
     createSettlementBills,
+    createIndividualSettlementBill,
     getSettlementSummary,
     getTotalSettlementAmount,
     recalculateForBill,

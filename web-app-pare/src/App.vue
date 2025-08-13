@@ -72,7 +72,7 @@
     </SideBar>
 
     <!-- Main Content Area -->
-    <div class="main-content oc-flex oc-width-1-1">
+    <div class="main-content oc-flex-1 oc-flex oc-width-1-1">
       <!-- Bill Detail Panel -->
       <BillDetailPanel
         v-if="detailPanel.type === 'bill'"
@@ -129,7 +129,7 @@
       />
 
       <!-- Empty state when no panel is selected -->
-      <div v-else class="empty-detail-state">
+      <div v-else class="empty-detail-state oc-flex oc-flex-center oc-flex-middle oc-p-l">
         <div class="empty-state-content">
           <oc-icon name="file-text" size="large" />
           <h3>Select an item to view details</h3>
@@ -888,19 +888,14 @@ export default defineComponent({
 }
 
 .main-content {
-  flex: 1;
   min-width: 0; // Prevent flex item from growing beyond container
   background-color: var(--oc-role-background);
   height: 100vh;
 }
 
 .empty-detail-state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   height: 100%;
   width: 100%;
-  padding: var(--oc-space-large);
 }
 
 .empty-state-content {

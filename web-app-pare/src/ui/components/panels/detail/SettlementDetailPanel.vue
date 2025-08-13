@@ -12,17 +12,19 @@
     <div class="settlement-detail-content oc-flex-1 oc-p-l oc-p-m-sm">
       <FormSection title="Settlement Overview" icon="exchange">
         <div class="settlement-overview oc-mb-l oc-borrder-rounded oc-p-m">
-          <div class="overview-item oc-mb-s oc-flex">
+          <div class="overview-item oc-mb-s oc-flex oc-flex-between oc-flex-middle">
             <span class="overview-label oc-text-bold">Total Transactions:</span>
-            <span class="overview-value">{{ settlement?.totalTransactions || 0 }}</span>
+            <span class="overview-value oc-font-semibold">{{
+              settlement?.totalTransactions || 0
+            }}</span>
           </div>
-          <div class="overview-item oc-mb-s oc-flex">
+          <div class="overview-item oc-mb-s oc-flex oc-flex-between oc-flex-middle">
             <span class="overview-label oc-text-bold">Total Amount:</span>
-            <span class="overview-value">{{ getTotalAmount() }}</span>
+            <span class="overview-value oc-font-semibold">{{ getTotalAmount() }}</span>
           </div>
-          <div class="overview-item oc-flex">
+          <div class="overview-item oc-flex oc-flex-between oc-flex-middle">
             <span class="overview-label oc-text-bold">Settlement Date:</span>
-            <span class="overview-value">{{ getCurrentDate() }}</span>
+            <span class="overview-value oc-font-semibold">{{ getCurrentDate() }}</span>
           </div>
         </div>
       </FormSection>
@@ -68,11 +70,20 @@
                 variation="primary"
                 size="small"
                 appearance="filled"
-                @click="onSettleTransaction"
-                class="oc-text-small"
+                @click="onSettleTransaction(transaction, index)"
+                class="settle-transaction-btn"
+                :disabled="isSettlingTransaction(transaction, index)"
               >
-                <oc-icon name="check" size="small" />
-                {{ $gettext('Settle') }}
+                <oc-icon
+                  :name="isSettlingTransaction(transaction, index) ? 'loader' : 'check'"
+                  :class="{ 'oc-spinner': isSettlingTransaction(transaction, index) }"
+                  size="small"
+                />
+                {{
+                  isSettlingTransaction(transaction, index)
+                    ? $gettext('Settling...')
+                    : $gettext('Settle')
+                }}
               </oc-button>
             </div>
           </div>
@@ -92,7 +103,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, computed, inject, type Ref } from 'vue'
+import { defineComponent, PropType, computed, inject, ref, type Ref } from 'vue'
 import { useGettext } from 'vue3-gettext'
 import { useMessages } from '@opencloud-eu/web-pkg'
 import { useSettlement } from '../../../../composables/useSettlement'
@@ -120,7 +131,16 @@ export default defineComponent({
 
     // Get parsed data from parent component for settlement creation
     const parsedData = inject<Ref<PCSVData>>('parsedData')
-    const { createSettlementBills, isCalculating, error, clearError } = useSettlement(parsedData)
+    const {
+      createSettlementBills,
+      createIndividualSettlementBill,
+      isCalculating,
+      error,
+      clearError
+    } = useSettlement(parsedData)
+
+    // Track individual transaction settlement states
+    const settlingTransactions = ref<Set<string>>(new Set())
 
     const isVisible = computed(() => props.settlement !== null)
 
@@ -180,17 +200,34 @@ export default defineComponent({
       }
     }
 
-    const onSettleTransaction = () => {
+    const isSettlingTransaction = (transaction: any, index: number): boolean => {
+      const transactionKey = `${transaction.fromUserId}-${transaction.toUserId}-${index}`
+      return settlingTransactions.value.has(transactionKey)
+    }
+
+    const onSettleTransaction = async (transaction: any, index: number) => {
+      const transactionKey = `${transaction.fromUserId}-${transaction.toUserId}-${index}`
+
       try {
-        // For now, this could create a single settlement bill for this transaction
-        // This is a placeholder - you might want to implement individual transaction settling
-        showMessage({
-          title: $gettext('Individual Settlement'),
-          desc: $gettext(
-            'Individual transaction settling is not yet implemented. Use "Settle All" instead.'
-          ),
-          status: 'info'
-        })
+        // Mark this transaction as being settled
+        settlingTransactions.value.add(transactionKey)
+
+        clearError()
+        const result = await createIndividualSettlementBill(transaction)
+
+        if (result) {
+          showMessage({
+            title: $gettext('Settlement Complete'),
+            desc: $gettext('Individual settlement bill has been created successfully.'),
+            status: 'success'
+          })
+
+          // Emit event to parent to refresh data
+          emit('settlement-created', result)
+
+          // Close the panel since settlement data has changed
+          emit('cancel')
+        }
       } catch (err) {
         console.error('Error settling individual transaction:', err)
         showMessage({
@@ -198,6 +235,9 @@ export default defineComponent({
           desc: err instanceof Error ? err.message : $gettext('Unknown error occurred'),
           status: 'danger'
         })
+      } finally {
+        // Remove from settling set
+        settlingTransactions.value.delete(transactionKey)
       }
     }
 
@@ -205,12 +245,14 @@ export default defineComponent({
       isVisible,
       panelTitle,
       canCreateSettlement,
+      isCalculating,
       formatAmount,
       getTotalAmount,
       getCurrentDate,
       onCancel,
       onCreateSettlement,
-      onSettleTransaction
+      onSettleTransaction,
+      isSettlingTransaction
     }
   }
 })
@@ -238,16 +280,12 @@ export default defineComponent({
   background-color: var(--oc-role-surface-container);
 
   .overview-item {
-    justify-content: space-between;
-    align-items: center;
-
     .overview-label {
       color: var(--oc-role-on-surface-variant);
     }
 
     .overview-value {
       color: var(--oc-role-on-surface);
-      font-weight: var(--oc-font-weight-semibold);
     }
   }
 }
@@ -291,22 +329,20 @@ export default defineComponent({
   }
 }
 
-.transaction-actions {
-  border-top: 1px solid var(--oc-role-outline-variant);
-  padding-top: var(--oc-space-small);
-}
-
 .empty-transactions {
   color: var(--oc-role-on-surface-variant);
+}
 
-  h3 {
-    margin: 0;
-    font-size: var(--oc-font-size-large);
+.oc-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
   }
-
-  p {
-    margin: var(--oc-space-small) 0 0 0;
-    font-size: var(--oc-font-size-medium);
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>
