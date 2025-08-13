@@ -1,5 +1,5 @@
 <template>
-  <div class="payment-mode-form" ref="formRef">
+  <div class="payment-mode-form oc-p-m" ref="formRef">
     <form @submit.prevent="onSubmit">
       <!-- Name -->
       <FormField label="Payment Mode Name" required :error="errors.name">
@@ -71,11 +71,3 @@ export default defineComponent({
   }
 })
 </script>
-
-<style lang="scss" scoped>
-@import '../../../styles/mixins';
-
-.payment-mode-form {
-  @include form-base;
-}
-</style>

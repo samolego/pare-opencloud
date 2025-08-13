@@ -3,7 +3,7 @@
     <!-- Bill Details Section -->
     <FormSection :title="`Bill: ${localForm.description}`" icon="file-text">
       <!-- Description - Full width -->
-      <div class="form-field-full">
+      <div class="oc-mb-l">
         <FormField label="What was this for?" required :error="errors.description">
           <FormInput
             v-model="localForm.description"
@@ -102,14 +102,14 @@
     <!-- Additional Details Section -->
     <FormSection title="Additional Details" icon="info-card">
       <!-- Repeat Field -->
-      <div class="form-field-full">
+      <div class="oc-mb-l">
         <FormField label="Repeat" :error="errors.repeat">
           <FormSelect v-model="localForm.repeat" :options="repeatOptions" />
         </FormField>
       </div>
 
       <!-- Comment -->
-      <div class="form-field-full">
+      <div class="oc-mb-l">
         <FormField label="Notes / Comments" :error="errors.comment">
           <FormTextarea
             v-model="localForm.comment"
@@ -120,7 +120,7 @@
       </div>
 
       <!-- File link -->
-      <div class="form-field-full">
+      <div class="oc-mb-l">
         <FormField
           label="Receipt / Document Link"
           help-text="Optional: Link to receipt or document"
@@ -582,11 +582,6 @@ export default defineComponent({
 
 .form-column {
   @include form-column;
-}
-
-.form-field-full {
-  @include form-field-spacing;
-  margin-bottom: var(--oc-space-large);
 }
 
 .input-wrapper,

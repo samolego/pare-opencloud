@@ -1,5 +1,5 @@
 <template>
-  <div class="category-form" ref="formRef">
+  <div class="category-form oc-p-m" ref="formRef">
     <form @submit.prevent="onSubmit">
       <!-- Name -->
       <FormField label="Category Name" required :error="errors.name">
@@ -71,11 +71,3 @@ export default defineComponent({
   }
 })
 </script>
-
-<style lang="scss" scoped>
-@import '../../../styles/mixins';
-
-.category-form {
-  @include form-base;
-}
-</style>

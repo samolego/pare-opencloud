@@ -1,5 +1,5 @@
 <template>
-  <div class="member-form" ref="formRef">
+  <div class="member-form oc-p-m" ref="formRef">
     <form @submit.prevent="onSubmit">
       <!-- Name -->
       <FormField label="Name" required :error="errors.name">
@@ -109,11 +109,3 @@ export default defineComponent({
   }
 })
 </script>
-
-<style lang="scss" scoped>
-@import '../../../styles/mixins';
-
-.member-form {
-  @include form-base;
-}
-</style>
