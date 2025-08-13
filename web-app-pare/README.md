@@ -44,6 +44,10 @@ More details and examples about app/extension development are available in the [
 
 Once you have a working extension, consider making it available via git.
 
+#### See Also
+* https://remixicon.com/ for icons
+* https://owncloud.design/ (for owncloud, but a lot of concepts apply to opencloud as well)
+
 ### Testing
 This repo holds the basic setup for unit testing with [vitest](https://vitest.dev/guide/). You can run the tests with:
 ```bash

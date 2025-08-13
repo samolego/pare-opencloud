@@ -111,8 +111,8 @@
 
       <!-- Payment Mode Detail Panel -->
       <PaymentModeDetailPanel
-        v-else-if="detailPanel.type === 'payment-mode'"
-        :key="`payment-mode-${detailPanel.mode}-${detailPanel.selectedItem?.id || 'new'}`"
+        v-else-if="detailPanel.type === 'payment_mode'"
+        :key="`payment_mode-${detailPanel.mode}-${detailPanel.selectedItem?.id || 'new'}`"
         :payment-mode="detailPanel.selectedItem"
         :mode="detailPanel.mode"
         @cancel="onDetailPanelCancel"
@@ -137,6 +137,17 @@
         </div>
       </div>
     </div>
+
+    <!-- Confirmation Dialog -->
+    <ConfirmationDialog
+      :is-visible="confirmDialog.isVisible"
+      :title="confirmDialog.title"
+      :message="confirmDialog.message"
+      :confirm-text="confirmDialog.confirmText"
+      :cancel-text="confirmDialog.cancelText"
+      @confirm="onConfirmDelete"
+      @cancel="onCancelDelete"
+    />
   </div>
 </template>
 
@@ -158,6 +169,7 @@ import {
   SettlementDetailPanel
 } from './ui/components/panels/detail'
 import SettlementAction from './ui/components/SettlementAction.vue'
+import { ConfirmationDialog } from './ui/components/dialogs'
 
 export default defineComponent({
   name: 'App',
@@ -168,7 +180,8 @@ export default defineComponent({
     CategoryDetailPanel,
     PaymentModeDetailPanel,
     SettlementDetailPanel,
-    SettlementAction
+    SettlementAction,
+    ConfirmationDialog
   },
   props: {
     applicationConfig: { type: Object, required: true },
@@ -190,13 +203,23 @@ export default defineComponent({
 
     // Detail Panel State
     const detailPanel = ref<{
-      type: 'bill' | 'member' | 'category' | 'payment-mode' | 'settlement' | null
+      type: 'bill' | 'member' | 'category' | 'payment_mode' | 'settlement' | null
       mode: 'create' | 'edit'
       selectedItem: any
     }>({
       type: null,
       mode: 'create',
       selectedItem: null
+    })
+
+    // Confirmation dialog state
+    const confirmDialog = ref({
+      isVisible: false,
+      title: '',
+      message: '',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      pendingItem: null as SidebarItem | null
     })
 
     const { $gettext } = useGettext()
@@ -299,12 +322,12 @@ export default defineComponent({
             descriptionField: ''
           }
         },
-        payment_modes: {
+        payment_mode: {
           items: paymentModes.value as SidebarItem[],
           config: {
             title: $gettext('Payment Modes'),
             buttonText: $gettext('Add Payment Mode'),
-            buttonIcon: 'euro-box',
+            buttonIcon: 'money-euro-circle',
             emptyMessage: $gettext('No payment modes yet. Add your first one!'),
             showCreateNewButton: true,
             titleField: 'name',
@@ -372,7 +395,7 @@ export default defineComponent({
           count: categories.value.length
         },
         {
-          key: 'payment-mode',
+          key: 'payment_mode',
           label: $gettext('Payment Modes'),
           icon: 'money-euro-circle',
           count: paymentModes.value.length
@@ -447,15 +470,15 @@ export default defineComponent({
           })
         },
         {
-          name: 'payment-mode',
+          name: 'payment_mode',
           title: () => $gettext('Payment Modes'),
           isRoot: () => true,
-          isVisible: () => currentSection.value === 'payment-mode',
+          isVisible: () => currentSection.value === 'payment_mode',
           component: ContentPanel,
           componentAttrs: () => ({
             darkTheme: darkTheme.value,
             items: paymentModes.value,
-            config: sidebarConfigMap.value.payment_modes.config,
+            config: sidebarConfigMap.value.payment_mode.config,
             onItemClick: onSidebarItemClick,
             onItemDelete: onSidebarItemDelete,
             selectedItemId: detailPanel.value.selectedItem?.id || null
@@ -512,7 +535,7 @@ export default defineComponent({
 
     const onSidebarButtonClick = () => {
       detailPanel.value = {
-        type: currentSection.value as 'bill' | 'member' | 'category',
+        type: currentSection.value as 'bill' | 'member' | 'category' | 'payment_mode',
         mode: 'create',
         selectedItem: null
       }
@@ -520,14 +543,50 @@ export default defineComponent({
 
     const onSidebarItemClick = (item: SidebarItem) => {
       detailPanel.value = {
-        type: currentSection.value as 'bill' | 'member' | 'category',
+        type: currentSection.value as 'bill' | 'member' | 'category' | 'payment_mode',
         mode: 'edit',
         selectedItem: item
       }
     }
 
     const onSidebarItemDelete = (item: SidebarItem) => {
+      // Store the item to be deleted and show confirmation dialog
+      confirmDialog.value.pendingItem = item
+
+      // Set dialog content based on item type
+      let itemTypeName = ''
+      if (currentSection.value === 'bill') {
+        itemTypeName = $gettext('bill')
+      } else if (currentSection.value === 'member') {
+        itemTypeName = $gettext('member')
+      } else if (currentSection.value === 'category') {
+        itemTypeName = $gettext('category')
+      } else if (currentSection.value === 'payment_mode') {
+        itemTypeName = $gettext('payment mode')
+      } else {
+        itemTypeName = $gettext('item')
+      }
+
+      confirmDialog.value.title = $gettext('Delete %{itemType}', { itemType: itemTypeName })
+      confirmDialog.value.message = $gettext(
+        'Are you sure you want to delete this %{itemType}? This action cannot be undone.',
+        { itemType: itemTypeName }
+      )
+      confirmDialog.value.confirmText = $gettext('Delete')
+      confirmDialog.value.cancelText = $gettext('Cancel')
+      confirmDialog.value.isVisible = true
+    }
+
+    const onConfirmDelete = () => {
+      const item = confirmDialog.value.pendingItem
+      if (!item) return
+
       try {
+        // Close detail panel first if the deleted item was selected
+        if (String(detailPanel.value.selectedItem?.id) === String(item.id)) {
+          onDetailPanelCancel()
+        }
+
         let updatedData = { ...parsedData.value }
 
         if (currentSection.value === 'bill') {
@@ -548,7 +607,7 @@ export default defineComponent({
             title: $gettext('Category deleted'),
             desc: $gettext('The category has been deleted successfully')
           })
-        } else if (currentSection.value === 'payment-mode') {
+        } else if (currentSection.value === 'payment_mode') {
           updatedData = PCSVParser.deletePaymentMode(updatedData, item.id)
           showMessage({
             title: $gettext('Payment mode deleted'),
@@ -559,18 +618,22 @@ export default defineComponent({
         const newContent = PCSVParser.generate(updatedData)
         editableContent.value = newContent
         emit('update:currentContent', newContent)
-
-        // Close detail panel if the deleted item was selected
-        if (detailPanel.value.selectedItem?.id === item.id) {
-          onDetailPanelCancel()
-        }
       } catch (error) {
         console.error('Error deleting item:', error)
         showMessage({
           title: $gettext('Error'),
           desc: $gettext('Failed to delete the item')
         })
+      } finally {
+        // Always close the dialog
+        confirmDialog.value.isVisible = false
+        confirmDialog.value.pendingItem = null
       }
+    }
+
+    const onCancelDelete = () => {
+      confirmDialog.value.isVisible = false
+      confirmDialog.value.pendingItem = null
     }
 
     const onDetailPanelCancel = () => {
@@ -833,6 +896,9 @@ export default defineComponent({
       onSidebarItemClick,
       onSidebarItemDelete,
       onDetailPanelCancel,
+      confirmDialog,
+      onConfirmDelete,
+      onCancelDelete,
       onCreateBill,
       onCreateMember,
       onCreateCategory,

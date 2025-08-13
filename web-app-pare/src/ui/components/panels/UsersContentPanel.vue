@@ -13,20 +13,17 @@
       <div class="user-item-content">
         <div class="item-header oc-flex oc-flex-middle oc-gap-s">
           <user-avatar :user-name="getEnhancedItemTitle(item)" :user-id="item.opencloud_id" />
-          <div class="item-title oc-text-bold oc-text-small">
+          <div class="item-title oc-text-bold oc-text-large">
             {{ getEnhancedItemTitle(item) }}
           </div>
         </div>
         <div class="item-details oc-flex oc-flex-between oc-flex-middle oc-mt-xs">
-          <div class="item-subtitle" :class="getBalanceClass(item)">
+          <div class="item-subtitle oc-text-medium oc-font-semibold" :class="getBalanceClass(item)">
             {{ getBalanceDisplay(item) }}
           </div>
           <div class="oc-text-muted oc-text-xsmall" @click="onItemDelete(item)">
             <oc-icon name="delete-bin-7" />
           </div>
-        </div>
-        <div v-if="getItemDescription(item)" class="item-description oc-text-xsmall oc-mt-xs">
-          {{ truncateText(getItemDescription(item), 50) }}
         </div>
       </div>
     </template>
@@ -179,8 +176,6 @@ export default defineComponent({
 
   .item-subtitle {
     color: var(--oc-role-primary);
-    font-weight: var(--oc-font-weight-semibold);
-    font-size: var(--oc-font-size-small);
 
     &.item-amount-negative {
       color: var(--oc-role-error);

@@ -19,7 +19,7 @@
           <slot name="item" :item="item">
             <div class="item-main">
               <div class="item-header oc-flex oc-flex-between oc-flex-middle">
-                <div class="item-title oc-text-bold oc-text-medium">
+                <div class="item-title oc-text-bold oc-text-large">
                   {{ getItemTitle(item) }}
                 </div>
                 <div v-if="getItemMeta(item)" class="oc-text-muted oc-text-small">
@@ -33,7 +33,7 @@
                 >
                   {{ getItemSubtitle(item) || '' }}
                 </div>
-                <div class="oc-text-muted oc-text-xsmall" @click="onItemDelete(item)">
+                <div class="oc-text-muted oc-text-xsmall" @click.stop="onItemDelete(item)">
                   <oc-icon name="delete-bin-7" />
                 </div>
               </div>

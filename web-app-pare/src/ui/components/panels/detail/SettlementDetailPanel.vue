@@ -216,12 +216,6 @@ export default defineComponent({
         const result = await createIndividualSettlementBill(transaction)
 
         if (result) {
-          showMessage({
-            title: $gettext('Settlement Complete'),
-            desc: $gettext('Individual settlement bill has been created successfully.'),
-            status: 'success'
-          })
-
           // Emit event to parent to refresh data
           emit('settlement-created', result)
 
