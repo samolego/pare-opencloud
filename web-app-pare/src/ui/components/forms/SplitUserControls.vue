@@ -1,5 +1,5 @@
 <template>
-  <div class="split-users oc-p-s">
+  <div class="split-users oc-p-s oc-border oc-rounded">
     <div
       v-for="user in users"
       :key="user.id"
@@ -32,7 +32,7 @@
       </div>
     </div>
 
-    <div class="split-summary oc-mt-s oc-pt-s">
+    <div class="split-summary oc-mt-s oc-pt-s oc-border-top">
       <div class="split-summary-row oc-flex oc-flex-between oc-flex-center">
         <span class="split-summary-label oc-text-s">Total split:</span>
         <span class="split-summary-value oc-text-s oc-font-semibold">{{
@@ -189,14 +189,11 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 .split-users {
-  border: 1px solid var(--oc-role-outline-variant);
-  border-radius: var(--oc-space-small);
   background-color: var(--oc-role-surface-container);
 }
 
 .split-user-info {
   align-items: center;
-  gap: var(--oc-space-medium) !important;
 }
 
 .split-user-info:last-child {
@@ -204,16 +201,12 @@ export default defineComponent({
 }
 
 .split-user-checkbox {
-  margin: 0;
   accent-color: var(--oc-role-primary);
 }
 
 .split-user-name {
   color: var(--oc-role-on-surface);
-  margin: 0;
   line-height: 1;
-  display: flex;
-  align-items: center;
 }
 
 .split-user-amount {
@@ -225,10 +218,6 @@ export default defineComponent({
     max-width: 100%;
     box-sizing: border-box;
   }
-}
-
-.split-summary {
-  border-top: 1px solid var(--oc-role-outline-variant);
 }
 
 .split-summary-label {

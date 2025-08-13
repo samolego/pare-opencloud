@@ -62,7 +62,7 @@ export default defineComponent({
   @include form-control;
   @include custom-scrollbar;
   resize: vertical;
-  min-height: 80px;
+  min-height: 40px;
 
   &:disabled,
   &.form-textarea-disabled {

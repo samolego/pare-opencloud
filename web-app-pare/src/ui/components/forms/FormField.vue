@@ -2,7 +2,7 @@
   <div class="form-field oc-mb-m" :class="{ 'form-field-error': hasError }">
     <label v-if="label" class="form-field-label oc-mb-xs">
       {{ label }}
-      <span v-if="required" class="form-field-required oc-ml-xs">*</span>
+      <span v-if="required" class="form-field-error-text oc-ml-xs">*</span>
     </label>
 
     <div class="form-field-content">
@@ -74,7 +74,6 @@ export default defineComponent({
   position: relative;
 }
 
-.form-field-required,
 .form-field-error-text {
   color: var(--oc-role-error);
 }
