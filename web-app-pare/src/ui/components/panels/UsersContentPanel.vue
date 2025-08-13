@@ -32,9 +32,6 @@
     </template>
 
     <!-- Settlement Action Footer -->
-    <template #footer>
-      <SettlementAction @settlement-created="onSettlementCreated" />
-    </template>
   </ContentPanel>
 </template>
 
@@ -45,14 +42,13 @@ import { useUserData } from '../../../composables/useUserData'
 import { useContentItemFormatting } from '../../../composables/useContentItemFormatting'
 import { useSettlement } from '../../../composables/useSettlement'
 import ContentPanel from './ContentPanel.vue'
-import SettlementAction from '../SettlementAction.vue'
+
 import type { PCSVData } from '../../../utils/pcsvParser'
 
 export default defineComponent({
   name: 'UsersContentPanel',
   components: {
-    ContentPanel,
-    SettlementAction
+    ContentPanel
   },
   props: {
     darkTheme: {
@@ -84,8 +80,8 @@ export default defineComponent({
       default: 20
     }
   },
-  emits: ['page-change', 'settlement-created'],
-  setup(props, { emit }) {
+  emits: ['page-change'],
+  setup(props) {
     const { getUserAvatar, getUserDisplayName, preloadUsers } = useUserData()
     const { getItemSubtitle, getItemDescription, isNegativeAmount, truncateText } =
       useContentItemFormatting()
@@ -133,10 +129,6 @@ export default defineComponent({
       return userBalance.balance > 0 ? 'item-balance-credit' : 'item-balance-debt'
     }
 
-    const onSettlementCreated = (settlementResult: any) => {
-      emit('settlement-created', settlementResult)
-    }
-
     // Preload user data when items change
     watch(
       () => props.items,
@@ -167,8 +159,7 @@ export default defineComponent({
       getItemAvatar,
       getEnhancedItemTitle,
       getBalanceDisplay,
-      getBalanceClass,
-      onSettlementCreated
+      getBalanceClass
     }
   }
 })

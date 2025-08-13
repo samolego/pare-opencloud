@@ -161,7 +161,7 @@ export class UserService {
         const openCloudUser: OpenCloudUser = await clientService.graphAuthenticated.users.getUser(
           userId,
           {
-            expand: ['photo', 'profilePicture', 'thumbnailPhoto', 'memberOf']
+            expand: ['photo', 'profilePicture', 'thumbnailPhoto', 'memberOf', 'avatar']
           }
         )
         if (openCloudUser) {

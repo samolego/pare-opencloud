@@ -60,6 +60,13 @@
             <oc-icon :name="currentSidebarConfig.buttonIcon || 'add'" size="small" />
             {{ currentSidebarConfig.buttonText }}
           </oc-button>
+
+          <!-- Settlement Action for Members Section -->
+          <SettlementAction
+            v-if="currentSection === 'member'"
+            class="oc-mt-s"
+            @view-transactions="onViewTransactions"
+          />
         </div>
       </template>
     </SideBar>
@@ -113,6 +120,14 @@
         @save-payment-mode="onSavePaymentMode"
       />
 
+      <!-- Settlement Detail Panel -->
+      <SettlementDetailPanel
+        v-else-if="detailPanel.type === 'settlement'"
+        :settlement="detailPanel.selectedItem"
+        @cancel="onDetailPanelCancel"
+        @settlement-created="onSettlementCreated"
+      />
+
       <!-- Empty state when no panel is selected -->
       <div v-else class="empty-detail-state">
         <div class="empty-state-content">
@@ -139,8 +154,10 @@ import {
   BillDetailPanel,
   MemberDetailPanel,
   CategoryDetailPanel,
-  PaymentModeDetailPanel
+  PaymentModeDetailPanel,
+  SettlementDetailPanel
 } from './ui/components/panels/detail'
+import SettlementAction from './ui/components/SettlementAction.vue'
 
 export default defineComponent({
   name: 'App',
@@ -149,7 +166,9 @@ export default defineComponent({
     BillDetailPanel,
     MemberDetailPanel,
     CategoryDetailPanel,
-    PaymentModeDetailPanel
+    PaymentModeDetailPanel,
+    SettlementDetailPanel,
+    SettlementAction
   },
   props: {
     applicationConfig: { type: Object, required: true },
@@ -171,7 +190,7 @@ export default defineComponent({
 
     // Detail Panel State
     const detailPanel = ref<{
-      type: 'bill' | 'member' | 'category' | 'payment-mode' | null
+      type: 'bill' | 'member' | 'category' | 'payment-mode' | 'settlement' | null
       mode: 'create' | 'edit'
       selectedItem: any
     }>({
@@ -782,6 +801,14 @@ export default defineComponent({
       }
     }
 
+    const onViewTransactions = (settlement: any) => {
+      detailPanel.value = {
+        type: 'settlement',
+        mode: 'edit',
+        selectedItem: settlement
+      }
+    }
+
     return {
       textEditor,
       editableContent,
@@ -814,7 +841,8 @@ export default defineComponent({
       onSaveMember,
       onSaveCategory,
       onSavePaymentMode,
-      onSettlementCreated
+      onSettlementCreated,
+      onViewTransactions
     }
   }
 })

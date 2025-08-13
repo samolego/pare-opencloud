@@ -37,3 +37,4 @@ dev/docker/opencloud/files/*
 **/certs/
 
 examples
+design-docs
