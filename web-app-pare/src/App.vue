@@ -57,7 +57,7 @@
             @click="onSidebarButtonClick"
             class="oc-width-1-1"
           >
-            <oc-icon :name="currentSidebarConfig.buttonIcon || 'plus'" size="small" />
+            <oc-icon :name="currentSidebarConfig.buttonIcon || 'add'" size="small" />
             {{ currentSidebarConfig.buttonText }}
           </oc-button>
         </div>
@@ -243,7 +243,7 @@ export default defineComponent({
           config: {
             title: $gettext('Recent Bills'),
             buttonText: $gettext('New Bill'),
-            buttonIcon: 'plus',
+            buttonIcon: 'add',
             emptyMessage: $gettext('No bills yet. Create your first bill!'),
             showCreateNewButton: true,
             titleField: 'description',
@@ -257,7 +257,7 @@ export default defineComponent({
           config: {
             title: $gettext('Members'),
             buttonText: $gettext('Add Member'),
-            buttonIcon: 'user-plus',
+            buttonIcon: 'user-add',
             emptyMessage: $gettext('No members yet. Add your first member!'),
             showCreateNewButton: true,
             titleField: 'name',
@@ -271,7 +271,7 @@ export default defineComponent({
           config: {
             title: $gettext('Categories'),
             buttonText: $gettext('Add Category'),
-            buttonIcon: 'tag',
+            buttonIcon: 'price-tag-3',
             emptyMessage: $gettext('No categories yet. Add your first one!'),
             showCreateNewButton: true,
             titleField: 'name',
@@ -285,7 +285,7 @@ export default defineComponent({
           config: {
             title: $gettext('Payment Modes'),
             buttonText: $gettext('Add Payment Mode'),
-            buttonIcon: 'euro',
+            buttonIcon: 'euro-box',
             emptyMessage: $gettext('No payment modes yet. Add your first one!'),
             showCreateNewButton: true,
             titleField: 'name',
@@ -349,7 +349,7 @@ export default defineComponent({
         {
           key: 'category',
           label: $gettext('Categories'),
-          icon: 'folder',
+          icon: 'price-tag',
           count: categories.value.length
         },
         {
