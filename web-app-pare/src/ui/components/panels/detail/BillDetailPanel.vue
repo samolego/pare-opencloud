@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isVisible" class="bill-detail-panel">
+  <div v-if="isVisible" class="bill-detail-panel oc-flex oc-flex-column">
     <DetailPanelHeader
       :title="panelTitle"
       :can-save="canSave"
@@ -9,10 +9,10 @@
       @save="onSave"
     />
 
-    <div class="bill-detail-content">
+    <div class="bill-detail-content oc-flex-1 oc-overflow-hidden">
       <div class="bill-detail-grid">
         <!-- Main Content -->
-        <div class="bill-detail-main oc-p-l">
+        <div class="bill-detail-main oc-p-l oc-overflow-auto">
           <BillForm
             ref="billForm"
             :bill="bill"
@@ -151,21 +151,26 @@ export default defineComponent({
 @import '../../../styles/mixins';
 
 .bill-detail-panel {
-  @include detail-panel;
-}
+  background-color: var(--oc-role-surface);
+  width: 100%;
+  height: 100%;
+  border-left: 1px solid var(--oc-role-outline-variant);
 
-.bill-detail-content {
-  flex: 1;
-  overflow: hidden;
+  @media (max-width: 768px) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
+  }
 }
 
 .bill-detail-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
+  gap: 0;
   flex: 1;
   height: 100%;
   min-height: 0;
-  gap: 0;
 
   @media (max-width: 1024px) {
     grid-template-columns: 1fr;
@@ -174,14 +179,13 @@ export default defineComponent({
 }
 
 .bill-detail-main {
-  overflow-y: auto;
   @include custom-scrollbar;
 }
 
 .bill-detail-sidebar {
-  border-left: 1px solid var(--oc-role-outline-variant);
   background-color: var(--oc-role-surface-container);
   height: 100%;
+  border-left: 1px solid var(--oc-role-outline-variant);
 
   @media (max-width: 1024px) {
     border-left: none;

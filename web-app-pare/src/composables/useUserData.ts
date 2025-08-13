@@ -84,7 +84,9 @@ export function useUserData() {
     if (user?.avatar) return user.avatar
     if (user?.profileImage) return user.profileImage
 
-    return null
+    const URL = `https://cloud.opencloud.test/graph/v1.0/users/${userId}/photo/$value`
+
+    return URL
   }
 
   /**

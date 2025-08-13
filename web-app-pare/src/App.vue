@@ -272,7 +272,21 @@ export default defineComponent({
             title: $gettext('Categories'),
             buttonText: $gettext('Add Category'),
             buttonIcon: 'tag',
-            emptyMessage: $gettext('No categories yet. Add your first category!'),
+            emptyMessage: $gettext('No categories yet. Add your first one!'),
+            showCreateNewButton: true,
+            titleField: 'name',
+            subtitleField: '',
+            metaField: '',
+            descriptionField: ''
+          }
+        },
+        payment_modes: {
+          items: paymentModes.value as SidebarItem[],
+          config: {
+            title: $gettext('Payment Modes'),
+            buttonText: $gettext('Add Payment Mode'),
+            buttonIcon: 'euro',
+            emptyMessage: $gettext('No payment modes yet. Add your first one!'),
             showCreateNewButton: true,
             titleField: 'name',
             subtitleField: '',
@@ -337,6 +351,12 @@ export default defineComponent({
           label: $gettext('Categories'),
           icon: 'folder',
           count: categories.value.length
+        },
+        {
+          key: 'payment-mode',
+          label: $gettext('Payment Modes'),
+          icon: 'money-euro-circle',
+          count: paymentModes.value.length
         }
       ]
 
@@ -402,6 +422,21 @@ export default defineComponent({
             darkTheme: darkTheme.value,
             items: categories.value,
             config: sidebarConfigMap.value.category.config,
+            onItemClick: onSidebarItemClick,
+            onItemDelete: onSidebarItemDelete,
+            selectedItemId: detailPanel.value.selectedItem?.id || null
+          })
+        },
+        {
+          name: 'payment-mode',
+          title: () => $gettext('Payment Modes'),
+          isRoot: () => true,
+          isVisible: () => currentSection.value === 'payment-mode',
+          component: ContentPanel,
+          componentAttrs: () => ({
+            darkTheme: darkTheme.value,
+            items: paymentModes.value,
+            config: sidebarConfigMap.value.payment_modes.config,
             onItemClick: onSidebarItemClick,
             onItemDelete: onSidebarItemDelete,
             selectedItemId: detailPanel.value.selectedItem?.id || null

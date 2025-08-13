@@ -1,49 +1,36 @@
 <template>
   <div class="split-users oc-p-s oc-border oc-rounded">
-    <div
-      v-for="user in users"
-      :key="user.id"
-      class="oc-flex oc-flex-between oc-flex-center oc-mb-xs"
-    >
-      <label
-        class="split-user-info oc-cursor-pointer oc-flex oc-flex-start oc-gap-m oc-flex-1"
-        :for="`user-${user.id}`"
-      >
-        <input
-          :id="`user-${user.id}`"
-          :checked="isUserIncluded(user.id)"
-          type="checkbox"
-          class="split-user-checkbox"
-          @change="onSplitIncludedChange(user.id)"
-        />
-        <span class="split-user-name oc-text-s">
-          {{ user.name }}
-        </span>
-      </label>
-      <div class="split-user-amount oc-flex-shrink-0">
-        <FormInput
-          :model-value="getUserAmount(user.id)"
-          type="number"
-          step="0.01"
-          :disabled="!isUserIncluded(user.id)"
-          class="split-amount-input oc-text-s oc-text-right"
-          @update:model-value="(value) => onSplitAmountChange(user.id, value)"
-        />
-      </div>
-    </div>
-
-    <div class="split-summary oc-mt-s oc-pt-s oc-border-top">
-      <div class="split-summary-row oc-flex oc-flex-between oc-flex-center">
-        <span class="split-summary-label oc-text-s">Total split:</span>
-        <span class="split-summary-value oc-text-s oc-font-semibold">{{
-          totalSplitAmount.toFixed(2)
-        }}</span>
-      </div>
+    <div class="split-users-list">
       <div
-        v-if="splitDifference !== 0"
-        class="split-summary-error oc-text-xs oc-mt-xs oc-text-right"
+        v-for="user in users"
+        :key="user.id"
+        class="oc-flex oc-flex-between oc-flex-center oc-mb-xs"
       >
-        Difference: {{ splitDifference.toFixed(2) }}
+        <label
+          class="split-user-info oc-cursor-pointer oc-flex oc-flex-start oc-gap-m oc-flex-1"
+          :for="`user-${user.id}`"
+        >
+          <input
+            :id="`user-${user.id}`"
+            :checked="isUserIncluded(user.id)"
+            type="checkbox"
+            class="split-user-checkbox"
+            @change="onSplitIncludedChange(user.id)"
+          />
+          <span class="split-user-name oc-text-s">
+            {{ user.name }}
+          </span>
+        </label>
+        <div class="split-user-amount oc-flex-shrink-0">
+          <FormInput
+            :model-value="getUserAmount(user.id)"
+            type="number"
+            step="0.01"
+            :disabled="!isUserIncluded(user.id)"
+            class="split-amount-input oc-text-s oc-text-right"
+            @update:model-value="(value) => onSplitAmountChange(user.id, value)"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -88,16 +75,6 @@ export default defineComponent({
     const getUserAmount = (userId: number): string => {
       return props.modelValue[userId]?.amount || '0.00'
     }
-
-    const totalSplitAmount = computed(() => {
-      return Object.values(props.modelValue)
-        .filter((split) => split.included)
-        .reduce((sum, split) => sum + parseFloat(split.amount || '0'), 0)
-    })
-
-    const splitDifference = computed(() => {
-      return totalSplitAmount.value - props.totalAmount
-    })
 
     const onSplitIncludedChange = (userId: number) => {
       const newSplits = { ...props.modelValue }
@@ -178,8 +155,6 @@ export default defineComponent({
     return {
       isUserIncluded,
       getUserAmount,
-      totalSplitAmount,
-      splitDifference,
       onSplitIncludedChange,
       onSplitAmountChange
     }
@@ -188,8 +163,16 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@import '../../styles/mixins';
+
 .split-users {
   background-color: var(--oc-role-surface-container);
+}
+
+.split-users-list {
+  max-height: 240px;
+  overflow-y: auto;
+  @include custom-scrollbar;
 }
 
 .split-user-info {
@@ -218,17 +201,5 @@ export default defineComponent({
     max-width: 100%;
     box-sizing: border-box;
   }
-}
-
-.split-summary-label {
-  color: var(--oc-role-on-surface);
-}
-
-.split-summary-value {
-  color: var(--oc-role-on-surface);
-}
-
-.split-summary-error {
-  color: var(--oc-role-error);
 }
 </style>

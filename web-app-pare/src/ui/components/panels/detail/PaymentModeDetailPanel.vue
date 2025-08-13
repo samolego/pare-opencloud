@@ -9,7 +9,7 @@
       @save="onSave"
     />
 
-    <div class="payment-mode-detail-content">
+    <div class="payment-mode-detail-content oc-p-l oc-p-m-sm">
       <FormSection title="Payment Method Information" icon="bank-card">
         <PaymentModeForm
           ref="paymentModeForm"
@@ -80,17 +80,19 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@import '../../../styles/mixins';
-
 .payment-mode-detail-panel {
-  @include detail-panel;
-}
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--oc-role-surface);
+  border-left: 1px solid var(--oc-role-outline-variant);
+  width: 100%;
 
-.payment-mode-detail-content {
-  padding: var(--oc-space-large);
-
-  @media (max-width: 1024px) {
-    padding: var(--oc-space-medium);
+  @media (max-width: 768px) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
   }
 }
 </style>

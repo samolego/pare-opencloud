@@ -25,8 +25,23 @@
         </div>
       </div>
 
-      <!-- Use the working SplitUserControls component -->
-      <div class="split-users-section">
+      <!-- Total Summary -->
+      <div class="split-summary oc-mt-s oc-p-s oc-border oc-rounded">
+        <div class="split-summary-row oc-flex oc-flex-between oc-flex-center">
+          <span class="split-summary-label oc-text-s">Total split:</span>
+          <span class="split-summary-value oc-text-s oc-font-semibold">{{
+            totalSplitAmount.toFixed(2)
+          }}</span>
+        </div>
+        <div
+          v-if="splitDifference !== 0"
+          class="split-summary-error oc-text-xs oc-mt-xs oc-text-right"
+        >
+          Difference: {{ splitDifference.toFixed(2) }}
+        </div>
+      </div>
+
+      <div class="split-users-section oc-mb-xl">
         <SplitUserControls
           :model-value="modelValue"
           :users="users"
@@ -39,7 +54,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, ref, watch } from 'vue'
+import { defineComponent, PropType, ref, watch, computed } from 'vue'
 import { User } from '../../../utils/pcsvParser'
 import { UserSplit } from '../../../types/forms'
 import { SplitUserControls } from '../forms'
@@ -124,11 +139,23 @@ export default defineComponent({
       emit('update:model-value', splits)
     }
 
+    const totalSplitAmount = computed(() => {
+      return Object.values(props.modelValue)
+        .filter((split) => split.included)
+        .reduce((sum, split) => sum + parseFloat(split.amount || '0'), 0)
+    })
+
+    const splitDifference = computed(() => {
+      return totalSplitAmount.value - props.totalAmount
+    })
+
     return {
       splitMode,
       splitModes,
       setSplitMode,
-      onSplitsUpdate
+      onSplitsUpdate,
+      totalSplitAmount,
+      splitDifference
     }
   }
 })
@@ -168,8 +195,6 @@ export default defineComponent({
 .split-content {
   flex: 1;
   padding: var(--oc-space-medium);
-  overflow-y: auto;
-  @include custom-scrollbar;
   display: flex;
   flex-direction: column;
   gap: var(--oc-space-large);
@@ -215,5 +240,22 @@ export default defineComponent({
 
 .split-users-section {
   flex: 1;
+  min-height: 0;
+}
+
+.split-summary {
+  background-color: var(--oc-role-surface-container);
+}
+
+.split-summary-label {
+  color: var(--oc-role-on-surface);
+}
+
+.split-summary-value {
+  color: var(--oc-role-on-surface);
+}
+
+.split-summary-error {
+  color: var(--oc-role-error);
 }
 </style>
