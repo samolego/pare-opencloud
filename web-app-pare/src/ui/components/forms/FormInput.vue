@@ -9,7 +9,11 @@
     :min="min"
     :max="max"
     class="form-input"
-    :class="{ 'form-input-disabled': disabled }"
+    :class="{
+      'form-input-disabled': disabled,
+      'oc-text-right': type === 'number',
+      'oc-cursor-pointer': type === 'date' || type === 'time'
+    }"
     @input="onInput"
     @blur="$emit('blur')"
     @focus="$emit('focus')"
@@ -80,16 +84,6 @@ export default defineComponent({
 
 .form-input {
   @include form-control;
-
-  // Special styling for different input types
-  &[type='number'] {
-    text-align: right;
-  }
-
-  &[type='date'],
-  &[type='time'] {
-    cursor: pointer;
-  }
 
   // Small variant for inline inputs
   &.form-input-small {

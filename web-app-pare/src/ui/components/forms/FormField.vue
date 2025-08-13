@@ -1,6 +1,6 @@
 <template>
-  <div class="form-field" :class="{ 'form-field-error': hasError }">
-    <label v-if="label" class="form-field-label">
+  <div class="form-field oc-mb-m" :class="{ 'form-field-error': hasError }">
+    <label v-if="label" class="form-field-label oc-mb-xs">
       {{ label }}
       <span v-if="required" class="form-field-required oc-ml-xs">*</span>
     </label>
@@ -54,8 +54,6 @@ export default defineComponent({
 @import '../../styles/mixins';
 
 .form-field {
-  @include form-field-spacing;
-
   &.form-field-error {
     .form-field-content :deep(input),
     .form-field-content :deep(select),
@@ -69,7 +67,6 @@ export default defineComponent({
   display: block;
   font-weight: var(--oc-font-weight-semibold);
   color: var(--oc-role-on-surface);
-  margin-bottom: var(--oc-space-xsmall);
   line-height: 1.4;
 }
 

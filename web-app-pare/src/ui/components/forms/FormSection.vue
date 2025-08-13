@@ -1,10 +1,10 @@
 <template>
-  <div class="form-section">
-    <div class="section-header">
+  <div class="form-section oc-mb-l">
+    <div class="section-header oc-flex oc-flex-center oc-gap-m oc-p-l">
       <div v-if="icon" class="section-header-icon">
         <oc-icon :name="icon" size="medium" />
       </div>
-      <h2 class="section-title">{{ title }}</h2>
+      <h2 class="section-title oc-text-l oc-font-semibold">{{ title }}</h2>
     </div>
 
     <div class="oc-p-m">
@@ -40,14 +40,9 @@ export default defineComponent({
   border-radius: var(--oc-space-medium);
   overflow: hidden;
   flex-shrink: 0;
-  margin-bottom: var(--oc-space-large);
 }
 
 .section-header {
-  display: flex;
-  align-items: center;
-  gap: var(--oc-space-medium);
-  padding: var(--oc-space-large);
   background-color: var(--oc-role-surface-container-high);
   border-bottom: 1px solid var(--oc-role-outline-variant);
 }
@@ -57,8 +52,6 @@ export default defineComponent({
 }
 
 .section-title {
-  font-size: var(--oc-font-size-large);
-  font-weight: var(--oc-font-weight-semibold);
   color: var(--oc-role-on-surface);
   margin: 0;
 }

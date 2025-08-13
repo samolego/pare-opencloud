@@ -3,7 +3,7 @@
     :value="modelValue"
     :required="required"
     :disabled="disabled"
-    class="form-select"
+    class="form-select oc-cursor-pointer"
     :class="{ 'form-select-disabled': disabled }"
     @change="onChange"
     @blur="$emit('blur')"
@@ -90,7 +90,6 @@ export default defineComponent({
 
 .form-select {
   @include form-control;
-  cursor: pointer;
 
   option {
     background-color: var(--oc-role-surface);

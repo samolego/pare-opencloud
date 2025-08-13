@@ -1,7 +1,11 @@
 <template>
-  <div class="split-users">
-    <div v-for="user in users" :key="user.id" class="split-user-row">
-      <div class="split-user-info">
+  <div class="split-users oc-p-s">
+    <div
+      v-for="user in users"
+      :key="user.id"
+      class="split-user-row oc-flex oc-flex-between oc-flex-center oc-mb-xs"
+    >
+      <div class="split-user-info oc-flex oc-flex-center oc-gap-xs">
         <input
           :id="`user-${user.id}`"
           :checked="isUserIncluded(user.id)"
@@ -9,7 +13,7 @@
           class="split-user-checkbox"
           @change="onSplitIncludedChange(user.id)"
         />
-        <label :for="`user-${user.id}`" class="split-user-name">
+        <label :for="`user-${user.id}`" class="split-user-name oc-text-s">
           {{ user.name }}
         </label>
       </div>
@@ -19,18 +23,23 @@
           type="number"
           step="0.01"
           :disabled="!isUserIncluded(user.id)"
-          class="split-amount-input"
+          class="split-amount-input oc-text-s oc-text-right"
           @update:model-value="(value) => onSplitAmountChange(user.id, value)"
         />
       </div>
     </div>
 
-    <div class="split-summary">
-      <div class="split-summary-row">
-        <span class="split-summary-label">Total split:</span>
-        <span class="split-summary-value">{{ totalSplitAmount.toFixed(2) }}</span>
+    <div class="split-summary oc-mt-s oc-pt-s">
+      <div class="split-summary-row oc-flex oc-flex-between oc-flex-center">
+        <span class="split-summary-label oc-text-s">Total split:</span>
+        <span class="split-summary-value oc-text-s oc-font-semibold">{{
+          totalSplitAmount.toFixed(2)
+        }}</span>
       </div>
-      <div v-if="splitDifference !== 0" class="split-summary-error">
+      <div
+        v-if="splitDifference !== 0"
+        class="split-summary-error oc-text-xs oc-mt-xs oc-text-right"
+      >
         Difference: {{ splitDifference.toFixed(2) }}
       </div>
     </div>
@@ -179,25 +188,11 @@ export default defineComponent({
 .split-users {
   border: 1px solid var(--oc-role-outline-variant);
   border-radius: var(--oc-space-small);
-  padding: var(--oc-space-small);
   background-color: var(--oc-role-surface-container);
 }
 
-.split-user-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--oc-space-xsmall);
-
-  &:last-of-type {
-    margin-bottom: 0;
-  }
-}
-
-.split-user-info {
-  display: flex;
-  align-items: center;
-  gap: var(--oc-space-xsmall);
+.split-user-row:last-of-type {
+  margin-bottom: 0 !important;
 }
 
 .split-user-checkbox {
@@ -206,7 +201,6 @@ export default defineComponent({
 }
 
 .split-user-name {
-  font-size: var(--oc-font-size-small);
   color: var(--oc-role-on-surface);
   cursor: pointer;
   margin: 0;
@@ -216,38 +210,19 @@ export default defineComponent({
   width: 100px;
 }
 
-.split-amount-input {
-  text-align: right;
-  font-size: var(--oc-font-size-small);
-}
-
 .split-summary {
-  margin-top: var(--oc-space-small);
-  padding-top: var(--oc-space-small);
   border-top: 1px solid var(--oc-role-outline-variant);
 }
 
-.split-summary-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .split-summary-label {
-  font-size: var(--oc-font-size-small);
   color: var(--oc-role-on-surface);
 }
 
 .split-summary-value {
-  font-size: var(--oc-font-size-small);
-  font-weight: var(--oc-font-weight-semibold);
   color: var(--oc-role-on-surface);
 }
 
 .split-summary-error {
-  font-size: var(--oc-font-size-xsmall);
   color: var(--oc-role-error);
-  margin-top: var(--oc-space-xsmall);
-  text-align: right;
 }
 </style>
