@@ -31,42 +31,20 @@
             aria-label="User suggestions"
           >
             <div class="suggestions-list">
-              <div
+              <UserTile
                 v-for="(suggestion, index) in suggestions"
                 :key="suggestion.id"
-                class="suggestion-item"
-                :class="{ 'is-selected': selectedIndex === index }"
+                :user="suggestion"
+                :is-selected="selectedIndex === index"
+                :show-email="true"
+                :show-open-cloud-id="false"
+                clickable
                 role="option"
                 :aria-selected="selectedIndex === index"
                 @click="selectSuggestion(suggestion)"
                 @mousedown.prevent="selectSuggestion(suggestion)"
                 @mouseenter="selectedIndex = index"
-              >
-                <div class="suggestion-content">
-                  <!-- User avatar -->
-                  <oc-avatar
-                    :src="suggestion.avatar"
-                    :user-name="suggestion.displayName"
-                    size="small"
-                    class="oc-mr-s"
-                  />
-
-                  <!-- User info -->
-                  <div class="user-info">
-                    <div class="user-name" v-text="suggestion.displayName" />
-                    <div
-                      v-if="suggestion.mail"
-                      class="user-email oc-text-muted"
-                      v-text="suggestion.mail"
-                    />
-                    <div
-                      v-else-if="suggestion.username"
-                      class="user-username oc-text-muted"
-                      v-text="suggestion.username"
-                    />
-                  </div>
-                </div>
-              </div>
+              />
             </div>
 
             <!-- No results message -->
@@ -100,12 +78,14 @@ import { useSimpleForm, useFormValidationEmits } from '../../../../composables/u
 import { MemberFormData, ValidationErrors } from '../../../../types/forms'
 import { FormField, FormInput } from '../../forms'
 import { UserSearchService, type UserSearchResult } from '../../../../services/userSearchService'
+import UserTile from '../../common/UserTile.vue'
 
 export default defineComponent({
   name: 'MemberForm',
   components: {
     FormField,
-    FormInput
+    FormInput,
+    UserTile
   },
   props: {
     member: {
@@ -419,23 +399,13 @@ export default defineComponent({
   margin: 0;
 }
 
-.suggestion-item {
-  cursor: pointer;
+:deep(.user-tile) {
   border-bottom: 1px solid var(--oc-role-outline-variant);
-  transition: background-color 0.15s ease;
   user-select: none;
   position: relative;
 
   &:last-child {
     border-bottom: none;
-  }
-
-  &:hover {
-    background-color: var(--oc-role-surface-container-high);
-  }
-
-  &.is-selected {
-    background-color: var(--oc-role-surface-container-highest);
   }
 
   // Ensure the entire area is clickable
@@ -452,35 +422,6 @@ export default defineComponent({
     bottom: 0;
     pointer-events: auto;
   }
-}
-
-.suggestion-content {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  gap: 12px;
-}
-
-.user-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.user-name {
-  font-weight: 500;
-  color: var(--oc-role-on-surface);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-email,
-.user-username {
-  font-size: 0.875rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-top: 2px;
 }
 
 .no-results {
@@ -501,19 +442,9 @@ export default defineComponent({
     max-height: 250px;
   }
 
-  .suggestion-content {
+  :deep(.user-tile-content) {
     padding: 10px 12px;
     gap: 10px;
-  }
-
-  .user-avatar {
-    width: 28px;
-    height: 28px;
-  }
-
-  .avatar-fallback svg {
-    width: 16px;
-    height: 16px;
   }
 }
 </style>

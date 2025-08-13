@@ -79,12 +79,56 @@
       <div class="form-row">
         <div class="form-column">
           <FormField label="Who paid initially?" required :error="errors.who_paid_id">
-            <FormSelect
-              v-model="localForm.who_paid_id"
-              :options="userOptions"
-              placeholder="Select user..."
-              required
-            />
+            <div class="who-paid-container">
+              <div
+                ref="whoPaidInputRef"
+                class="who-paid-input"
+                :class="{ 'is-open': showWhoPaidDropdown }"
+                @click="toggleWhoPaidDropdown"
+                @keydown="onWhoPaidKeydown"
+                tabindex="0"
+                role="combobox"
+                :aria-expanded="showWhoPaidDropdown"
+                aria-haspopup="listbox"
+              >
+                <div v-if="selectedUser" class="selected-user">
+                  <oc-avatar
+                    :src="selectedUserAvatarUrl"
+                    :user-name="selectedUser.name"
+                    size="small"
+                    class="oc-mr-s"
+                  />
+                  <span class="user-name">{{ selectedUser.name }}</span>
+                </div>
+                <span v-else class="placeholder">Select user...</span>
+                <oc-icon name="keyboard-arrow-down" size="small" class="dropdown-arrow" />
+              </div>
+
+              <!-- Dropdown -->
+              <div
+                v-if="showWhoPaidDropdown"
+                class="who-paid-dropdown"
+                role="listbox"
+                aria-label="User selection"
+              >
+                <div class="dropdown-list">
+                  <UserTile
+                    v-for="(user, index) in users"
+                    :key="user.id"
+                    :user="user"
+                    :is-selected="whoPaidSelectedIndex === index"
+                    :show-email="false"
+                    :show-open-cloud-id="true"
+                    clickable
+                    role="option"
+                    :aria-selected="whoPaidSelectedIndex === index"
+                    @click="selectWhoPaidUser(user)"
+                    @mousedown.prevent="selectWhoPaidUser(user)"
+                    @mouseenter="whoPaidSelectedIndex = index"
+                  />
+                </div>
+              </div>
+            </div>
           </FormField>
         </div>
         <div class="form-column">
@@ -144,7 +188,17 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, reactive, ref, computed, watch } from 'vue'
+import {
+  defineComponent,
+  PropType,
+  reactive,
+  ref,
+  computed,
+  watch,
+  onMounted,
+  onUnmounted
+} from 'vue'
+import { useClientService } from '@opencloud-eu/web-pkg'
 import {
   User,
   PaymentMode,
@@ -156,6 +210,7 @@ import {
 } from '../../../../utils/pcsvParser'
 import { UserSplit, BillFormData, ValidationErrors } from '../../../../types/forms'
 import { FormField, FormInput, FormSelect, FormTextarea, FormSection } from '../../forms'
+import UserTile from '../../common/UserTile.vue'
 
 export default defineComponent({
   name: 'BillForm',
@@ -164,7 +219,8 @@ export default defineComponent({
     FormInput,
     FormSelect,
     FormTextarea,
-    FormSection
+    FormSection,
+    UserTile
   },
   props: {
     bill: {
@@ -194,6 +250,40 @@ export default defineComponent({
   },
   emits: ['submit', 'validation-change', 'splits-change'],
   setup(props, { emit, expose }) {
+    const clientService = useClientService()
+
+    // Who paid dropdown state
+    const whoPaidInputRef = ref<HTMLElement>()
+    const showWhoPaidDropdown = ref(false)
+    const whoPaidSelectedIndex = ref(-1)
+
+    // Computed for selected user
+    const selectedUser = computed(
+      () => props.users.find((user) => user.id === localForm.who_paid_id) || null
+    )
+
+    // Computed avatar URL for selected user
+    const selectedUserAvatarUrl = computed(() => {
+      if (!selectedUser.value) return undefined
+
+      // If user already has an avatar, use it
+      if (selectedUser.value.avatar) {
+        return selectedUser.value.avatar
+      }
+
+      // If we have an OpenCloud ID, construct the avatar URL
+      if (selectedUser.value.opencloud_id && clientService) {
+        try {
+          const baseUrl =
+            clientService.httpAuthenticatedClient?.defaults?.baseURL || window.location.origin
+          return `${baseUrl}/graph/v1.0/users/${selectedUser.value.opencloud_id}/photo/$value`
+        } catch (error) {
+          console.debug('Failed to construct avatar URL:', error)
+        }
+      }
+
+      return undefined
+    })
     const localForm = reactive<BillFormData>({
       description: '',
       total_amount: '',
@@ -547,6 +637,84 @@ export default defineComponent({
       })
     }
 
+    // Who paid dropdown handlers
+    const toggleWhoPaidDropdown = () => {
+      showWhoPaidDropdown.value = !showWhoPaidDropdown.value
+      if (showWhoPaidDropdown.value) {
+        whoPaidSelectedIndex.value = props.users.findIndex(
+          (user) => user.id === localForm.who_paid_id
+        )
+      }
+    }
+
+    const selectWhoPaidUser = (user: User) => {
+      localForm.who_paid_id = user.id
+      showWhoPaidDropdown.value = false
+      whoPaidSelectedIndex.value = -1
+      whoPaidInputRef.value?.blur()
+    }
+
+    const onWhoPaidKeydown = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case 'ArrowUp':
+          event.preventDefault()
+          if (whoPaidSelectedIndex.value > 0) {
+            whoPaidSelectedIndex.value--
+          } else if (props.users.length > 0) {
+            whoPaidSelectedIndex.value = props.users.length - 1
+          }
+          break
+
+        case 'ArrowDown':
+          event.preventDefault()
+          if (whoPaidSelectedIndex.value < props.users.length - 1) {
+            whoPaidSelectedIndex.value++
+          } else {
+            whoPaidSelectedIndex.value = 0
+          }
+          break
+
+        case 'Enter':
+        case ' ':
+          event.preventDefault()
+          if (showWhoPaidDropdown.value) {
+            if (
+              whoPaidSelectedIndex.value >= 0 &&
+              whoPaidSelectedIndex.value < props.users.length
+            ) {
+              selectWhoPaidUser(props.users[whoPaidSelectedIndex.value])
+            }
+          } else {
+            toggleWhoPaidDropdown()
+          }
+          break
+
+        case 'Escape':
+          event.preventDefault()
+          showWhoPaidDropdown.value = false
+          whoPaidSelectedIndex.value = -1
+          whoPaidInputRef.value?.blur()
+          break
+      }
+    }
+
+    // Click outside to close dropdown
+    const handleClickOutside = (event: Event) => {
+      if (whoPaidInputRef.value && !whoPaidInputRef.value.contains(event.target as Node)) {
+        showWhoPaidDropdown.value = false
+        whoPaidSelectedIndex.value = -1
+      }
+    }
+
+    // Lifecycle
+    onMounted(() => {
+      document.addEventListener('click', handleClickOutside)
+    })
+
+    onUnmounted(() => {
+      document.removeEventListener('click', handleClickOutside)
+    })
+
     // Expose methods to parent component
     expose({
       updateSplits,
@@ -561,7 +729,18 @@ export default defineComponent({
       paymentModeOptions,
       categoryOptions,
       repeatOptions,
-      onSubmit
+      onSubmit,
+      // Who paid dropdown
+      whoPaidInputRef,
+      showWhoPaidDropdown,
+      whoPaidSelectedIndex,
+      selectedUser,
+      toggleWhoPaidDropdown,
+      selectWhoPaidUser,
+      onWhoPaidKeydown,
+      // Expose users for template
+      users: computed(() => props.users),
+      selectedUserAvatarUrl
     }
   }
 })
@@ -609,5 +788,133 @@ export default defineComponent({
 
 .select-with-icon {
   padding-left: calc(var(--oc-space-xlarge) + var(--oc-space-medium));
+}
+
+// Who paid dropdown styles
+.who-paid-container {
+  position: relative;
+  width: 100%;
+  z-index: 10000;
+  overflow: visible;
+}
+
+.who-paid-input {
+  @include form-control;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  min-height: 44px;
+  padding: 8px 12px;
+  background-color: var(--oc-role-surface);
+  border: 1px solid var(--oc-role-outline-variant);
+  border-radius: var(--oc-border-radius-medium);
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--oc-role-outline);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--oc-role-primary);
+    box-shadow: 0 0 0 2px var(--oc-role-primary-container);
+  }
+
+  &.is-open {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-color: var(--oc-role-primary);
+  }
+}
+
+.selected-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.placeholder {
+  color: var(--oc-role-on-surface-variant);
+  flex: 1;
+}
+
+.dropdown-arrow {
+  color: var(--oc-role-on-surface-variant);
+  transition: transform 0.15s ease;
+
+  .who-paid-input.is-open & {
+    transform: rotate(180deg);
+  }
+}
+
+.who-paid-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 99999;
+  background-color: var(--oc-role-surface);
+  border: 1px solid var(--oc-role-outline-variant);
+  border-top: none;
+  border-bottom-left-radius: var(--oc-border-radius-medium);
+  border-bottom-right-radius: var(--oc-border-radius-medium);
+  box-shadow: var(--oc-shadow-depth-2);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.dropdown-list {
+  padding: 0;
+  margin: 0;
+}
+
+:deep(.user-tile) {
+  border-bottom: 1px solid var(--oc-role-outline-variant);
+  user-select: none;
+  position: relative;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  // Ensure the entire area is clickable
+  * {
+    pointer-events: none;
+  }
+
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: auto;
+  }
+}
+
+// Ensure parent containers don't clip the dropdown
+:deep(.form-field),
+:deep(.bill-form),
+:deep(.form-section),
+:deep(.form-row),
+:deep(.form-column),
+:deep(.oc-panel),
+:deep(.oc-panel-body) {
+  overflow: visible !important;
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+  .who-paid-dropdown {
+    max-height: 250px;
+  }
+
+  :deep(.user-tile-content) {
+    padding: 10px 12px;
+    gap: 10px;
+  }
 }
 </style>
