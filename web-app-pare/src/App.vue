@@ -532,7 +532,8 @@ export default defineComponent({
     const onCreateBill = (data: { bill: any; splits: any[] }) => {
       try {
         let updatedData = { ...parsedData.value }
-        updatedData = PCSVParser.addBill(updatedData, data.bill, data.splits)
+        const result = PCSVParser.addBill(updatedData, data.bill, data.splits)
+        updatedData = result.data
         const newContent = PCSVParser.generate(updatedData)
         editableContent.value = newContent
         emit('update:currentContent', newContent)
@@ -542,6 +543,8 @@ export default defineComponent({
           title: $gettext('Bill created'),
           desc: $gettext('Your bill has been created successfully')
         })
+
+        console.log(`App: Bill created with ID ${result.billId}`)
       } catch (error) {
         console.error('Error creating bill:', error)
       }
@@ -620,7 +623,8 @@ export default defineComponent({
         const { selectedItem } = detailPanel.value
         if (selectedItem && selectedItem.id) {
           let updatedData = { ...parsedData.value }
-          updatedData = PCSVParser.updateBill(updatedData, selectedItem.id, data.bill, data.splits)
+          const result = PCSVParser.updateBill(updatedData, selectedItem.id, data.bill, data.splits)
+          updatedData = result.data
 
           const newContent = PCSVParser.generate(updatedData)
           editableContent.value = newContent
@@ -631,6 +635,8 @@ export default defineComponent({
             title: $gettext('Bill updated'),
             desc: $gettext('Your bill has been updated successfully')
           })
+
+          console.log(`App: Bill updated with ID ${result.billId}`)
         }
       } catch (error) {
         console.error('Error saving bill:', error)

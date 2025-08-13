@@ -44,6 +44,12 @@ export interface BillSplit {
   amount: number
 }
 
+export interface Balance {
+  user_id: number
+  balance: number
+  last_calculated: string
+}
+
 export class PCSVParser {
   static parse(content: string): PCSVData {
     const lines = content
@@ -92,19 +98,48 @@ export class PCSVParser {
   }
 
   static generate(data: PCSVData): string {
+    console.log('PCSVParser: Generating PCSV content')
     const lines: string[] = []
 
-    for (const table of Object.values(data.tables)) {
-      lines.push(`TABLE,${table.name}`)
-      lines.push(table.headers.join(','))
+    // Define preferred table order (balances should be last)
+    const tableOrder = ['users', 'payment_mode', 'category', 'bills', 'bill_splits', 'balances']
+    const processedTables = new Set<string>()
 
-      for (const row of table.rows) {
-        lines.push(row.map((cell) => this.escapeCSVCell(cell)).join(','))
+    // Process tables in preferred order
+    for (const tableName of tableOrder) {
+      const table = data.tables[tableName]
+      if (table && table.rows.length > 0) {
+        console.log(`PCSVParser: Adding table ${tableName} with ${table.rows.length} rows`)
+        lines.push(`TABLE,${table.name}`)
+        lines.push(table.headers.join(','))
+
+        for (const row of table.rows) {
+          lines.push(row.map((cell) => this.escapeCSVCell(cell)).join(','))
+        }
+
+        lines.push('') // Empty line between tables
+        processedTables.add(tableName)
       }
-
-      lines.push('') // Empty line between tables
     }
 
+    // Process any remaining tables not in the preferred order
+    for (const table of Object.values(data.tables)) {
+      if (!processedTables.has(table.name.toLowerCase()) && table.rows.length > 0) {
+        console.log(
+          `PCSVParser: Adding additional table ${table.name} with ${table.rows.length} rows`
+        )
+        lines.push(`TABLE,${table.name}`)
+        lines.push(table.headers.join(','))
+
+        for (const row of table.rows) {
+          lines.push(row.map((cell) => this.escapeCSVCell(cell)).join(','))
+        }
+
+        lines.push('') // Empty line between tables
+      }
+    }
+
+    console.log('PCSVParser: PCSV content generation completed')
     return lines.join('\n')
   }
 
@@ -194,6 +229,9 @@ export class PCSVParser {
       }
     }
 
+    // Balances table is optional - will be created when needed
+    console.log('PCSVParser: Ensured default tables')
+
     return data
   }
 
@@ -201,7 +239,8 @@ export class PCSVParser {
     data: PCSVData,
     bill: Omit<Bill, 'id'>,
     splits: Omit<BillSplit, 'id' | 'bill_id'>[]
-  ): PCSVData {
+  ): { data: PCSVData; billId: number } {
+    console.log('PCSVParser: Adding new bill')
     const billsTable = data.tables.bills
     const billSplitsTable = data.tables.bill_splits
 
@@ -233,7 +272,14 @@ export class PCSVParser {
       ])
     }
 
-    return data
+    // Invalidate balance cache since data has changed
+    if (data.tables.balances) {
+      console.log('PCSVParser: Clearing balance cache due to new bill')
+      data.tables.balances.rows = []
+    }
+
+    console.log(`PCSVParser: Added bill ${billId} with ${splits.length} splits`)
+    return { data, billId }
   }
 
   static getBills(data: PCSVData): Bill[] {
@@ -252,6 +298,76 @@ export class PCSVParser {
       comment: row[8],
       file_link: row[9]
     }))
+  }
+
+  static getAllBillSplits(data: PCSVData): BillSplit[] {
+    console.log('PCSVParser: Getting all bill splits')
+    const billSplitsTable = data.tables.bill_splits
+    if (!billSplitsTable || !billSplitsTable.rows) {
+      console.log('PCSVParser: No bill splits table found')
+      return []
+    }
+
+    const splits = billSplitsTable.rows
+      .filter((row) => row && row.length >= 4)
+      .map((row) => ({
+        id: parseInt(row[0]) || 0,
+        bill_id: parseInt(row[1]) || 0,
+        user_id: parseInt(row[2]) || 0,
+        amount: parseFloat(row[3]) || 0
+      }))
+
+    console.log(`PCSVParser: Retrieved ${splits.length} bill splits`)
+    return splits
+  }
+
+  static getBalances(data: PCSVData): Balance[] {
+    console.log('PCSVParser: Getting balances from table')
+    const balancesTable = data.tables.balances
+    if (!balancesTable || !balancesTable.rows) {
+      console.log('PCSVParser: No balances table found')
+      return []
+    }
+
+    const balances = balancesTable.rows
+      .filter((row) => row && row.length >= 3)
+      .map((row) => ({
+        user_id: parseInt(row[0]) || 0,
+        balance: parseFloat(row[1]) || 0,
+        last_calculated: row[2] || ''
+      }))
+
+    console.log(`PCSVParser: Retrieved ${balances.length} balances from table`)
+    return balances
+  }
+
+  static setBalances(data: PCSVData, balances: Balance[]): PCSVData {
+    console.log(`PCSVParser: Setting ${balances.length} balances to table`)
+
+    // Ensure balances table exists
+    if (!data.tables.balances) {
+      data.tables.balances = {
+        name: 'balances',
+        headers: ['user_id', 'balance', 'last_calculated'],
+        rows: []
+      }
+    }
+
+    // Clear existing rows and add new balances
+    data.tables.balances.rows = balances.map((balance) => [
+      balance.user_id.toString(),
+      balance.balance.toString(),
+      balance.last_calculated
+    ])
+
+    console.log('PCSVParser: Balances table updated')
+    return data
+  }
+
+  static hasBalancesTable(data: PCSVData): boolean {
+    const hasTable = !!(data.tables.balances && data.tables.balances.rows.length > 0)
+    console.log(`PCSVParser: Has balances table: ${hasTable}`)
+    return hasTable
   }
 
   static getBillSplits(data: PCSVData, billId: number): BillSplit[] {
@@ -275,7 +391,8 @@ export class PCSVParser {
     billId: number,
     bill: Omit<Bill, 'id'>,
     splits: Omit<BillSplit, 'id' | 'bill_id'>[]
-  ): PCSVData {
+  ): { data: PCSVData; billId: number } {
+    console.log(`PCSVParser: Updating bill ${billId}`)
     const billsTable = data.tables.bills
     const billSplitsTable = data.tables.bill_splits
 
@@ -310,7 +427,14 @@ export class PCSVParser {
       ])
     }
 
-    return data
+    // Invalidate balance cache since data has changed
+    if (data.tables.balances) {
+      console.log('PCSVParser: Clearing balance cache due to bill update')
+      data.tables.balances.rows = []
+    }
+
+    console.log(`PCSVParser: Updated bill ${billId}`)
+    return { data, billId }
   }
 
   static updateUser(data: PCSVData, userId: number, user: Omit<User, 'id'>): PCSVData {
@@ -391,6 +515,7 @@ export class PCSVParser {
   }
 
   static deleteBill(data: PCSVData, billId: number): PCSVData {
+    console.log(`PCSVParser: Deleting bill ${billId}`)
     const billsTable = data.tables.bills
     const billSplitsTable = data.tables.bill_splits
 
@@ -400,6 +525,13 @@ export class PCSVParser {
     // Remove all splits for this bill
     billSplitsTable.rows = billSplitsTable.rows.filter((row) => parseInt(row[1]) !== billId)
 
+    // Invalidate balance cache since data has changed
+    if (data.tables.balances) {
+      console.log('PCSVParser: Clearing balance cache due to bill deletion')
+      data.tables.balances.rows = []
+    }
+
+    console.log(`PCSVParser: Deleted bill ${billId}`)
     return data
   }
 

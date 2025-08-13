@@ -48,18 +48,31 @@ export function useDetailPanelLogic<T = any>(mode: FormMode, itemType: string, s
   }
 
   // Generic event handlers that emit with proper naming
-  const createEventHandlers = (emit: any) => {
+  const createEventHandlers = (
+    emit: any,
+    postSaveCallback?: (billId?: number) => Promise<void>
+  ) => {
     const onCancel = () => {
       emit('cancel')
     }
 
-    const onFormSubmit = (data: T) => {
+    const onFormSubmit = async (data: T) => {
       const eventName =
         mode === 'create'
           ? `create-${itemType.toLowerCase().replace(' ', '-')}`
           : `save-${itemType.toLowerCase().replace(' ', '-')}`
 
       emit(eventName, data)
+
+      // Execute post-save callback if provided
+      if (postSaveCallback && (data as any)?.id) {
+        console.log(`useDetailPanelLogic: Executing post-save callback for ${itemType}`)
+        try {
+          await postSaveCallback((data as any).id)
+        } catch (error) {
+          console.error(`useDetailPanelLogic: Error in post-save callback:`, error)
+        }
+      }
     }
 
     return {

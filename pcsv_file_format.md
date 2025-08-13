@@ -148,6 +148,29 @@ id,name
 4,Utilities
 ```
 
+### 6. Balances Table (Optional)
+Pre-calculated user balances for performance optimization.
+
+**Structure:**
+```
+TABLE,balances
+user_id,balance,last_calculated
+```
+
+
+**Fields:**
+- `user_id`: Reference to users table (integer)
+- `balance`: Current balance for this user (decimal)
+- `last_calculated`: Timestamp when balance was calculated (format: DD/MM/YYYY HH:MM)
+
+**Usage Rules:**
+1. This table is optional and used for performance optimization
+2. If present, applications should validate against calculated balances periodically
+3. If balances table is missing or outdated, fall back to calculation
+4. When bills/splits change, update the balances table or mark it for recalculation
+
+
+
 ## File Creation Rules
 
 ### Auto-Creation of Missing Tables

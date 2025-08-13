@@ -1,6 +1,6 @@
 // Vue composable for settlement functionality
 
-import { computed, ref, type Ref } from 'vue'
+import { computed, ref, watch, type Ref } from 'vue'
 import { BalanceCalculator } from '../utils/balanceCalculator'
 import { SettlementAlgorithm } from '../utils/settlementAlgorithm'
 import { PCSVParser, type PCSVData } from '../utils/pcsvParser'
@@ -15,35 +15,59 @@ export function useSettlement(parsedData: Ref<PCSVData> | undefined) {
   const isCalculating = ref(false)
   const lastSettlement = ref<Settlement | null>(null)
   const error = ref<string | null>(null)
+  const userBalances = ref<UserBalance[]>([])
+  const lastCalculationHash = ref<string>('')
 
   /**
-   * Calculate current user balances
+   * Calculate current user balances asynchronously
    */
-  const userBalances = computed<UserBalance[]>(() => {
-    if (!parsedData?.value) return []
+  const calculateBalances = async () => {
+    if (!parsedData?.value) {
+      console.log('useSettlement: No parsed data available')
+      userBalances.value = []
+      return
+    }
+
+    // Create a hash to avoid recalculating if data hasn't changed
+    const dataHash = JSON.stringify({
+      billsLength: parsedData.value.tables.bills?.rows.length || 0,
+      splitsLength: parsedData.value.tables.bill_splits?.rows.length || 0,
+      balancesLength: parsedData.value.tables.balances?.rows.length || 0
+    })
+
+    if (dataHash === lastCalculationHash.value && userBalances.value.length > 0) {
+      console.log('useSettlement: Data unchanged, skipping calculation')
+      return
+    }
+
+    console.log('useSettlement: Starting balance calculation')
+    isCalculating.value = true
+    error.value = null
 
     try {
-      const bills = PCSVParser.getBills(parsedData.value)
-      const users = PCSVParser.getUsers(parsedData.value)
-
-      // Get all bill splits
-      const allBillSplits = bills.flatMap((bill) =>
-        PCSVParser.getBillSplits(parsedData.value!, bill.id)
-      )
-
-      const input: BalanceCalculationInput = {
-        bills,
-        billSplits: allBillSplits,
-        users
-      }
-
-      return BalanceCalculator.calculateUserBalances(input)
+      const balances = await BalanceCalculator.calculateUserBalancesAsync(parsedData.value)
+      userBalances.value = balances
+      lastCalculationHash.value = dataHash
+      console.log('useSettlement: Balance calculation completed', { count: balances.length })
     } catch (err) {
-      console.error('Error calculating user balances:', err)
+      console.error('useSettlement: Error calculating user balances:', err)
       error.value = err instanceof Error ? err.message : 'Unknown error calculating balances'
-      return []
+      userBalances.value = []
+    } finally {
+      isCalculating.value = false
     }
-  })
+  }
+
+  // Watch for data changes and recalculate
+  watch(
+    parsedData,
+    () => {
+      if (parsedData?.value) {
+        calculateBalances()
+      }
+    },
+    { immediate: true, deep: false }
+  )
 
   /**
    * Get users who are owed money (creditors)
@@ -209,6 +233,29 @@ export function useSettlement(parsedData: Ref<PCSVData> | undefined) {
   }
 
   /**
+   * Recalculate balances for a specific bill
+   */
+  const recalculateForBill = async (billId: number) => {
+    if (!parsedData?.value) return
+
+    console.log(`useSettlement: Recalculating balances for bill ${billId}`)
+    isCalculating.value = true
+    error.value = null
+
+    try {
+      await BalanceCalculator.recalculateForBill(parsedData.value, billId)
+      // Force recalculation by clearing the hash
+      lastCalculationHash.value = ''
+      await calculateBalances()
+    } catch (err) {
+      console.error('useSettlement: Error recalculating balances for bill:', err)
+      error.value = err instanceof Error ? err.message : 'Unknown error recalculating balances'
+    } finally {
+      isCalculating.value = false
+    }
+  }
+
+  /**
    * Clear any errors
    */
   const clearError = () => {
@@ -217,7 +264,7 @@ export function useSettlement(parsedData: Ref<PCSVData> | undefined) {
 
   return {
     // Computed values
-    userBalances,
+    userBalances: computed(() => userBalances.value),
     creditors,
     debtors,
     needsSettlement,
@@ -235,6 +282,7 @@ export function useSettlement(parsedData: Ref<PCSVData> | undefined) {
     createSettlementBills,
     getSettlementSummary,
     getTotalSettlementAmount,
+    recalculateForBill,
     clearError
   }
 }

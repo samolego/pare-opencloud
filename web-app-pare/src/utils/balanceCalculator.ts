@@ -1,6 +1,7 @@
 // Balance calculation utilities for settlement system
 
 import { UserBalance, BalanceCalculationInput } from '../types/settlement'
+import { PCSVParser, type PCSVData, type Balance } from './pcsvParser'
 
 export class BalanceCalculator {
   /**
@@ -9,6 +10,11 @@ export class BalanceCalculator {
    * @returns Array of user balances
    */
   static calculateUserBalances(input: BalanceCalculationInput): UserBalance[] {
+    console.log('BalanceCalculator: Starting balance calculation', {
+      billsCount: input.bills.length,
+      splitsCount: input.billSplits.length,
+      usersCount: input.users.length
+    })
     const { bills, billSplits, users } = input
     const balances = new Map<number, number>()
 
@@ -16,6 +22,17 @@ export class BalanceCalculator {
     users.forEach((user) => {
       balances.set(user.id, 0)
     })
+
+    // Create a map of bill splits by bill_id for faster lookup
+    const splitsByBillId = new Map<number, typeof billSplits>()
+    billSplits.forEach((split) => {
+      if (!splitsByBillId.has(split.bill_id)) {
+        splitsByBillId.set(split.bill_id, [])
+      }
+      splitsByBillId.get(split.bill_id)!.push(split)
+    })
+
+    console.log('BalanceCalculator: Processing bills and splits')
 
     // Process each bill
     bills.forEach((bill) => {
@@ -28,7 +45,7 @@ export class BalanceCalculator {
       balances.set(whoPaidId, currentPayerBalance + totalAmount)
 
       // Subtract split amounts from each person who owes (debt)
-      const billSplitsForThisBill = billSplits.filter((split) => split.bill_id === billId)
+      const billSplitsForThisBill = splitsByBillId.get(billId) || []
 
       billSplitsForThisBill.forEach((split) => {
         const currentUserBalance = balances.get(split.user_id) || 0
@@ -37,11 +54,139 @@ export class BalanceCalculator {
     })
 
     // Convert to UserBalance array
-    return users.map((user) => ({
+    const result = users.map((user) => ({
       userId: user.id,
       name: user.name,
       balance: balances.get(user.id) || 0
     }))
+
+    console.log('BalanceCalculator: Balance calculation completed', {
+      resultCount: result.length
+    })
+
+    return result
+  }
+
+  /**
+   * Async balance calculation with caching support
+   * @param data - PCSV data
+   * @returns Promise<UserBalance[]>
+   */
+  static async calculateUserBalancesAsync(data: PCSVData): Promise<UserBalance[]> {
+    console.log('BalanceCalculator: Starting async balance calculation')
+
+    // Check if we have cached balances
+    if (PCSVParser.hasBalancesTable(data)) {
+      console.log('BalanceCalculator: Found cached balances, loading from table')
+      const cachedBalances = PCSVParser.getBalances(data)
+      const users = PCSVParser.getUsers(data)
+
+      // Convert cached balances to UserBalance format
+      const userBalances = users.map((user) => {
+        const cachedBalance = cachedBalances.find((b) => b.user_id === user.id)
+        return {
+          userId: user.id,
+          name: user.name,
+          balance: cachedBalance?.balance || 0
+        }
+      })
+
+      console.log('BalanceCalculator: Returning cached balances', { count: userBalances.length })
+      return userBalances
+    }
+
+    // No cached balances, calculate from scratch
+    console.log('BalanceCalculator: No cached balances, calculating from scratch')
+
+    // Use setTimeout to yield to event loop for large datasets
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    const bills = PCSVParser.getBills(data)
+    const users = PCSVParser.getUsers(data)
+    const allBillSplits = PCSVParser.getAllBillSplits(data)
+
+    const input: BalanceCalculationInput = {
+      bills,
+      billSplits: allBillSplits,
+      users
+    }
+
+    const balances = this.calculateUserBalances(input)
+
+    // Cache the results
+    await this.saveBalancesToCache(data, balances)
+
+    return balances
+  }
+
+  /**
+   * Save calculated balances to cache
+   * @param data - PCSV data
+   * @param balances - Calculated balances
+   */
+  static async saveBalancesToCache(data: PCSVData, balances: UserBalance[]): Promise<void> {
+    console.log('BalanceCalculator: Saving balances to cache')
+
+    const now = new Date()
+    const timestamp = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
+
+    const cacheBalances: Balance[] = balances.map((balance) => ({
+      user_id: balance.userId,
+      balance: balance.balance,
+      last_calculated: timestamp
+    }))
+
+    PCSVParser.setBalances(data, cacheBalances)
+    console.log('BalanceCalculator: Balances cached successfully')
+  }
+
+  /**
+   * Force recalculation of balances (ignores cache)
+   * @param data - PCSV data
+   * @returns Promise<UserBalance[]>
+   */
+  static async forceRecalculateBalances(data: PCSVData): Promise<UserBalance[]> {
+    console.log('BalanceCalculator: Force recalculating balances (ignoring cache)')
+
+    // Clear existing balances table to force recalculation
+    if (data.tables.balances) {
+      data.tables.balances.rows = []
+    }
+
+    // Use setTimeout to yield to event loop for large datasets
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    const bills = PCSVParser.getBills(data)
+    const users = PCSVParser.getUsers(data)
+    const allBillSplits = PCSVParser.getAllBillSplits(data)
+
+    const input: BalanceCalculationInput = {
+      bills,
+      billSplits: allBillSplits,
+      users
+    }
+
+    const balances = this.calculateUserBalances(input)
+
+    // Cache the results
+    await this.saveBalancesToCache(data, balances)
+
+    return balances
+  }
+
+  /**
+   * Recalculate balances for a specific bill (incremental update)
+   * @param data - PCSV data
+   * @param billId - ID of the bill that changed
+   */
+  static async recalculateForBill(data: PCSVData, billId: number): Promise<void> {
+    console.log(`BalanceCalculator: Recalculating balances for bill ${billId}`)
+
+    // For now, we'll do a full recalculation
+    // TODO: Implement incremental calculation for better performance
+    const balances = await this.forceRecalculateBalances(data)
+
+    console.log(`BalanceCalculator: Balances recalculated for bill ${billId}`)
   }
 
   /**

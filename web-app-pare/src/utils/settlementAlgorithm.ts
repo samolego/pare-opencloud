@@ -1,6 +1,11 @@
 // Settlement algorithm for debt simplification
 
-import { UserBalance, Settlement, SettlementTransaction, SettlementBillData } from '../types/settlement'
+import {
+  UserBalance,
+  Settlement,
+  SettlementTransaction,
+  SettlementBillData
+} from '../types/settlement'
 import { BalanceCalculator } from './balanceCalculator'
 
 export class SettlementAlgorithm {
@@ -11,7 +16,7 @@ export class SettlementAlgorithm {
    */
   static createSettlement(balances: UserBalance[]): Settlement {
     // Clone balances to avoid mutating original data
-    const workingBalances = balances.map(balance => ({ ...balance }))
+    const workingBalances = balances.map((balance) => ({ ...balance }))
     const transactions: SettlementTransaction[] = []
 
     // Get creditors and debtors
@@ -19,8 +24,8 @@ export class SettlementAlgorithm {
     const debtors = BalanceCalculator.getDebtors(workingBalances)
 
     // Create copies for iteration
-    const workingCreditors = creditors.map(c => ({ ...c }))
-    const workingDebtors = debtors.map(d => ({ ...d }))
+    const workingCreditors = creditors.map((c) => ({ ...c }))
+    const workingDebtors = debtors.map((d) => ({ ...d }))
 
     // Greedy algorithm: match largest creditor with largest debtor
     let creditorIndex = 0
@@ -88,7 +93,7 @@ export class SettlementAlgorithm {
     const settlementDate = date || now.toISOString().split('T')[0]
     const settlementTime = time || now.toTimeString().split(' ')[0].slice(0, 5)
 
-    return settlement.transactions.map(transaction => ({
+    return settlement.transactions.map((transaction) => ({
       description: `Settlement: ${transaction.fromUserName} → ${transaction.toUserName}`,
       fromUserId: transaction.fromUserId,
       toUserId: transaction.toUserId,
@@ -109,7 +114,7 @@ export class SettlementAlgorithm {
     const transactionEffects = new Map<number, number>()
 
     // Initialize with original balances
-    originalBalances.forEach(balance => {
+    originalBalances.forEach((balance) => {
       transactionEffects.set(balance.userId, balance.balance)
     })
 
