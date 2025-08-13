@@ -119,7 +119,7 @@ export default defineComponent({
     },
     itemsPerPage: {
       type: Number,
-      default: 20
+      default: 10
     }
   },
   emits: ['page-change'],

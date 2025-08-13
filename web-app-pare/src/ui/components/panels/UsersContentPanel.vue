@@ -74,7 +74,7 @@ export default defineComponent({
     },
     itemsPerPage: {
       type: Number,
-      default: 20
+      default: 8
     }
   },
   emits: ['page-change'],
