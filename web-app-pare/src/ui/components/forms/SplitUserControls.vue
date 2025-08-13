@@ -3,9 +3,12 @@
     <div
       v-for="user in users"
       :key="user.id"
-      class="split-user-row oc-flex oc-flex-between oc-flex-center oc-mb-xs"
+      class="oc-flex oc-flex-between oc-flex-center oc-mb-xs"
     >
-      <div class="split-user-info oc-flex oc-flex-center oc-gap-xs">
+      <label
+        class="split-user-info oc-cursor-pointer oc-flex oc-flex-start oc-gap-m oc-flex-1"
+        :for="`user-${user.id}`"
+      >
         <input
           :id="`user-${user.id}`"
           :checked="isUserIncluded(user.id)"
@@ -13,11 +16,11 @@
           class="split-user-checkbox"
           @change="onSplitIncludedChange(user.id)"
         />
-        <label :for="`user-${user.id}`" class="split-user-name oc-text-s">
+        <span class="split-user-name oc-text-s">
           {{ user.name }}
-        </label>
-      </div>
-      <div class="split-user-amount">
+        </span>
+      </label>
+      <div class="split-user-amount oc-flex-shrink-0">
         <FormInput
           :model-value="getUserAmount(user.id)"
           type="number"
@@ -191,7 +194,12 @@ export default defineComponent({
   background-color: var(--oc-role-surface-container);
 }
 
-.split-user-row:last-of-type {
+.split-user-info {
+  align-items: center;
+  gap: var(--oc-space-medium) !important;
+}
+
+.split-user-info:last-child {
   margin-bottom: 0 !important;
 }
 
@@ -202,12 +210,21 @@ export default defineComponent({
 
 .split-user-name {
   color: var(--oc-role-on-surface);
-  cursor: pointer;
   margin: 0;
+  line-height: 1;
+  display: flex;
+  align-items: center;
 }
 
 .split-user-amount {
-  width: 100px;
+  width: 120px;
+  max-width: 120px;
+
+  :deep(.form-input) {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
 }
 
 .split-summary {
