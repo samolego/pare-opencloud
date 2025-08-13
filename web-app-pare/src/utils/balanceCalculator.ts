@@ -1,7 +1,7 @@
 // Balance calculation utilities for settlement system
 
 import { UserBalance, BalanceCalculationInput } from '../types/settlement'
-import { PCSVParser, type PCSVData, type Balance } from './pcsvParser'
+import { PCSVParser, type PCSVData } from './pcsvParser'
 
 export class BalanceCalculator {
   /**
@@ -75,21 +75,18 @@ export class BalanceCalculator {
   static async calculateUserBalancesAsync(data: PCSVData): Promise<UserBalance[]> {
     console.log('BalanceCalculator: Starting async balance calculation')
 
-    // Check if we have cached balances
-    if (PCSVParser.hasBalancesTable(data)) {
-      console.log('BalanceCalculator: Found cached balances, loading from table')
-      const cachedBalances = PCSVParser.getBalances(data)
-      const users = PCSVParser.getUsers(data)
+    const users = PCSVParser.getUsers(data)
 
-      // Convert cached balances to UserBalance format
-      const userBalances = users.map((user) => {
-        const cachedBalance = cachedBalances.find((b) => b.user_id === user.id)
-        return {
-          userId: user.id,
-          name: user.name,
-          balance: cachedBalance?.balance || 0
-        }
-      })
+    // Check if all users have cached balances
+    const hasCachedBalances = users.every((user) => user.balance !== null)
+
+    if (hasCachedBalances && users.length > 0) {
+      console.log('BalanceCalculator: Found cached balances in users table')
+      const userBalances = users.map((user) => ({
+        userId: user.id,
+        name: user.name,
+        balance: user.balance || 0
+      }))
 
       console.log('BalanceCalculator: Returning cached balances', { count: userBalances.length })
       return userBalances
@@ -102,7 +99,6 @@ export class BalanceCalculator {
     await new Promise((resolve) => setTimeout(resolve, 0))
 
     const bills = PCSVParser.getBills(data)
-    const users = PCSVParser.getUsers(data)
     const allBillSplits = PCSVParser.getAllBillSplits(data)
 
     const input: BalanceCalculationInput = {
@@ -125,19 +121,24 @@ export class BalanceCalculator {
    * @param balances - Calculated balances
    */
   static async saveBalancesToCache(data: PCSVData, balances: UserBalance[]): Promise<void> {
-    console.log('BalanceCalculator: Saving balances to cache')
+    console.log('BalanceCalculator: Saving balances to users table')
 
-    const now = new Date()
-    const timestamp = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
+    // Update each user's balance in the users table
+    const usersTable = data.tables.users
+    if (!usersTable) {
+      console.error('BalanceCalculator: No users table found')
+      return
+    }
 
-    const cacheBalances: Balance[] = balances.map((balance) => ({
-      user_id: balance.userId,
-      balance: balance.balance,
-      last_calculated: timestamp
-    }))
+    balances.forEach((balance) => {
+      const userRowIndex = usersTable.rows.findIndex((row) => parseInt(row[0]) === balance.userId)
+      if (userRowIndex !== -1) {
+        // Update the balance field (index 3) in the user row
+        usersTable.rows[userRowIndex][3] = balance.balance.toString()
+      }
+    })
 
-    PCSVParser.setBalances(data, cacheBalances)
-    console.log('BalanceCalculator: Balances cached successfully')
+    console.log('BalanceCalculator: Balances cached successfully in users table')
   }
 
   /**
@@ -148,9 +149,14 @@ export class BalanceCalculator {
   static async forceRecalculateBalances(data: PCSVData): Promise<UserBalance[]> {
     console.log('BalanceCalculator: Force recalculating balances (ignoring cache)')
 
-    // Clear existing balances table to force recalculation
-    if (data.tables.balances) {
-      data.tables.balances.rows = []
+    // Clear existing balances in users table to force recalculation
+    const usersTable = data.tables.users
+    if (usersTable) {
+      usersTable.rows.forEach((row) => {
+        if (row.length > 3) {
+          row[3] = '' // Clear balance field
+        }
+      })
     }
 
     // Use setTimeout to yield to event loop for large datasets

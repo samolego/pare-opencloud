@@ -4,12 +4,7 @@ import { computed, ref, watch, type Ref } from 'vue'
 import { BalanceCalculator } from '../utils/balanceCalculator'
 import { SettlementAlgorithm } from '../utils/settlementAlgorithm'
 import { PCSVParser, type PCSVData } from '../utils/pcsvParser'
-import type {
-  UserBalance,
-  Settlement,
-  SettlementResult,
-  BalanceCalculationInput
-} from '../types/settlement'
+import type { UserBalance, Settlement, SettlementResult } from '../types/settlement'
 
 export function useSettlement(parsedData: Ref<PCSVData> | undefined) {
   const isCalculating = ref(false)
@@ -32,7 +27,7 @@ export function useSettlement(parsedData: Ref<PCSVData> | undefined) {
     const dataHash = JSON.stringify({
       billsLength: parsedData.value.tables.bills?.rows.length || 0,
       splitsLength: parsedData.value.tables.bill_splits?.rows.length || 0,
-      balancesLength: parsedData.value.tables.balances?.rows.length || 0
+      usersLength: parsedData.value.tables.users?.rows.length || 0
     })
 
     if (dataHash === lastCalculationHash.value && userBalances.value.length > 0) {
@@ -144,13 +139,13 @@ export function useSettlement(parsedData: Ref<PCSVData> | undefined) {
   /**
    * Create settlement bills and add them to the data
    */
-  const createSettlementBills = (
+  const createSettlementBills = async (
     date?: string,
     time?: string
   ): Promise<SettlementResult | null> => {
     if (!parsedData?.value) {
       error.value = 'No data available'
-      return null
+      return Promise.resolve(null)
     }
 
     isCalculating.value = true
@@ -160,17 +155,17 @@ export function useSettlement(parsedData: Ref<PCSVData> | undefined) {
       // Generate settlement plan
       const settlement = generateSettlement()
       if (!settlement) {
-        return null
+        return Promise.resolve(null)
       }
 
       // Convert to settlement bills
       const settlementBills = SettlementAlgorithm.createSettlementBills(settlement, date, time)
 
       if (settlementBills.length === 0) {
-        return {
+        return Promise.resolve({
           settlement,
           settlementBills: []
-        }
+        })
       }
 
       // Add each settlement bill to the data
@@ -182,7 +177,7 @@ export function useSettlement(parsedData: Ref<PCSVData> | undefined) {
           description: settlementBill.description,
           total_amount: settlementBill.amount,
           who_paid_id: settlementBill.fromUserId,
-          datetime: `${settlementBill.date} ${settlementBill.time}`,
+          timestamp: Date.now(),
           repeat: '',
           payment_mode_id: null,
           category_id: null,
@@ -199,20 +194,21 @@ export function useSettlement(parsedData: Ref<PCSVData> | undefined) {
         ]
 
         // Add to data
-        updatedData = PCSVParser.addBill(updatedData, bill, splits)
+        const result = PCSVParser.addBill(updatedData, bill, splits)
+        updatedData = result.data
       }
 
       // Update the parsed data
       parsedData.value = updatedData
 
-      return {
+      return Promise.resolve({
         settlement,
         settlementBills
-      }
+      })
     } catch (err) {
       console.error('Error creating settlement bills:', err)
       error.value = err instanceof Error ? err.message : 'Unknown error creating settlement bills'
-      return null
+      return Promise.resolve(null)
     } finally {
       isCalculating.value = false
     }

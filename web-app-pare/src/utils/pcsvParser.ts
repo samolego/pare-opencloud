@@ -12,6 +12,7 @@ export interface User {
   id: number
   name: string
   opencloud_id: string | null
+  balance: number | null
 }
 
 export interface PaymentMode {
@@ -29,7 +30,7 @@ export interface Bill {
   description: string
   total_amount: number
   who_paid_id: number
-  datetime: string
+  timestamp: number
   repeat: string
   payment_mode_id: number | null
   category_id: number | null
@@ -42,12 +43,6 @@ export interface BillSplit {
   bill_id: number
   user_id: number
   amount: number
-}
-
-export interface Balance {
-  user_id: number
-  balance: number
-  last_calculated: string
 }
 
 export class PCSVParser {
@@ -102,7 +97,7 @@ export class PCSVParser {
     const lines: string[] = []
 
     // Define preferred table order (balances should be last)
-    const tableOrder = ['users', 'payment_mode', 'category', 'bills', 'bill_splits', 'balances']
+    const tableOrder = ['users', 'payment_mode', 'category', 'bills', 'bill_splits']
     const processedTables = new Set<string>()
 
     // Process tables in preferred order
@@ -152,7 +147,7 @@ export class PCSVParser {
     if (!data.tables.users) {
       data.tables.users = {
         name: 'users',
-        headers: ['id', 'name', 'opencloud_id'],
+        headers: ['id', 'name', 'opencloud_id', 'balance'],
         rows: []
       }
     }
@@ -165,7 +160,12 @@ export class PCSVParser {
 
     if (!hasCurrentUser) {
       const nextUserId = this.getNextId(usersTable, 0)
-      usersTable.rows.push([nextUserId.toString(), currentUserName, currentUserOpenCloudId || ''])
+      usersTable.rows.push([
+        nextUserId.toString(),
+        currentUserName,
+        currentUserOpenCloudId || '',
+        '0.00'
+      ])
     }
 
     // Ensure payment_mode table
@@ -209,7 +209,7 @@ export class PCSVParser {
           'description',
           'total_amount',
           'who_paid_id',
-          'datetime',
+          'timestamp',
           'repeat',
           'payment_mode_id',
           'category_id',
@@ -253,7 +253,7 @@ export class PCSVParser {
       bill.description,
       bill.total_amount.toString(),
       bill.who_paid_id.toString(),
-      bill.datetime,
+      bill.timestamp.toString(),
       bill.repeat,
       bill.payment_mode_id?.toString() || '',
       bill.category_id?.toString() || '',
@@ -291,7 +291,7 @@ export class PCSVParser {
       description: row[1],
       total_amount: parseFloat(row[2]),
       who_paid_id: parseInt(row[3]),
-      datetime: row[4],
+      timestamp: parseInt(row[4]),
       repeat: row[5],
       payment_mode_id: row[6] ? parseInt(row[6]) : null,
       category_id: row[7] ? parseInt(row[7]) : null,
@@ -319,55 +319,6 @@ export class PCSVParser {
 
     console.log(`PCSVParser: Retrieved ${splits.length} bill splits`)
     return splits
-  }
-
-  static getBalances(data: PCSVData): Balance[] {
-    console.log('PCSVParser: Getting balances from table')
-    const balancesTable = data.tables.balances
-    if (!balancesTable || !balancesTable.rows) {
-      console.log('PCSVParser: No balances table found')
-      return []
-    }
-
-    const balances = balancesTable.rows
-      .filter((row) => row && row.length >= 3)
-      .map((row) => ({
-        user_id: parseInt(row[0]) || 0,
-        balance: parseFloat(row[1]) || 0,
-        last_calculated: row[2] || ''
-      }))
-
-    console.log(`PCSVParser: Retrieved ${balances.length} balances from table`)
-    return balances
-  }
-
-  static setBalances(data: PCSVData, balances: Balance[]): PCSVData {
-    console.log(`PCSVParser: Setting ${balances.length} balances to table`)
-
-    // Ensure balances table exists
-    if (!data.tables.balances) {
-      data.tables.balances = {
-        name: 'balances',
-        headers: ['user_id', 'balance', 'last_calculated'],
-        rows: []
-      }
-    }
-
-    // Clear existing rows and add new balances
-    data.tables.balances.rows = balances.map((balance) => [
-      balance.user_id.toString(),
-      balance.balance.toString(),
-      balance.last_calculated
-    ])
-
-    console.log('PCSVParser: Balances table updated')
-    return data
-  }
-
-  static hasBalancesTable(data: PCSVData): boolean {
-    const hasTable = !!(data.tables.balances && data.tables.balances.rows.length > 0)
-    console.log(`PCSVParser: Has balances table: ${hasTable}`)
-    return hasTable
   }
 
   static getBillSplits(data: PCSVData, billId: number): BillSplit[] {
@@ -404,7 +355,7 @@ export class PCSVParser {
         bill.description,
         bill.total_amount.toString(),
         bill.who_paid_id.toString(),
-        bill.datetime,
+        bill.timestamp.toString(),
         bill.repeat || '',
         bill.payment_mode_id?.toString() || '',
         bill.category_id?.toString() || '',
@@ -427,12 +378,6 @@ export class PCSVParser {
       ])
     }
 
-    // Invalidate balance cache since data has changed
-    if (data.tables.balances) {
-      console.log('PCSVParser: Clearing balance cache due to bill update')
-      data.tables.balances.rows = []
-    }
-
     console.log(`PCSVParser: Updated bill ${billId}`)
     return { data, billId }
   }
@@ -443,7 +388,12 @@ export class PCSVParser {
     // Find and update the user
     const userRowIndex = usersTable.rows.findIndex((row) => parseInt(row[0]) === userId)
     if (userRowIndex !== -1) {
-      usersTable.rows[userRowIndex] = [userId.toString(), user.name, user.opencloud_id || '']
+      usersTable.rows[userRowIndex] = [
+        userId.toString(),
+        user.name,
+        user.opencloud_id || '',
+        user.balance?.toString() || ''
+      ]
     }
 
     return data
@@ -456,7 +406,8 @@ export class PCSVParser {
     return usersTable.rows.map((row) => ({
       id: parseInt(row[0]),
       name: row[1],
-      opencloud_id: row[2] || null
+      opencloud_id: row[2] || null,
+      balance: row[3] ? parseFloat(row[3]) : null
     }))
   }
 
@@ -524,12 +475,6 @@ export class PCSVParser {
 
     // Remove all splits for this bill
     billSplitsTable.rows = billSplitsTable.rows.filter((row) => parseInt(row[1]) !== billId)
-
-    // Invalidate balance cache since data has changed
-    if (data.tables.balances) {
-      console.log('PCSVParser: Clearing balance cache due to bill deletion')
-      data.tables.balances.rows = []
-    }
 
     console.log(`PCSVParser: Deleted bill ${billId}`)
     return data

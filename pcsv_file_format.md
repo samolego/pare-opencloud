@@ -27,7 +27,7 @@ Primary table containing expense/income transactions.
 **Structure:**
 ```
 TABLE,bills
-id,description,total_amount,who_paid_id,datetime,repeat,payment_mode_id,category_id,comment,file_link
+id,description,total_amount,who_paid_id,timestamp,repeat,payment_mode_id,category_id,comment,file_link
 ```
 
 **Fields:**
@@ -35,7 +35,7 @@ id,description,total_amount,who_paid_id,datetime,repeat,payment_mode_id,category
 - `description`: What was purchased/paid for (string)
 - `total_amount`: Total amount in currency (decimal, can be negative for income)
 - `who_paid_id`: Reference to users table - who made the payment (integer)
-- `datetime`: When the transaction occurred (format: DD/MM/YYYY HH:MM)
+- `timestamp`: Unix timestamp when the transaction occurred (integer, milliseconds since epoch)
 - `repeat`: Recurring frequency (None, Daily, Weekly, Monthly, Yearly)
 - `payment_mode_id`: Reference to payment_mode table (integer, can be null)
 - `category_id`: Reference to category table (integer, can be null)
@@ -45,9 +45,9 @@ id,description,total_amount,who_paid_id,datetime,repeat,payment_mode_id,category
 **Example:**
 ```
 TABLE,bills
-id,description,total_amount,who_paid_id,datetime,repeat,payment_mode_id,category_id,comment,file_link
-1,Space suits,8000.00,5,21/01/1981 13:00,None,1,2,With radio heater and 2 hours oxygen!!!,https://example.com/receipt.pdf
-2,Grocery shopping,-45.50,1,15/01/2024 18:30,None,2,1,Weekly groceries,
+id,description,total_amount,who_paid_id,timestamp,repeat,payment_mode_id,category_id,comment,file_link
+1,Space suits,8000.00,5,348872400000,None,1,2,With radio heater and 2 hours oxygen!!!,https://example.com/receipt.pdf
+2,Grocery shopping,-45.50,1,1705429800000,None,2,1,Weekly groceries,
 ```
 
 ### 2. Bill Splits Table
@@ -78,29 +78,36 @@ id,bill_id,user_id,amount
 ```
 
 ### 3. Users Table
-People who can pay bills or owe money.
+People who can pay bills or owe money, including their current balances.
 
 **Structure:**
 ```
 TABLE,users
-id,name,opencloud_id
+id,name,opencloud_id,balance
 ```
 
 **Fields:**
 - `id`: Unique identifier for the user (integer)
 - `name`: Display name of the user (string)
 - `opencloud_id`: OpenCloud user ID for integration (string, can be null/empty for users not in this OpenCloud instance)
+- `balance`: Current calculated balance for this user (decimal, can be null if not calculated)
 
 **Example:**
 ```
 TABLE,users
-id,name,opencloud_id
-1,Ash,ash.android
-2,Bishop,bishop.synthetic
-3,Ripley,ripley.warrant
-4,8th passenger,
-5,Weyland,weyland.corp
+id,name,opencloud_id,balance
+1,Ash,ash.android,-100.00
+2,Bishop,bishop.synthetic,-200.00
+3,Ripley,ripley.warrant,-320.00
+4,8th passenger,,0.00
+5,Weyland,weyland.corp,620.00
 ```
+
+**Balance Calculation:**
+- Balance = (Total amount paid by user) - (Total amount owed by user across all bill splits)
+- Positive balance means the user is owed money
+- Negative balance means the user owes money
+- Balance field is optional and used for performance optimization
 
 ### 4. Payment Mode Table
 Methods of payment (cash, card, bank transfer, etc.).
@@ -148,29 +155,6 @@ id,name
 4,Utilities
 ```
 
-### 6. Balances Table (Optional)
-Pre-calculated user balances for performance optimization.
-
-**Structure:**
-```
-TABLE,balances
-user_id,balance,last_calculated
-```
-
-
-**Fields:**
-- `user_id`: Reference to users table (integer)
-- `balance`: Current balance for this user (decimal)
-- `last_calculated`: Timestamp when balance was calculated (format: DD/MM/YYYY HH:MM)
-
-**Usage Rules:**
-1. This table is optional and used for performance optimization
-2. If present, applications should validate against calculated balances periodically
-3. If balances table is missing or outdated, fall back to calculation
-4. When bills/splits change, update the balances table or mark it for recalculation
-
-
-
 ## File Creation Rules
 
 ### Auto-Creation of Missing Tables
@@ -193,7 +177,7 @@ New files may be populated with basic default entries:
 
 ## Validation Rules
 
-1. **Referential Integrity**: 
+1. **Referential Integrity**:
    - `who_paid_id` in bills must reference existing user
    - `bill_id` in bill_splits must reference existing bill
    - `user_id` in bill_splits must reference existing user
@@ -203,10 +187,16 @@ New files may be populated with basic default entries:
    - Sum of included bill_splits amounts should equal the bill's total_amount
    - Amounts can be negative (for income/refunds)
 
-3. **Date Format**: DD/MM/YYYY HH:MM format for datetime fields
+3. **Balance Validation**:
+   - If balance field is present, applications should validate against calculated balances periodically
+   - If balance field is missing or null, fall back to real-time calculation
+   - When bills/splits change, update user balances or mark them for recalculation
 
-4. **Required Fields**: 
-   - Bills: id, description, total_amount, who_paid_id, datetime
+4. **Timestamp Format**: Unix timestamps in milliseconds since epoch (integer values)
+
+5. **Required Fields**:
+   - Bills: id, description, total_amount, who_paid_id, timestamp
+   - Users: id, name
    - All other fields can be empty/null
 
 ## CSV Compatibility
@@ -221,9 +211,9 @@ This format is designed to be fully compatible with standard CSV readers:
 
 ```
 TABLE,users
-id,name,opencloud_id
-1,Ellen Ripley,ripley.lv426
-2,Carter Burke,burke.corp
+id,name,opencloud_id,balance
+1,Ellen Ripley,ripley.lv426,3987.50
+2,Carter Burke,burke.corp,-3987.50
 
 TABLE,payment_mode
 id,name
@@ -236,9 +226,9 @@ id,name
 2,Food
 
 TABLE,bills
-id,description,total_amount,who_paid_id,datetime,repeat,payment_mode_id,category_id,comment,file_link
-1,Space suits,8000.00,1,21/01/1981 13:00,None,1,1,Emergency suits for away mission,
-2,Coffee supplies,25.00,2,22/01/1981 09:15,Weekly,2,2,Keep the crew caffeinated,
+id,description,total_amount,who_paid_id,timestamp,repeat,payment_mode_id,category_id,comment,file_link
+1,Space suits,8000.00,1,348872400000,None,1,1,Emergency suits for away mission,
+2,Coffee supplies,25.00,2,348945300000,Weekly,2,2,Keep the crew caffeinated,
 
 TABLE,bill_splits
 id,bill_id,user_id,amount

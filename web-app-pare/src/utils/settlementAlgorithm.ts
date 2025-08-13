@@ -119,7 +119,7 @@ export class SettlementAlgorithm {
     })
 
     // Apply transaction effects
-    settlement.transactions.forEach(transaction => {
+    settlement.transactions.forEach((transaction) => {
       // Debtor pays (reduces their debt)
       const fromCurrentBalance = transactionEffects.get(transaction.fromUserId) || 0
       transactionEffects.set(transaction.fromUserId, fromCurrentBalance + transaction.amount)
@@ -132,7 +132,9 @@ export class SettlementAlgorithm {
     // Check that all balances are now zero (or very close)
     for (const [userId, finalBalance] of transactionEffects) {
       if (Math.abs(finalBalance) > 0.01) {
-        console.warn(`Settlement validation failed: User ${userId} has remaining balance ${finalBalance}`)
+        console.warn(
+          `Settlement validation failed: User ${userId} has remaining balance ${finalBalance}`
+        )
         return false
       }
     }

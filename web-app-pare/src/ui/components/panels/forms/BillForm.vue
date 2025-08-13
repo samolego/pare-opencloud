@@ -218,7 +218,10 @@ export default defineComponent({
         localForm.total_amount = props.bill.total_amount.toString()
         localForm.who_paid_id = props.bill.who_paid_id || null
 
-        const [date, time] = props.bill.datetime.split(' ')
+        // Convert timestamp to date/time format
+        const billDate = new Date(props.bill.timestamp)
+        const date = billDate.toISOString().split('T')[0]
+        const time = billDate.toTimeString().slice(0, 5)
         localForm.date = date
         localForm.time = time || null
 
@@ -512,7 +515,7 @@ export default defineComponent({
         description: localForm.description,
         total_amount: parseFloat(localForm.total_amount),
         who_paid_id: localForm.who_paid_id!,
-        datetime: `${localForm.date} ${localForm.time}`,
+        timestamp: new Date(`${localForm.date} ${localForm.time}`).getTime(),
         repeat: localForm.repeat,
         payment_mode_id: localForm.payment_mode_id,
         category_id: localForm.category_id,
