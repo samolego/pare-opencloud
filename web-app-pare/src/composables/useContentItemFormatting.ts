@@ -13,7 +13,7 @@ export function useContentItemFormatting() {
     if (typeof value === 'number' && config.subtitleField.includes('amount')) {
       const prefix = value < 0 ? '-' : ''
       const absValue = Math.abs(value)
-      return `${prefix}$${absValue.toFixed(2)}`
+      return `${prefix}${absValue.toFixed(2)}`
     }
 
     return value || ''

@@ -1,10 +1,39 @@
 <template>
   <div class="content-panel">
+    <!-- Search Bar -->
+    <div v-if="items.length > 0" class="oc-p-s oc-mb-s oc-border-b">
+      <div class="oc-flex oc-flex-middle search-input-wrapper">
+        <oc-icon name="search" class="oc-text-muted search-icon" />
+        <input
+          v-model="searchQuery"
+          type="text"
+          class="search-input oc-text-small"
+          placeholder="Search items..."
+          @input="onSearchInput"
+        />
+        <button
+          v-if="searchQuery"
+          class="oc-p-xs oc-ml-xs oc-text-muted clear-search-btn"
+          @click="clearSearch"
+          title="Clear search"
+        >
+          <oc-icon name="close" />
+        </button>
+      </div>
+    </div>
+
+    <div
+      v-if="filteredItems.length === 0 && items.length > 0"
+      class="oc-text-muted oc-text-small oc-p-s"
+    >
+      No items match your search.
+    </div>
+
     <div v-if="items.length === 0" class="oc-text-muted oc-text-small oc-p-s">
       {{ emptyMessage }}
     </div>
 
-    <div v-else class="content-container">
+    <div v-else-if="filteredItems.length > 0" class="content-container">
       <div class="content-list">
         <div
           v-for="item in paginatedItems"
@@ -49,7 +78,7 @@
       </div>
 
       <!-- Pagination Controls - Floating at bottom -->
-      <div v-if="items.length > 0 && totalPages > 1" class="pagination-controls">
+      <div v-if="filteredItems.length > 0 && totalPages > 1" class="pagination-controls">
         <div class="oc-flex oc-flex-center oc-flex-middle">
           <button
             class="pagination-btn"
@@ -99,7 +128,8 @@
         </div>
 
         <div class="oc-text-small oc-text-muted oc-text-center oc-mt-s">
-          {{ totalPages }} pages, {{ items.length }} items
+          {{ totalPages }} pages, {{ filteredItems.length }} items
+          <span v-if="searchQuery">(filtered from {{ items.length }})</span>
         </div>
       </div>
     </div>
@@ -152,17 +182,45 @@ export default defineComponent({
   setup(props, { emit }) {
     const currentPage = ref(1)
     const pageInputValue = ref(1)
+    const searchQuery = ref('')
     const { getItemSubtitle, getItemMeta, getItemDescription, isNegativeAmount, truncateText } =
       useContentItemFormatting()
 
+    const filteredItems = computed(() => {
+      if (!searchQuery.value.trim()) {
+        return props.items
+      }
+
+      const query = searchQuery.value.toLowerCase()
+      return props.items.filter((item) => {
+        // Search in title
+        const title = (item[props.config.titleField] || '').toString().toLowerCase()
+        if (title.includes(query)) return true
+
+        // Search in subtitle
+        const subtitle = getItemSubtitle(item, props.config)
+        if (subtitle && subtitle.toString().toLowerCase().includes(query)) return true
+
+        // Search in description
+        const description = getItemDescription(item, props.config)
+        if (description && description.toString().toLowerCase().includes(query)) return true
+
+        // Search in meta
+        const meta = getItemMeta(item, props.config)
+        if (meta && meta.toString().toLowerCase().includes(query)) return true
+
+        return false
+      })
+    })
+
     const totalPages = computed(() => {
-      return Math.ceil(props.items.length / props.itemsPerPage)
+      return Math.ceil(filteredItems.value.length / props.itemsPerPage)
     })
 
     const paginatedItems = computed(() => {
       const start = (currentPage.value - 1) * props.itemsPerPage
       const end = start + props.itemsPerPage
-      return props.items.slice(start, end)
+      return filteredItems.value.slice(start, end)
     })
 
     // Watch for changes in totalPages and adjust currentPage if necessary
@@ -182,6 +240,13 @@ export default defineComponent({
       },
       { immediate: true }
     )
+
+    // Watch for search query changes and reset to first page
+    watch(searchQuery, () => {
+      currentPage.value = 1
+      pageInputValue.value = 1
+      emit('page-change', currentPage.value)
+    })
 
     const goToFirstPage = () => {
       if (currentPage.value > 1) {
@@ -226,6 +291,14 @@ export default defineComponent({
       return item[props.config.titleField] || ''
     }
 
+    const onSearchInput = () => {
+      // Search is handled by the watcher on searchQuery
+    }
+
+    const clearSearch = () => {
+      searchQuery.value = ''
+    }
+
     return {
       getItemTitle,
       getItemSubtitle: (item: SidebarItem) => getItemSubtitle(item, props.config),
@@ -237,7 +310,11 @@ export default defineComponent({
       currentPage,
       totalPages,
       paginatedItems,
+      filteredItems,
       pageInputValue,
+      searchQuery,
+      onSearchInput,
+      clearSearch,
       goToFirstPage,
       goToLastPage,
       goToNextPage,
@@ -400,6 +477,52 @@ input[type='number'] {
     outline: none;
     border-color: var(--oc-role-primary) !important;
     box-shadow: 0 0 0 2px var(--oc-role-primary-container);
+  }
+}
+
+.search-input-wrapper {
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: var(--oc-space-small);
+  z-index: 1;
+}
+
+.search-input {
+  width: 100%;
+  padding: var(--oc-space-small) var(--oc-space-medium);
+  padding-left: calc(var(--oc-space-medium) + 20px);
+  border: 1px solid var(--oc-role-outline-variant);
+  border-radius: var(--oc-space-small);
+  background-color: var(--oc-role-surface);
+  color: var(--oc-role-on-surface);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--oc-role-primary);
+    box-shadow: 0 0 0 2px var(--oc-role-primary-container);
+  }
+
+  &::placeholder {
+    color: var(--oc-role-on-surface-variant);
+  }
+}
+
+.clear-search-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: var(--oc-role-surface-container);
+    color: var(--oc-role-on-surface);
   }
 }
 

@@ -20,13 +20,9 @@
 
           <div class="oc-flex oc-flex-right oc-flex-middle oc-mt-m">
             <div class="oc-modal-body-actions-grid">
-              <button
-                type="button"
-                class="oc-button oc-rounded oc-button-m oc-button-justify-content-center oc-button-gap-m oc-button-outline oc-modal-body-actions-cancel oc-ml-s"
-                @click="onCancel"
-              >
+              <oc-button type="button" variation="passive" @click="onCancel">
                 {{ cancelText }}
-              </button>
+              </oc-button>
 
               <button
                 type="button"
@@ -89,11 +85,15 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-// Use existing OpenCloud modal styles
-// Override delete button colors to use error colors
 .delete-button {
-  background-color: var(--oc-role-error-container) !important;
-  border-color: var(--oc-role-error-container) !important;
-  color: var(--oc-role-on-error-container) !important;
+  background-color: var(--oc-role-error) !important;
+  border-color: var(--oc-role-error) !important;
+  color: var(--oc-role-on-error) !important;
+
+  &:hover {
+    background-color: var(--oc-role-error-container) !important;
+    border-color: var(--oc-role-error-container) !important;
+    color: var(--oc-role-on-error-container) !important;
+  }
 }
 </style>
