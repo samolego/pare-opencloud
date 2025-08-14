@@ -108,7 +108,7 @@ import { useGettext } from 'vue3-gettext'
 import { useMessages } from '@opencloud-eu/web-pkg'
 import { useSettlement } from '../../../../composables/useSettlement'
 import type { Settlement } from '../../../../types/settlement'
-import type { PCSVData } from '../../../../utils/pcsvParser'
+import type { PSONData } from '../../../../utils/psonParser'
 import DetailPanelHeader from '../DetailPanelHeader.vue'
 import { FormSection } from '../../forms'
 
@@ -130,7 +130,7 @@ export default defineComponent({
     const { showMessage } = useMessages()
 
     // Get parsed data from parent component for settlement creation
-    const parsedData = inject<Ref<PCSVData>>('parsedData')
+    const parsedData = inject<Ref<PSONData>>('parsedData')
     const {
       createSettlementBills,
       createIndividualSettlementBill,

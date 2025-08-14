@@ -73,7 +73,7 @@
 <script lang="ts">
 import { defineComponent, PropType, watch, ref, computed, onMounted, onUnmounted } from 'vue'
 import { useClientService } from '@opencloud-eu/web-pkg'
-import { User } from '../../../../utils/pcsvParser'
+import { User } from '../../../../utils/psonParser'
 import { useSimpleForm, useFormValidationEmits } from '../../../../composables/useSimpleForm'
 import { MemberFormData, ValidationErrors } from '../../../../types/forms'
 import { FormField, FormInput } from '../../forms'

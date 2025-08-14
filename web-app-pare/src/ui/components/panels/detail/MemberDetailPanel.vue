@@ -25,7 +25,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue'
-import { User } from '../../../../utils/pcsvParser'
+import { User } from '../../../../utils/psonParser'
 import { useMemberDetailPanel } from '../../../../composables/useDetailPanelLogic'
 import { FormMode } from '../../../../types/forms'
 import DetailPanelHeader from '../DetailPanelHeader.vue'

@@ -3,10 +3,10 @@
 import { computed, ref, watch, type Ref } from 'vue'
 import { BalanceCalculator } from '../utils/balanceCalculator'
 import { SettlementAlgorithm } from '../utils/settlementAlgorithm'
-import { PCSVParser, type PCSVData } from '../utils/pcsvParser'
+import { PSONParser, type PSONData } from '../utils/psonParser'
 import type { UserBalance, Settlement, SettlementResult } from '../types/settlement'
 
-export function useSettlement(parsedData: Ref<PCSVData> | undefined) {
+export function useSettlement(parsedData: Ref<PSONData> | undefined) {
   const isCalculating = ref(false)
   const lastSettlement = ref<Settlement | null>(null)
   const error = ref<string | null>(null)
@@ -25,9 +25,9 @@ export function useSettlement(parsedData: Ref<PCSVData> | undefined) {
 
     // Create a hash to avoid recalculating if data hasn't changed
     const dataHash = JSON.stringify({
-      billsLength: parsedData.value.tables.bills?.rows.length || 0,
-      splitsLength: parsedData.value.tables.bill_splits?.rows.length || 0,
-      usersLength: parsedData.value.tables.users?.rows.length || 0
+      billsLength: Object.keys(parsedData.value.data.bills).length || 0,
+      splitsLength: Object.values(parsedData.value.data.bills).reduce((acc, bill) => acc + Object.keys(bill.splits).length, 0) || 0,
+      usersLength: Object.keys(parsedData.value.data.users).length || 0
     })
 
     if (dataHash === lastCalculationHash.value && userBalances.value.length > 0) {
@@ -192,7 +192,7 @@ export function useSettlement(parsedData: Ref<PCSVData> | undefined) {
         ]
 
         // Add to data
-        const result = PCSVParser.addBill(updatedData, bill, splits)
+        const result = PSONParser.addBill(updatedData, bill, splits)
         updatedData = result.data
       }
 

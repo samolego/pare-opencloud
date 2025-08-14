@@ -38,7 +38,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType, computed, watch } from 'vue'
-import { User } from '../../../utils/pcsvParser'
+import { User } from '../../../utils/psonParser'
 import { UserSplit } from '../../../types/forms'
 import FormInput from './FormInput.vue'
 

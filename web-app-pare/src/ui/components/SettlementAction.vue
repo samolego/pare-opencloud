@@ -44,7 +44,7 @@ import { defineComponent, computed, ref, watch, inject, type Ref } from 'vue'
 import { useGettext } from 'vue3-gettext'
 import { useSettlement } from '../../composables/useSettlement'
 import type { Settlement } from '../../types/settlement'
-import type { PCSVData } from '../../utils/pcsvParser'
+import type { PSONData } from '../../utils/psonParser'
 
 export default defineComponent({
   name: 'SettlementAction',
@@ -53,7 +53,7 @@ export default defineComponent({
     const { $gettext } = useGettext()
 
     // Get parsed data from parent component
-    const parsedData = inject<Ref<PCSVData>>('parsedData')
+    const parsedData = inject<Ref<PSONData>>('parsedData')
 
     if (!parsedData) {
       throw new Error(

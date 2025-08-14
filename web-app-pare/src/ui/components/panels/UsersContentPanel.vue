@@ -40,7 +40,7 @@ import { useContentItemFormatting } from '../../../composables/useContentItemFor
 import { useSettlement } from '../../../composables/useSettlement'
 import ContentPanel from './ContentPanel.vue'
 
-import type { PCSVData } from '../../../utils/pcsvParser'
+import type { PSONData } from '../../../utils/psonParser'
 
 export default defineComponent({
   name: 'UsersContentPanel',
@@ -84,7 +84,7 @@ export default defineComponent({
       useContentItemFormatting()
 
     // Get parsed data from parent component
-    const parsedData = inject<Ref<PCSVData>>('parsedData')
+    const parsedData = inject<Ref<PSONData>>('parsedData')
     const { getUserBalance, formatBalance } = useSettlement(parsedData)
 
     const getItemAvatar = (item: SidebarItem): string => {

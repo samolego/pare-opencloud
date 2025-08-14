@@ -38,7 +38,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType, inject, ref, watch, nextTick } from 'vue'
-import { Bill, User, PaymentMode, Category, PCSVData } from '../../../../utils/pcsvParser'
+import { Bill, User, PaymentMode, Category, PSONData } from '../../../../utils/psonParser'
 import { useBillDetailPanel } from '../../../../composables/useDetailPanelLogic'
 import { FormMode } from '../../../../types/forms'
 import { UserSplit } from '../../../../types/forms'
@@ -96,7 +96,7 @@ export default defineComponent({
     // Use the formRef from composable as billForm
     const billForm = formRef
 
-    const parsedData = inject<PCSVData>('parsedData')
+    const parsedData = inject<PSONData>('parsedData')
     const totalAmount = ref(0)
     const userSplits = ref<{ [userId: number]: UserSplitWithInclusion }>({})
     const isUpdatingFromForm = ref(false)

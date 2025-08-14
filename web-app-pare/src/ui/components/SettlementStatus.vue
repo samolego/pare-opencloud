@@ -47,7 +47,7 @@ import { useGettext } from 'vue3-gettext'
 import { useMessages } from '@opencloud-eu/web-pkg'
 import { useSettlement } from '../../composables/useSettlement'
 import type { Settlement, SettlementResult } from '../../types/settlement'
-import type { PCSVData } from '../../utils/pcsvParser'
+import type { PSONData } from '../../utils/psonParser'
 
 export default defineComponent({
   name: 'SettlementStatus',
@@ -57,7 +57,7 @@ export default defineComponent({
     const { showMessage } = useMessages()
 
     // Get parsed data from parent component
-    const parsedData = inject<Ref<PCSVData>>('parsedData')
+    const parsedData = inject<Ref<PSONData>>('parsedData')
 
     if (!parsedData) {
       throw new Error(

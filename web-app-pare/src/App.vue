@@ -155,7 +155,7 @@
 import { computed, defineComponent, ref, watch, onMounted, provide } from 'vue'
 import { useMessages, useThemeStore, SideBar } from '@opencloud-eu/web-pkg'
 import { useGettext } from 'vue3-gettext'
-import { PCSVParser, PCSVData } from './utils/pcsvParser'
+import { PSONParser, PSONData } from './utils/psonParser'
 import { SidebarItem, SidebarConfig } from './types/sidebar'
 import { useUser } from './composables/useUser'
 import NavigationPanel from './ui/components/panels/NavigationPanel.vue'
@@ -236,21 +236,27 @@ export default defineComponent({
       return themeStore.currentTheme.isDark
     })
 
-    // Parse PCSV data
-    const parsedData = ref<PCSVData>({ tables: {} })
+    // Parse PSON data
+    const parsedData = ref<PSONData>({ 
+      meta: { version: '1.0', created: '', modified: '' },
+      data: { users: {}, payment_modes: {}, categories: {}, bills: {} }
+    })
 
     const updateParsedData = () => {
       try {
-        let data = PCSVParser.parse(editableContent.value)
-        data = PCSVParser.ensureDefaultTables(
+        let data = PSONParser.parse(editableContent.value)
+        data = PSONParser.ensureDefaultTables(
           data,
           currentUser.value?.name || 'Current User',
           currentUser.value?.opencloud_id || null
         )
         parsedData.value = data
       } catch (error) {
-        console.error('Error parsing PCSV:', error)
-        parsedData.value = { tables: {} } as PCSVData
+        console.error('Error parsing PSON:', error)
+        parsedData.value = { 
+          meta: { version: '1.0', created: '', modified: '' },
+          data: { users: {}, payment_modes: {}, categories: {}, bills: {} }
+        } as PSONData
       }
     }
 
@@ -259,22 +265,22 @@ export default defineComponent({
     watch(() => currentUser.value, updateParsedData)
 
     // Provide parsedData to child components
-    provide('parsedData', parsedData)
+    provide('parsedData', parsedData as Ref<PSONData>)
 
     const bills = computed(() => {
-      return PCSVParser.getBills(parsedData.value).sort((a, b) => b.timestamp - a.timestamp)
+      return PSONParser.getBills(parsedData.value).sort((a, b) => b.timestamp - a.timestamp)
     })
 
     const users = computed(() => {
-      return PCSVParser.getUsers(parsedData.value)
+      return PSONParser.getUsers(parsedData.value)
     })
 
     const paymentModes = computed(() => {
-      return PCSVParser.getPaymentModes(parsedData.value)
+      return PSONParser.getPaymentModes(parsedData.value)
     })
 
     const categories = computed(() => {
-      return PCSVParser.getCategories(parsedData.value)
+      return PSONParser.getCategories(parsedData.value)
     })
 
     // Sidebar configuration map
@@ -590,32 +596,32 @@ export default defineComponent({
         let updatedData = { ...parsedData.value }
 
         if (currentSection.value === 'bill') {
-          updatedData = PCSVParser.deleteBill(updatedData, item.id)
+          updatedData = PSONParser.deleteBill(updatedData, item.id)
           showMessage({
             title: $gettext('Bill deleted'),
             desc: $gettext('The bill has been deleted successfully')
           })
         } else if (currentSection.value === 'member') {
-          updatedData = PCSVParser.deleteUser(updatedData, item.id)
+          updatedData = PSONParser.deleteUser(updatedData, item.id)
           showMessage({
             title: $gettext('Member deleted'),
             desc: $gettext('The member has been deleted successfully')
           })
         } else if (currentSection.value === 'category') {
-          updatedData = PCSVParser.deleteCategory(updatedData, item.id)
+          updatedData = PSONParser.deleteCategory(updatedData, item.id)
           showMessage({
             title: $gettext('Category deleted'),
             desc: $gettext('The category has been deleted successfully')
           })
         } else if (currentSection.value === 'payment_mode') {
-          updatedData = PCSVParser.deletePaymentMode(updatedData, item.id)
+          updatedData = PSONParser.deletePaymentMode(updatedData, item.id)
           showMessage({
             title: $gettext('Payment mode deleted'),
             desc: $gettext('The payment mode has been deleted successfully')
           })
         }
 
-        const newContent = PCSVParser.generate(updatedData)
+        const newContent = PSONParser.generate(updatedData)
         editableContent.value = newContent
         emit('update:currentContent', newContent)
       } catch (error) {
@@ -647,9 +653,9 @@ export default defineComponent({
     const onCreateBill = (data: { bill: any; splits: any[] }) => {
       try {
         let updatedData = { ...parsedData.value }
-        const result = PCSVParser.addBill(updatedData, data.bill, data.splits)
+        const result = PSONParser.addBill(updatedData, data.bill, data.splits)
         updatedData = result.data
-        const newContent = PCSVParser.generate(updatedData)
+        const newContent = PSONParser.generate(updatedData)
         editableContent.value = newContent
         emit('update:currentContent', newContent)
         onDetailPanelCancel()
@@ -668,12 +674,16 @@ export default defineComponent({
     const onCreateMember = (data: { name: string; opencloud_id: string }) => {
       try {
         const updatedData = { ...parsedData.value }
-        const usersTable = updatedData.tables.users
-        const nextUserId = Math.max(...usersTable.rows.map((row) => parseInt(row[0])), 0) + 1
+        // Find next available user ID
+        const nextUserId = Math.max(...Object.keys(updatedData.data.users).map(Number), 0) + 1
 
-        usersTable.rows.push([nextUserId.toString(), data.name, data.opencloud_id || ''])
+        updatedData.data.users[nextUserId.toString()] = {
+          name: data.name,
+          opencloud_id: data.opencloud_id || null,
+          balance: 0
+        }
 
-        const newContent = PCSVParser.generate(updatedData)
+        const newContent = PSONParser.generate(updatedData)
         editableContent.value = newContent
         emit('update:currentContent', newContent)
         onDetailPanelCancel()
@@ -690,13 +700,12 @@ export default defineComponent({
     const onCreateCategory = (data: { name: string }) => {
       try {
         const updatedData = { ...parsedData.value }
-        const categoriesTable = updatedData.tables.category
-        const nextCategoryId =
-          Math.max(...categoriesTable.rows.map((row) => parseInt(row[0])), 0) + 1
+        // Find next available category ID
+        const nextCategoryId = Math.max(...Object.keys(updatedData.data.categories).map(Number), 0) + 1
 
-        categoriesTable.rows.push([nextCategoryId.toString(), data.name])
+        updatedData.data.categories[nextCategoryId.toString()] = { name: data.name }
 
-        const newContent = PCSVParser.generate(updatedData)
+        const newContent = PSONParser.generate(updatedData)
         editableContent.value = newContent
         emit('update:currentContent', newContent)
         onDetailPanelCancel()
@@ -713,13 +722,12 @@ export default defineComponent({
     const onCreatePaymentMode = (data: { name: string }) => {
       try {
         const updatedData = { ...parsedData.value }
-        const paymentModesTable = updatedData.tables.payment_mode
-        const nextPaymentModeId =
-          Math.max(...paymentModesTable.rows.map((row) => parseInt(row[0])), 0) + 1
+        // Find next available payment mode ID
+        const nextPaymentModeId = Math.max(...Object.keys(updatedData.data.payment_modes).map(Number), 0) + 1
 
-        paymentModesTable.rows.push([nextPaymentModeId.toString(), data.name])
+        updatedData.data.payment_modes[nextPaymentModeId.toString()] = { name: data.name }
 
-        const newContent = PCSVParser.generate(updatedData)
+        const newContent = PSONParser.generate(updatedData)
         editableContent.value = newContent
         emit('update:currentContent', newContent)
         onDetailPanelCancel()
@@ -738,10 +746,10 @@ export default defineComponent({
         const { selectedItem } = detailPanel.value
         if (selectedItem && selectedItem.id) {
           let updatedData = { ...parsedData.value }
-          const result = PCSVParser.updateBill(updatedData, selectedItem.id, data.bill, data.splits)
+          const result = PSONParser.updateBill(updatedData, selectedItem.id, data.bill, data.splits)
           updatedData = result.data
 
-          const newContent = PCSVParser.generate(updatedData)
+          const newContent = PSONParser.generate(updatedData)
           editableContent.value = newContent
           emit('update:currentContent', newContent)
           onDetailPanelCancel()
@@ -767,9 +775,9 @@ export default defineComponent({
         const { selectedItem } = detailPanel.value
         if (selectedItem && selectedItem.id) {
           let updatedData = { ...parsedData.value }
-          updatedData = PCSVParser.updateUser(updatedData, selectedItem.id, data)
+          updatedData = PSONParser.updateUser(updatedData, selectedItem.id, data)
 
-          const newContent = PCSVParser.generate(updatedData)
+          const newContent = PSONParser.generate(updatedData)
           editableContent.value = newContent
           emit('update:currentContent', newContent)
           onDetailPanelCancel()
@@ -793,9 +801,9 @@ export default defineComponent({
         const { selectedItem } = detailPanel.value
         if (selectedItem && selectedItem.id) {
           let updatedData = { ...parsedData.value }
-          updatedData = PCSVParser.updateCategory(updatedData, selectedItem.id, data)
+          updatedData = PSONParser.updateCategory(updatedData, selectedItem.id, data)
 
-          const newContent = PCSVParser.generate(updatedData)
+          const newContent = PSONParser.generate(updatedData)
           editableContent.value = newContent
           emit('update:currentContent', newContent)
           onDetailPanelCancel()
@@ -819,9 +827,9 @@ export default defineComponent({
         const { selectedItem } = detailPanel.value
         if (selectedItem && selectedItem.id) {
           let updatedData = { ...parsedData.value }
-          updatedData = PCSVParser.updatePaymentMode(updatedData, selectedItem.id, data)
+          updatedData = PSONParser.updatePaymentMode(updatedData, selectedItem.id, data)
 
-          const newContent = PCSVParser.generate(updatedData)
+          const newContent = PSONParser.generate(updatedData)
           editableContent.value = newContent
           emit('update:currentContent', newContent)
           onDetailPanelCancel()
@@ -844,7 +852,7 @@ export default defineComponent({
       try {
         // The settlement bills have already been added to parsedData by the composable
         // Just need to update the content and show a success message
-        const newContent = PCSVParser.generate(parsedData.value)
+        const newContent = PSONParser.generate(parsedData.value)
         editableContent.value = newContent
         emit('update:currentContent', newContent)
 

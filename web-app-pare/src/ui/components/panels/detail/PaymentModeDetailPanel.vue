@@ -25,7 +25,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue'
-import { PaymentMode } from '../../../../utils/pcsvParser'
+import { PaymentMode } from '../../../../utils/psonParser'
 import { usePaymentModeDetailPanel } from '../../../../composables/useDetailPanelLogic'
 import { FormMode } from '../../../../types/forms'
 import DetailPanelHeader from '../DetailPanelHeader.vue'

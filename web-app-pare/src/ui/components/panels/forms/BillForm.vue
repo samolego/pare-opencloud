@@ -205,9 +205,9 @@ import {
   Category,
   Bill,
   BillSplit,
-  PCSVData,
-  PCSVParser
-} from '../../../../utils/pcsvParser'
+  PSONData,
+  PSONParser
+} from '../../../../utils/psonParser'
 import { UserSplit, BillFormData, ValidationErrors } from '../../../../types/forms'
 import { FormField, FormInput, FormSelect, FormTextarea, FormSection } from '../../forms'
 import UserTile from '../../common/UserTile.vue'
@@ -240,7 +240,7 @@ export default defineComponent({
       required: true
     },
     parsedData: {
-      type: Object as PropType<PCSVData>,
+      type: Object as PropType<PSONData>,
       required: true
     },
     mode: {
@@ -248,7 +248,14 @@ export default defineComponent({
       default: 'create'
     }
   },
-  emits: ['submit', 'validation-change', 'splits-change'],
+      emits: {
+      submit: (_data: { bill: Omit<Bill, 'id'>; splits: Omit<BillSplit, 'id' | 'bill_id'>[] }) => true,
+      'validation-change': (_isValid: boolean) => true,
+      'splits-change': (
+        _splits: { [userId: number]: UserSplit & { included: boolean } },
+        _totalAmount: number
+      ) => true
+    },
   setup(props, { emit, expose }) {
     const clientService = useClientService()
 
@@ -358,7 +365,7 @@ export default defineComponent({
         return
       }
 
-      const billSplits = PCSVParser.getBillSplits(props.parsedData, props.bill.id)
+      const billSplits = PSONParser.getBillSplits(props.parsedData, props.bill.id)
 
       // Clear included users set
       includedUsers.value.clear()

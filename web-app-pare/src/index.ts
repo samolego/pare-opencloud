@@ -21,10 +21,10 @@ export default defineWebApplication({
       name: $gettext('Pare Finance'),
       icon: 'money-euro-box',
       color: '#1eb980',
-      defaultExtension: 'pcsv',
+      defaultExtension: 'pson',
       extensions: [
         {
-          extension: 'pcsv',
+          extension: 'pson',
           routeName: 'pare-finance',
 
           // Add this if you want your app to be present in the "New" file menu.

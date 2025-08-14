@@ -11,7 +11,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType, watch } from 'vue'
-import { Category } from '../../../../utils/pcsvParser'
+import { Category } from '../../../../utils/psonParser'
 import { useNameOnlyForm, useFormValidationEmits } from '../../../../composables/useSimpleForm'
 import { FormField, FormInput } from '../../forms'
 

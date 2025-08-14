@@ -1,7 +1,7 @@
 // Balance calculation utilities for settlement system
 
 import { UserBalance, BalanceCalculationInput } from '../types/settlement'
-import { PCSVParser, type PCSVData } from './pcsvParser'
+import { PSONParser, type PSONData } from './psonParser'
 
 export class BalanceCalculator {
   /**
@@ -69,13 +69,13 @@ export class BalanceCalculator {
 
   /**
    * Async balance calculation with caching support
-   * @param data - PCSV data
+   * @param data - PSON data
    * @returns Promise<UserBalance[]>
    */
-  static async calculateUserBalancesAsync(data: PCSVData): Promise<UserBalance[]> {
+  static async calculateUserBalancesAsync(data: PSONData): Promise<UserBalance[]> {
     console.log('BalanceCalculator: Starting async balance calculation')
 
-    const users = PCSVParser.getUsers(data)
+    const users = PSONParser.getUsers(data)
 
     // Check if all users have stored balances
     const hasStoredBalances = users.every((user) => user.balance !== null)
@@ -98,8 +98,8 @@ export class BalanceCalculator {
     // Use setTimeout to yield to event loop for large datasets
     await new Promise((resolve) => setTimeout(resolve, 0))
 
-    const bills = PCSVParser.getBills(data)
-    const allBillSplits = PCSVParser.getAllBillSplits(data)
+    const bills = PSONParser.getBills(data)
+    const allBillSplits = PSONParser.getAllBillSplits(data)
 
     const input: BalanceCalculationInput = {
       bills,
@@ -117,24 +117,27 @@ export class BalanceCalculator {
 
   /**
    * Save calculated balances to users table
-   * @param data - PCSV data
+   * @param data - PSON data
    * @param balances - Calculated balances
    */
-  static async saveBalancesToUsers(data: PCSVData, balances: UserBalance[]): Promise<void> {
+  static async saveBalancesToUsers(data: PSONData, balances: UserBalance[]): Promise<void> {
     console.log('BalanceCalculator: Saving balances to users table')
 
     // Update each user's balance in the users table
-    const usersTable = data.tables.users
+    const usersTable = data.data.users
     if (!usersTable) {
       console.error('BalanceCalculator: No users table found')
       return
     }
 
     balances.forEach((balance) => {
-      const userRowIndex = usersTable.rows.findIndex((row) => parseInt(row[0]) === balance.userId)
-      if (userRowIndex !== -1) {
-        // Update the balance field (index 3) in the user row
-        usersTable.rows[userRowIndex][3] = balance.balance.toString()
+      const userIdStr = balance.userId.toString()
+      if (usersTable[userIdStr]) {
+        // Update the balance field in the user object
+        usersTable[userIdStr] = {
+          ...usersTable[userIdStr],
+          balance: balance.balance
+        }
       }
     })
 
@@ -143,18 +146,19 @@ export class BalanceCalculator {
 
   /**
    * Force recalculation of balances (clears existing balance data)
-   * @param data - PCSV data
+   * @param data - PSON data
    * @returns Promise<UserBalance[]>
    */
-  static async forceRecalculateBalances(data: PCSVData): Promise<UserBalance[]> {
+  static async forceRecalculateBalances(data: PSONData): Promise<UserBalance[]> {
     console.log('BalanceCalculator: Force recalculating balances (clearing existing data)')
 
     // Clear existing balances in users table to force recalculation
-    const usersTable = data.tables.users
+    const usersTable = data.data.users
     if (usersTable) {
-      usersTable.rows.forEach((row) => {
-        if (row.length > 3) {
-          row[3] = '' // Clear balance field
+      Object.keys(usersTable).forEach((userId) => {
+        usersTable[userId] = {
+          ...usersTable[userId],
+          balance: 0
         }
       })
     }
@@ -162,9 +166,9 @@ export class BalanceCalculator {
     // Use setTimeout to yield to event loop for large datasets
     await new Promise((resolve) => setTimeout(resolve, 0))
 
-    const bills = PCSVParser.getBills(data)
-    const users = PCSVParser.getUsers(data)
-    const allBillSplits = PCSVParser.getAllBillSplits(data)
+    const bills = PSONParser.getBills(data)
+    const users = PSONParser.getUsers(data)
+    const allBillSplits = PSONParser.getAllBillSplits(data)
 
     const input: BalanceCalculationInput = {
       bills,
@@ -182,10 +186,10 @@ export class BalanceCalculator {
 
   /**
    * Recalculate balances for a specific bill (incremental update)
-   * @param data - PCSV data
+   * @param data - PSON data
    * @param billId - ID of the bill that changed
    */
-  static async recalculateForBill(data: PCSVData, billId: number): Promise<void> {
+  static async recalculateForBill(data: PSONData, billId: number): Promise<void> {
     console.log(`BalanceCalculator: Recalculating balances for bill ${billId}`)
 
     // For now, we'll do a full recalculation

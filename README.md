@@ -37,10 +37,10 @@ Think like baby Nextcloud Cospend. Like really simple.
 ## 🏗️ Architecture
 
 ### 🚀 Backendless Design
-Pare operates without a traditional backend server. Instead, it uses CSV files as the data storage format. Description of the format can be found at [pcsv_file_format.md](./pcsv_file_format.md).
+Pare operates without a traditional backend server. Instead, it uses JSON files with a custom extension (.pson) as the data storage format. Description of the format can be found at [pson_file_format.md](./pson_file_format.md).
 
 ### 📋 Data Structure
-The application parses and manages CSV data containing:
+The application parses and manages JSON data containing:
 - **Bills**: Expense records with metadata
 - **Bill Splits**: Individual user portions of each bill
 - **Users**: Group member information
@@ -88,7 +88,7 @@ CSV files should follow the expected schema for:
 - User profiles and balances  
 - Category and payment mode definitions
 
-The application includes a CSV parser (`PCSVParser`) that handles data validation and transformation.
+The application includes a JSON parser (`PSONParser`) that handles data validation and transformation.
 
 ## 📖 Usage
 

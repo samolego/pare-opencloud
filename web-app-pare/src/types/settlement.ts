@@ -1,6 +1,6 @@
 // Settlement-related types for debt simplification
 
-import { Bill, BillSplit, User } from '../utils/pcsvParser'
+import { Bill, BillSplit, User } from '../utils/psonParser'
 
 export interface UserBalance {
   userId: number
