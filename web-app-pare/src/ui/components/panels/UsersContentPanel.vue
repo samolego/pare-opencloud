@@ -18,9 +18,8 @@
         <div class="oc-flex oc-flex-column oc-flex-auto oc-ml-m">
           <!-- Top Section: Username -->
           <div class="oc-flex oc-flex-row oc-flex-middle oc-gap-s">
-            <user-avatar :user-name="getEnhancedItemTitle(item)" :user-id="item.opencloud_id" />
             <div class="item-title oc-text-bold oc-text-large">
-              {{ getEnhancedItemTitle(item) }}
+              {{ getUserName(item) }}
             </div>
           </div>
 
@@ -99,7 +98,7 @@ export default defineComponent({
   },
   emits: ['page-change'],
   setup(props) {
-    const { getUserAvatar, getUserDisplayName, preloadUsers } = useUserData()
+    const { preloadUsers } = useUserData()
     const { getItemSubtitle, getItemDescription, isNegativeAmount, truncateText } =
       useContentItemFormatting()
 
@@ -107,22 +106,8 @@ export default defineComponent({
     const parsedData = inject<Ref<PSONData>>('parsedData')
     const { getUserBalance, formatBalance } = useSettlement(parsedData)
 
-    const getItemAvatar = (item: SidebarItem): string => {
-      // Use opencloud_id if available, fallback to CSV id for display
-      const userId = item.opencloud_id || item.id.toString()
-      const avatar = getUserAvatar(
-        userId,
-        clientService.httpAuthenticatedClient?.defaults?.baseURL || window.location.origin
-      )
-      return avatar
-    }
-
-    const getEnhancedItemTitle = (item: SidebarItem): string => {
-      // If we have opencloud_id, get enhanced name from API, otherwise use CSV name
-      if (item.opencloud_id) {
-        return getUserDisplayName(item.opencloud_id)
-      }
-      return item[props.config.titleField] || ''
+    const getUserName = (item: SidebarItem): string => {
+      return item.displayName || item.name || item.mail
     }
 
     const getBalanceDisplay = (item: SidebarItem): string => {
@@ -176,8 +161,7 @@ export default defineComponent({
       getItemDescription: (item: SidebarItem) => getItemDescription(item, props.config),
       isNegativeAmount: (item: SidebarItem) => isNegativeAmount(item, props.config),
       truncateText,
-      getItemAvatar,
-      getEnhancedItemTitle,
+      getUserName,
       getBalanceDisplay,
       getBalanceClass
     }

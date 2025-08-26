@@ -44,34 +44,11 @@ export function useUser() {
     }
   }
 
-  /**
-   * Refresh user data (clears cache and refetches)
-   */
-  const refreshUser = async (resource?: Resource) => {
-    UserService.clearCache()
-    currentUser.value = null
-    return await initUser(resource)
-  }
-
-  /**
-   * Clear user data (useful for logout)
-   */
-  const clearUser = () => {
-    UserService.clearCache()
-    currentUser.value = null
-    error.value = null
-  }
-
   // Computed properties
   const user = computed(() => currentUser.value)
-  const isAuthenticated = computed(() => !!currentUser.value?.opencloud_id)
   const displayName = computed(() => {
     if (!currentUser.value) return 'Loading...'
     return UserService.formatDisplayName(currentUser.value)
-  })
-  const hasValidUser = computed(() => {
-    if (!currentUser.value) return false
-    return UserService.hasValidUser(currentUser.value)
   })
 
   return {
@@ -79,16 +56,10 @@ export function useUser() {
     user,
     isLoading: computed(() => isLoading.value),
     error: computed(() => error.value),
-
     // Computed
-    isAuthenticated,
     displayName,
-    hasValidUser,
-
     // Methods
-    initUser,
-    refreshUser,
-    clearUser
+    initUser
   }
 }
 

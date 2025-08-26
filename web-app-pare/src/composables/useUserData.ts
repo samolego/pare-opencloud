@@ -65,29 +65,6 @@ export function useUserData() {
   }
 
   /**
-   * Get user display name with fallback
-   */
-  const getUserDisplayName = (userId: string): string => {
-    const user = getCachedUser(userId)
-    if (user?.displayName) return user.displayName
-    if (user?.name) return user.name
-    return `User ${userId}`
-  }
-
-  /**
-   * Get user avatar URL with fallback generation
-   */
-  const getUserAvatar = (baseUrl: string, userId: string): string | null => {
-    const user = getCachedUser(userId)
-
-    // Return actual avatar if available
-    if (user?.avatar) return user.avatar
-    if (user?.profileImage) return user.profileImage
-
-    return `https://${baseUrl}/graph/v1.0/users/${userId}/photo/$value`
-  }
-
-  /**
    * Preload user data for a list of user IDs
    */
   const preloadUsers = async (userIds: string[]): Promise<void> => {
@@ -122,8 +99,6 @@ export function useUserData() {
     getUserById,
     getCachedUser,
     isLoading,
-    getUserDisplayName,
-    getUserAvatar,
     preloadUsers,
     clearCache,
     clearUserCache,
