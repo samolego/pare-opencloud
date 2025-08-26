@@ -5,11 +5,10 @@
       :is-open="true"
       :loading="false"
       :available-panels="navigationPanels"
-      :panel-context="panelContext"
       :active-panel="'navigation'"
-      @select-panel="onNavigate"
-      class="navigation-sidebar"
       :class="{ 'navigation-sidebar-collapsed': isNavigationCollapsed }"
+      class="navigation-sidebar"
+      @select-panel="onNavigate"
     >
       <template #rootHeader>
         <div class="oc-p-s oc-flex oc-flex-between oc-flex-middle">
@@ -42,10 +41,9 @@
       :is-open="true"
       :loading="false"
       :available-panels="contentPanels"
-      :panel-context="panelContext"
       :active-panel="currentSection"
-      @select-panel="onNavigate"
       class="content-sidebar"
+      @select-panel="onNavigate"
     >
       <template #rootHeader>
         <div class="oc-p-s">
@@ -54,8 +52,8 @@
             variation="primary"
             size="medium"
             appearance="filled"
-            @click="onSidebarButtonClick"
             class="oc-width-1-1"
+            @click="onSidebarButtonClick"
           >
             <oc-icon :name="currentSidebarConfig.buttonIcon || 'add'" size="small" />
             {{ currentSidebarConfig.buttonText }}
@@ -132,7 +130,7 @@
       <div v-else class="empty-detail-state oc-flex oc-flex-center oc-flex-middle oc-p-l">
         <div class="empty-state-content">
           <oc-icon name="file-text" size="large" />
-          <h3>Select an item to view details</h3>
+          <h2>Select an item to view details</h2>
           <p>Choose an item from the list or create a new one to get started.</p>
         </div>
       </div>
@@ -152,7 +150,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref, watch, onMounted, provide } from 'vue'
+import { computed, defineComponent, ref, onMounted, provide, Ref } from 'vue'
 import { useMessages, useThemeStore, SideBar } from '@opencloud-eu/web-pkg'
 import { useGettext } from 'vue3-gettext'
 import { PSONParser, PSONData } from './utils/psonParser'
@@ -195,8 +193,8 @@ export default defineComponent({
   emits: ['update:currentContent'],
   setup(props, { emit }) {
     const textEditor = ref<HTMLTextAreaElement>()
-    const editableContent = ref(props.currentContent)
-    const originalContent = ref(props.currentContent)
+    console.debug('Initial content:')
+    console.debug(props.currentContent)
     const lastSaved = ref<string>('')
     const currentSection = ref<string>('bill')
     const isNavigationCollapsed = ref(true)
@@ -237,32 +235,7 @@ export default defineComponent({
     })
 
     // Parse PSON data
-    const parsedData = ref<PSONData>({ 
-      meta: { version: '1.0', created: '', modified: '' },
-      data: { users: {}, payment_modes: {}, categories: {}, bills: {} }
-    })
-
-    const updateParsedData = () => {
-      try {
-        let data = PSONParser.parse(editableContent.value)
-        data = PSONParser.ensureDefaultTables(
-          data,
-          currentUser.value?.name || 'Current User',
-          currentUser.value?.opencloud_id || null
-        )
-        parsedData.value = data
-      } catch (error) {
-        console.error('Error parsing PSON:', error)
-        parsedData.value = { 
-          meta: { version: '1.0', created: '', modified: '' },
-          data: { users: {}, payment_modes: {}, categories: {}, bills: {} }
-        } as PSONData
-      }
-    }
-
-    // Update parsed data when content changes
-    watch(editableContent, updateParsedData, { immediate: true })
-    watch(() => currentUser.value, updateParsedData)
+    const parsedData = ref(PSONParser.parse(props.currentContent) as PSONData)
 
     // Provide parsedData to child components
     provide('parsedData', parsedData as Ref<PSONData>)
@@ -510,21 +483,6 @@ export default defineComponent({
       return allPanels
     })
 
-    // Watch for external content changes
-    watch(
-      () => props.currentContent,
-      (newContent) => {
-        if (newContent !== editableContent.value) {
-          editableContent.value = newContent
-          originalContent.value = newContent
-        }
-      }
-    )
-
-    const onContentChange = () => {
-      emit('update:currentContent', editableContent.value)
-    }
-
     const onNavigate = (section: string) => {
       currentSection.value = section
       // Reset detail panel and selected item when switching sections
@@ -589,7 +547,7 @@ export default defineComponent({
 
       try {
         // Close detail panel first if the deleted item was selected
-        if (String(detailPanel.value.selectedItem?.id) === String(item.id)) {
+        if (detailPanel.value.selectedItem?.id === item.id) {
           onDetailPanelCancel()
         }
 
@@ -621,9 +579,8 @@ export default defineComponent({
           })
         }
 
-        const newContent = PSONParser.generate(updatedData)
-        editableContent.value = newContent
-        emit('update:currentContent', newContent)
+        PSONParser.updateMetadata(updatedData)
+        emit('update:currentContent', updatedData)
       } catch (error) {
         console.error('Error deleting item:', error)
         showMessage({
@@ -655,9 +612,8 @@ export default defineComponent({
         let updatedData = { ...parsedData.value }
         const result = PSONParser.addBill(updatedData, data.bill, data.splits)
         updatedData = result.data
-        const newContent = PSONParser.generate(updatedData)
-        editableContent.value = newContent
-        emit('update:currentContent', newContent)
+        PSONParser.updateMetadata(updatedData)
+        emit('update:currentContent', updatedData)
         onDetailPanelCancel()
 
         showMessage({
@@ -683,9 +639,8 @@ export default defineComponent({
           balance: 0
         }
 
-        const newContent = PSONParser.generate(updatedData)
-        editableContent.value = newContent
-        emit('update:currentContent', newContent)
+        PSONParser.updateMetadata(updatedData)
+        emit('update:currentContent', updatedData)
         onDetailPanelCancel()
 
         showMessage({
@@ -701,13 +656,13 @@ export default defineComponent({
       try {
         const updatedData = { ...parsedData.value }
         // Find next available category ID
-        const nextCategoryId = Math.max(...Object.keys(updatedData.data.categories).map(Number), 0) + 1
+        const nextCategoryId =
+          Math.max(...Object.keys(updatedData.data.categories).map(Number), 0) + 1
 
         updatedData.data.categories[nextCategoryId.toString()] = { name: data.name }
 
-        const newContent = PSONParser.generate(updatedData)
-        editableContent.value = newContent
-        emit('update:currentContent', newContent)
+        PSONParser.updateMetadata(updatedData)
+        emit('update:currentContent', updatedData)
         onDetailPanelCancel()
 
         showMessage({
@@ -723,13 +678,13 @@ export default defineComponent({
       try {
         const updatedData = { ...parsedData.value }
         // Find next available payment mode ID
-        const nextPaymentModeId = Math.max(...Object.keys(updatedData.data.payment_modes).map(Number), 0) + 1
+        const nextPaymentModeId =
+          Math.max(...Object.keys(updatedData.data.payment_modes).map(Number), 0) + 1
 
         updatedData.data.payment_modes[nextPaymentModeId.toString()] = { name: data.name }
 
-        const newContent = PSONParser.generate(updatedData)
-        editableContent.value = newContent
-        emit('update:currentContent', newContent)
+        PSONParser.updateMetadata(updatedData)
+        emit('update:currentContent', updatedData)
         onDetailPanelCancel()
 
         showMessage({
@@ -749,9 +704,8 @@ export default defineComponent({
           const result = PSONParser.updateBill(updatedData, selectedItem.id, data.bill, data.splits)
           updatedData = result.data
 
-          const newContent = PSONParser.generate(updatedData)
-          editableContent.value = newContent
-          emit('update:currentContent', newContent)
+          PSONParser.updateMetadata(updatedData)
+          emit('update:currentContent', updatedData)
           onDetailPanelCancel()
 
           showMessage({
@@ -777,9 +731,8 @@ export default defineComponent({
           let updatedData = { ...parsedData.value }
           updatedData = PSONParser.updateUser(updatedData, selectedItem.id, data)
 
-          const newContent = PSONParser.generate(updatedData)
-          editableContent.value = newContent
-          emit('update:currentContent', newContent)
+          PSONParser.updateMetadata(updatedData)
+          emit('update:currentContent', updatedData)
           onDetailPanelCancel()
 
           showMessage({
@@ -803,9 +756,8 @@ export default defineComponent({
           let updatedData = { ...parsedData.value }
           updatedData = PSONParser.updateCategory(updatedData, selectedItem.id, data)
 
-          const newContent = PSONParser.generate(updatedData)
-          editableContent.value = newContent
-          emit('update:currentContent', newContent)
+          PSONParser.updateMetadata(updatedData)
+          emit('update:currentContent', updatedData)
           onDetailPanelCancel()
 
           showMessage({
@@ -829,9 +781,8 @@ export default defineComponent({
           let updatedData = { ...parsedData.value }
           updatedData = PSONParser.updatePaymentMode(updatedData, selectedItem.id, data)
 
-          const newContent = PSONParser.generate(updatedData)
-          editableContent.value = newContent
-          emit('update:currentContent', newContent)
+          PSONParser.updateMetadata(updatedData)
+          emit('update:currentContent', updatedData)
           onDetailPanelCancel()
 
           showMessage({
@@ -852,9 +803,8 @@ export default defineComponent({
       try {
         // The settlement bills have already been added to parsedData by the composable
         // Just need to update the content and show a success message
-        const newContent = PSONParser.generate(parsedData.value)
-        editableContent.value = newContent
-        emit('update:currentContent', newContent)
+        PSONParser.updateMetadata(parsedData.value)
+        emit('update:currentContent', parsedData.value)
 
         showMessage({
           title: $gettext('Settlement Complete'),
@@ -882,7 +832,6 @@ export default defineComponent({
 
     return {
       textEditor,
-      editableContent,
       darkTheme,
       lastSaved,
       currentUser,
@@ -897,7 +846,6 @@ export default defineComponent({
       navigationPanels,
       contentPanels,
       isNavigationCollapsed,
-      onContentChange,
       onNavigate,
       toggleNavigation,
       onSidebarButtonClick,
@@ -926,7 +874,6 @@ export default defineComponent({
 .navigation-sidebar {
   min-width: 200px !important;
   width: 200px !important;
-  border-right: 1px solid var(--oc-color-border);
   background-color: var(--oc-role-surface-container);
   transition:
     width 0.3s ease,
@@ -974,26 +921,5 @@ export default defineComponent({
 
 .empty-state-content {
   text-align: center;
-  max-width: 300px;
-
-  svg {
-    color: var(--oc-role-on-surface-variant);
-    margin-bottom: var(--oc-space-medium);
-    opacity: 0.6;
-  }
-
-  h3 {
-    font-size: var(--oc-font-size-large);
-    font-weight: var(--oc-font-weight-semibold);
-    color: var(--oc-role-on-surface);
-    margin: 0 0 var(--oc-space-small) 0;
-  }
-
-  p {
-    font-size: var(--oc-font-size-small);
-    color: var(--oc-role-on-surface-variant);
-    margin: 0;
-    line-height: 1.4;
-  }
 }
 </style>

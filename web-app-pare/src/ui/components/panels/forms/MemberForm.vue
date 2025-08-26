@@ -10,7 +10,7 @@
             type="text"
             placeholder="Start typing to search for users..."
             required
-            class="form-input name-input"
+            class="oc-input name-input"
             :class="{ 'has-suggestions': showSuggestions && hasSuggestions }"
             @input="onNameInput"
             @focus="onNameFocus"

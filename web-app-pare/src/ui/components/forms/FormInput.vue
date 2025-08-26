@@ -8,7 +8,7 @@
     :step="step"
     :min="min"
     :max="max"
-    class="form-input"
+    class="oc-input"
     :class="{
       'form-input-disabled': disabled,
       'oc-text-right': type === 'number',

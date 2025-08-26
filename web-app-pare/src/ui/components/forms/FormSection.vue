@@ -1,6 +1,8 @@
 <template>
-  <div class="form-section oc-mb-l oc-border">
-    <div class="section-header oc-flex oc-flex-center oc-gap-m oc-p-l oc-border-bottom">
+  <div class="form-section oc-mb-l oc-border oc-rounded">
+    <div
+      class="section-header oc-flex oc-flex-center oc-gap-m oc-p-l oc-border-bottom oc-rounded-top"
+    >
       <div v-if="icon" class="section-header-icon">
         <oc-icon :name="icon" size="medium" />
       </div>
@@ -36,7 +38,6 @@ export default defineComponent({
 
 .form-section {
   background-color: var(--oc-role-surface-container);
-  border-radius: var(--oc-space-medium);
   overflow: hidden;
   flex-shrink: 0;
 }

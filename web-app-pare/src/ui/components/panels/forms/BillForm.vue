@@ -27,7 +27,7 @@
                 step="0.01"
                 placeholder="0.00"
                 required
-                class="amount-input"
+                class="oc-pl-xl"
               />
             </div>
           </FormField>
@@ -42,7 +42,7 @@
                 v-model="localForm.category_id"
                 :options="categoryOptions"
                 placeholder="Select category..."
-                class="select-with-icon"
+                class="oc-pl-xl"
               />
             </div>
           </FormField>
@@ -57,7 +57,7 @@
               <div class="input-icon">
                 <oc-icon name="calendar" size="small" />
               </div>
-              <FormInput v-model="localForm.date" type="date" required class="input-with-icon" />
+              <FormInput v-model="localForm.date" type="date" required class="oc-pl-xl" />
             </div>
           </FormField>
         </div>
@@ -67,7 +67,7 @@
               <div class="input-icon">
                 <oc-icon name="time" size="small" />
               </div>
-              <FormInput v-model="localForm.time" type="time" required class="input-with-icon" />
+              <FormInput v-model="localForm.time" type="time" required class="oc-pl-xl" />
             </div>
           </FormField>
         </div>
@@ -84,12 +84,12 @@
                 ref="whoPaidInputRef"
                 class="who-paid-input"
                 :class="{ 'is-open': showWhoPaidDropdown }"
-                @click="toggleWhoPaidDropdown"
-                @keydown="onWhoPaidKeydown"
                 tabindex="0"
                 role="combobox"
                 :aria-expanded="showWhoPaidDropdown"
                 aria-haspopup="listbox"
+                @click="toggleWhoPaidDropdown"
+                @keydown="onWhoPaidKeydown"
               >
                 <div v-if="selectedUser" class="selected-user">
                   <oc-avatar
@@ -178,7 +178,7 @@
               v-model="localForm.file_link"
               type="url"
               placeholder="https://example.com/receipt.pdf"
-              class="input-with-icon"
+              class="oc-pl-xl"
             />
           </div>
         </FormField>
@@ -248,14 +248,15 @@ export default defineComponent({
       default: 'create'
     }
   },
-      emits: {
-      submit: (_data: { bill: Omit<Bill, 'id'>; splits: Omit<BillSplit, 'id' | 'bill_id'>[] }) => true,
-      'validation-change': (_isValid: boolean) => true,
-      'splits-change': (
-        _splits: { [userId: number]: UserSplit & { included: boolean } },
-        _totalAmount: number
-      ) => true
-    },
+  emits: {
+    submit: (_data: { bill: Omit<Bill, 'id'>; splits: Omit<BillSplit, 'id' | 'bill_id'>[] }) =>
+      true,
+    'validation-change': (_isValid: boolean) => true,
+    'splits-change': (
+      _splits: { [userId: number]: UserSplit & { included: boolean } },
+      _totalAmount: number
+    ) => true
+  },
   setup(props, { emit, expose }) {
     const clientService = useClientService()
 
@@ -291,6 +292,7 @@ export default defineComponent({
 
       return undefined
     })
+
     const localForm = reactive<BillFormData>({
       description: '',
       total_amount: '',
@@ -786,15 +788,6 @@ export default defineComponent({
   z-index: 1;
   color: var(--oc-role-on-surface-variant);
   pointer-events: none;
-}
-
-.input-with-icon,
-.amount-input {
-  padding-left: calc(var(--oc-space-xlarge) + var(--oc-space-medium));
-}
-
-.select-with-icon {
-  padding-left: calc(var(--oc-space-xlarge) + var(--oc-space-medium));
 }
 
 // Who paid dropdown styles

@@ -47,60 +47,38 @@ export interface PSONData {
     users: Record<string, Omit<User, 'id'>>
     payment_modes: Record<string, Omit<PaymentMode, 'id'>>
     categories: Record<string, Omit<Category, 'id'>>
-    bills: Record<string, Omit<Bill, 'id'> & { splits: Record<string, Omit<BillSplit, 'id' | 'bill_id'>> }>
+    bills: Record<
+      string,
+      Omit<Bill, 'id'> & { splits: Record<string, Omit<BillSplit, 'id' | 'bill_id'>> }
+    >
   }
 }
 
 export class PSONParser {
   static parse(content: string): PSONData {
+    console.log('PSONParser: Parsing content')
+    console.log({ content })
     if (!content.trim()) {
-      return this.createEmptyPSONData()
+      return this.createDefaultPSONData()
     }
-    
+
     try {
       const data = JSON.parse(content) as PSONData
       return data
     } catch (error) {
       console.error('Error parsing PSON:', error)
-      return this.createEmptyPSONData()
+      return this.createDefaultPSONData()
     }
   }
 
-  static generate(data: PSONData): string {
+  static updateMetadata(data: PSONData) {
     // Update modified timestamp
     data.meta.modified = new Date().toISOString()
-    
-    // Pretty print JSON with 2-space indentation
-    return JSON.stringify(data, null, 2)
   }
 
-  static ensureDefaultTables(
-    data: PSONData,
-    currentUserName: string,
-    currentUserOpenCloudId: string | null
-  ): PSONData {
-    // Ensure users table
-    if (!data.data.users) {
-      data.data.users = {}
-    }
-
-    // Add current user if not exists
-    const hasCurrentUser = Object.values(data.data.users).some(
-      (user) => user.opencloud_id === currentUserOpenCloudId || user.name === currentUserName
-    )
-
-    if (!hasCurrentUser) {
-      // Find next available user ID
-      const nextUserId = this.getNextId(Object.keys(data.data.users).map(Number), 0)
-      data.data.users[nextUserId.toString()] = {
-        name: currentUserName,
-        opencloud_id: currentUserOpenCloudId || null,
-        balance: 0
-      }
-    }
-
+  static fillDefaults(data: PSONData) {
     // Ensure payment_mode table
-    if (!data.data.payment_modes) {
+    if (!data.data.payment_modes || Object.keys(data.data.payment_modes).length === 0) {
       data.data.payment_modes = {
         '1': { name: '💵 Cash' },
         '2': { name: '💳 Credit Card' },
@@ -111,7 +89,7 @@ export class PSONParser {
     }
 
     // Ensure category table
-    if (!data.data.categories) {
+    if (!data.data.categories || Object.keys(data.data.categories).length === 0) {
       data.data.categories = {
         '1': { name: '🍔 Food' },
         '2': { name: '🚗 Transport' },
@@ -122,14 +100,6 @@ export class PSONParser {
         '7': { name: '🔧 Equipment' }
       }
     }
-
-    // Ensure bills table
-    if (!data.data.bills) {
-      data.data.bills = {}
-    }
-
-    console.log('PSONParser: Ensured default tables')
-    return data
   }
 
   static addBill(
@@ -138,14 +108,14 @@ export class PSONParser {
     splits: Omit<BillSplit, 'id' | 'bill_id'>[]
   ): { data: PSONData; billId: number } {
     console.log('PSONParser: Adding new bill')
-    
+
     // Get next bill ID
-    const billId = this.getNextId(Object.keys(data.data.bills).map(Number), 0)
+    const billId = this.getNextId(Object.keys(data.data.bills).map(Number))
 
     // Prepare splits with IDs
     const splitsWithIds: Record<string, Omit<BillSplit, 'id' | 'bill_id'>> = {}
     let splitIdCounter = 1
-    
+
     for (const split of splits) {
       splitsWithIds[splitIdCounter.toString()] = {
         user_id: split.user_id,
@@ -220,7 +190,7 @@ export class PSONParser {
     splits: Omit<BillSplit, 'id' | 'bill_id'>[]
   ): { data: PSONData; billId: number } {
     console.log(`PSONParser: Updating bill ${billId}`)
-    
+
     // Get old bill and splits for balance reversal
     const oldBills = this.getBills(data)
     const oldBill = oldBills.find((b) => b.id === billId)
@@ -234,7 +204,7 @@ export class PSONParser {
     // Prepare splits with IDs
     const splitsWithIds: Record<string, Omit<BillSplit, 'id' | 'bill_id'>> = {}
     let splitIdCounter = 1
-    
+
     for (const split of splits) {
       splitsWithIds[splitIdCounter.toString()] = {
         user_id: split.user_id,
@@ -258,7 +228,7 @@ export class PSONParser {
 
   static updateUser(data: PSONData, userId: number, user: Omit<User, 'id'>): PSONData {
     const userIdStr = userId.toString()
-    
+
     // Update the user
     if (data.data.users[userIdStr]) {
       data.data.users[userIdStr] = user
@@ -289,7 +259,7 @@ export class PSONParser {
     category: Omit<Category, 'id'>
   ): PSONData {
     const categoryIdStr = categoryId.toString()
-    
+
     // Update the category
     if (data.data.categories[categoryIdStr]) {
       data.data.categories[categoryIdStr] = category
@@ -304,7 +274,7 @@ export class PSONParser {
     paymentMode: Omit<PaymentMode, 'id'>
   ): PSONData {
     const paymentModeIdStr = paymentModeId.toString()
-    
+
     // Update the payment mode
     if (data.data.payment_modes[paymentModeIdStr]) {
       data.data.payment_modes[paymentModeIdStr] = paymentMode
@@ -322,7 +292,7 @@ export class PSONParser {
 
   static deleteBill(data: PSONData, billId: number): PSONData {
     console.log(`PSONParser: Deleting bill ${billId}`)
-    
+
     // Get bill and splits for balance reversal before deletion
     const bills = this.getBills(data)
     const bill = bills.find((b) => b.id === billId)
@@ -374,7 +344,7 @@ export class PSONParser {
     direction: 1 | -1
   ): void {
     const userIdStr = whoPaidId.toString()
-    
+
     // Update balance for user who paid
     if (data.data.users[userIdStr]) {
       const currentBalance = data.data.users[userIdStr].balance || 0
@@ -404,7 +374,7 @@ export class PSONParser {
     )
   }
 
-  private static getNextId(existingIds: number[], columnIndex: number): number {
+  private static getNextId(existingIds: number[]): number {
     let maxId = 0
     for (const id of existingIds) {
       if (!isNaN(id) && id > maxId) {
@@ -414,9 +384,9 @@ export class PSONParser {
     return maxId + 1
   }
 
-  private static createEmptyPSONData(): PSONData {
+  public static createDefaultPSONData(): PSONData {
     const now = new Date().toISOString()
-    return {
+    const data = {
       meta: {
         version: '1.0',
         created: now,
@@ -429,5 +399,9 @@ export class PSONParser {
         bills: {}
       }
     }
+
+    PSONParser.fillDefaults(data)
+
+    return data
   }
 }

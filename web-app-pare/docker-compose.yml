@@ -45,7 +45,6 @@ services:
       - '/var/run/docker.sock:/var/run/docker.sock:ro'
       - './dev/docker/traefik/certificates:/certs'
       - './dev/docker/traefik/config:/etc/traefik/config:ro'
-    restart: unless-stopped
 
   opencloud:
     image: opencloudeu/opencloud-rolling:latest
@@ -87,7 +86,6 @@ services:
       - 'traefik.http.routers.opencloud.rule=Host(`cloud.opencloud.test`)'
       - 'traefik.http.routers.opencloud.tls=true'
       - 'traefik.http.services.opencloud.loadbalancer.server.port=9200'
-    restart: unless-stopped
     depends_on:
       - traefik
 

@@ -1,10 +1,4 @@
-import {
-  defineWebApplication,
-  ApplicationSetupOptions,
-  Extension,
-  AppMenuItemExtension,
-  AppWrapperRoute
-} from '@opencloud-eu/web-pkg'
+import { defineWebApplication, AppMenuItemExtension, AppWrapperRoute } from '@opencloud-eu/web-pkg'
 import { urlJoin } from '@opencloud-eu/web-client'
 import { RouteRecordRaw } from 'vue-router'
 import { computed } from 'vue'
@@ -13,7 +7,7 @@ import { useGettext } from 'vue3-gettext'
 import App from './App.vue'
 
 export default defineWebApplication({
-  setup(args) {
+  setup(_args) {
     const { $gettext } = useGettext()
 
     const appInfo = {

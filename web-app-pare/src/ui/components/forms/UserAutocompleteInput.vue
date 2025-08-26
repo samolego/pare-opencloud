@@ -7,7 +7,7 @@
         :placeholder="placeholder"
         :required="required"
         :disabled="disabled"
-        class="form-input user-input"
+        class="oc-input user-input"
         :class="{
           'form-input-disabled': disabled,
           'has-error': hasError

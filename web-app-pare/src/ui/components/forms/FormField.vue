@@ -1,11 +1,11 @@
 <template>
   <div class="form-field oc-mb-m" :class="{ 'form-field-error': hasError }">
-    <label v-if="label" class="form-field-label oc-mb-xs">
+    <label v-if="label" class="form-field-label oc-font-weight-semibold oc-mb-xs">
       {{ label }}
       <span v-if="required" class="form-field-error-text oc-ml-xs">*</span>
     </label>
 
-    <div class="form-field-content">
+    <div class="oc-position-relative">
       <slot></slot>
     </div>
 
@@ -55,9 +55,9 @@ export default defineComponent({
 
 .form-field {
   &.form-field-error {
-    .form-field-content :deep(input),
-    .form-field-content :deep(select),
-    .form-field-content :deep(textarea) {
+    .oc-position-relative :deep(input),
+    .oc-position-relative :deep(select),
+    .oc-position-relative :deep(textarea) {
       @include form-control-error;
     }
   }
@@ -65,13 +65,8 @@ export default defineComponent({
 
 .form-field-label {
   display: block;
-  font-weight: var(--oc-font-weight-semibold);
   color: var(--oc-role-on-surface);
   line-height: 1.4;
-}
-
-.form-field-content {
-  position: relative;
 }
 
 .form-field-error-text {

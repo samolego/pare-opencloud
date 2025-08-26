@@ -3,7 +3,7 @@
     :value="modelValue"
     :required="required"
     :disabled="disabled"
-    class="form-select oc-cursor-pointer"
+    class="oc-select oc-cursor-pointer"
     :class="{ 'form-select-disabled': disabled }"
     @change="onChange"
     @blur="$emit('blur')"

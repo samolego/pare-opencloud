@@ -6,7 +6,7 @@
     :disabled="disabled"
     :rows="rows"
     :maxlength="maxlength"
-    class="form-textarea"
+    class="oc-textarea"
     :class="{ 'form-textarea-disabled': disabled }"
     @input="onInput"
     @blur="$emit('blur')"
