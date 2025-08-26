@@ -42,47 +42,18 @@
       role="listbox"
       aria-label="User suggestions"
     >
-      <ul class="suggestions-list oc-list oc-m-rm">
-        <li
-          v-for="(suggestion, index) in suggestions"
-          :key="suggestion.id"
-          class="suggestion-item"
+      <div class="suggestions-list oc-list oc-m-rm">
+        <UserTile
+          v-for="(user, index) in suggestions"
+          :key="user.opencloud_id"
+          :user="user"
           :class="{ 'is-selected': selectedIndex === index }"
+          :show-email="false"
+          :show-open-cloud-id="true"
+          clickable
           role="option"
-          :aria-selected="selectedIndex === index"
-          @click="selectSuggestion(suggestion)"
-          @mouseenter="selectedIndex = index"
-        >
-          <div class="suggestion-content">
-            <!-- User avatar -->
-            <div class="user-avatar">
-              <img
-                v-if="suggestion.avatar"
-                :src="suggestion.avatar"
-                :alt="suggestion.displayName"
-                class="avatar-image"
-                @error="onAvatarError"
-              />
-              <span v-else class="avatar-fallback oc-icon oc-icon-m"> </span>
-            </div>
-
-            <!-- User info -->
-            <div class="user-info">
-              <div class="user-name" v-text="suggestion.displayName" />
-              <div
-                v-if="suggestion.mail"
-                class="user-email oc-text-muted"
-                v-text="suggestion.mail"
-              />
-              <div
-                v-else-if="suggestion.username"
-                class="user-username oc-text-muted"
-                v-text="suggestion.username"
-              />
-            </div>
-          </div>
-        </li>
-      </ul>
+        />
+      </div>
 
       <!-- No results message -->
       <div
@@ -104,9 +75,13 @@
 import { defineComponent } from 'vue'
 import { useClientService } from '@opencloud-eu/web-pkg'
 import { UserSearchService, type UserSearchResult } from '../../../services/userSearchService'
+import UserTile from '../common/UserTile.vue'
 
 export default defineComponent({
   name: 'UserAutocompleteInput',
+  components: {
+    UserTile
+  },
   props: {
     modelValue: {
       type: String,

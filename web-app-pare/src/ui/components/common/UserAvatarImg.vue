@@ -1,28 +1,22 @@
 <template>
-  <oc-avatar :src="avatarUrl" :user-name="displayName" :size="avatarSize" />
+  <oc-avatar :src="avatarUrl" :user-name="displayName" :width="avatarSize" />
 </template>
 
 <script lang="ts">
 import { defineComponent, PropType, computed, onMounted } from 'vue'
 import { useLoadAvatars, useAvatarsStore } from '@opencloud-eu/web-pkg'
-
-interface AvatarInfo {
-  name?: string
-  displayName?: string
-  mail?: string
-  opencloud_id?: string | null
-}
+import type { DisplayUser } from '../../../types/users'
 
 export default defineComponent({
   name: 'UserAvatarImg',
   props: {
     user: {
-      type: Object as PropType<AvatarInfo>,
+      type: Object as PropType<DisplayUser>,
       required: true
     },
     avatarSize: {
-      type: String as PropType<'small' | 'medium' | 'large'>,
-      default: 'small'
+      type: Number,
+      default: 50
     }
   },
   setup(props) {

@@ -92,13 +92,7 @@
                 @keydown="onWhoPaidKeydown"
               >
                 <div v-if="selectedUser" class="selected-user">
-                  <oc-avatar
-                    :src="selectedUserAvatarUrl"
-                    :user-name="selectedUser.name"
-                    size="small"
-                    class="oc-mr-s"
-                  />
-                  <span class="user-name">{{ selectedUser.name }}</span>
+                  <UserTile :user="selectedUser" :avatar-size="32" :clickable="false" />
                 </div>
                 <span v-else class="placeholder">Select user...</span>
                 <oc-icon name="keyboard-arrow-down" size="small" class="dropdown-arrow" />
@@ -107,7 +101,7 @@
               <!-- Dropdown -->
               <div
                 v-if="showWhoPaidDropdown"
-                class="who-paid-dropdown"
+                class="oc-select"
                 role="listbox"
                 aria-label="User selection"
               >

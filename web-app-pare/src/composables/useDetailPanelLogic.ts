@@ -100,7 +100,7 @@ export function useBillDetailPanel(mode: FormMode) {
   return useDetailPanelLogic(mode, 'Bill', mode === 'create' ? 'Create Bill' : 'Save Changes')
 }
 
-export function useMemberDetailPanel(mode: FormMode) {
+export function useUserDetailPanel(mode: FormMode) {
   return useDetailPanelLogic(mode, 'Member', mode === 'create' ? 'Add Member' : 'Save Changes')
 }
 

@@ -39,7 +39,7 @@ export interface BillFormData {
   file_link: string
 }
 
-export interface MemberFormData {
+export interface UserFormData {
   name: string
   opencloud_id: string
 }

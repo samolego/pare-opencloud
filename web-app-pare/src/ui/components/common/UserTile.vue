@@ -3,11 +3,9 @@
     class="user-tile oc-rounded"
     :class="{ 'is-clickable': clickable, 'is-selected': isSelected }"
   >
-    <div
-      class="oc-rounded oc-flex oc-p-m oc-flex-row oc-flex-middle oc-flex-center user-tile-content"
-    >
+    <div class="oc-rounded oc-flex oc-flex-row oc-flex-middle oc-flex-center user-tile-content">
       <!-- User avatar -->
-      <UserAvatarImg :user="user" />
+      <UserAvatarImg :user="user" :avatar-size="avatarSize" />
 
       <!-- User info -->
       <div class="user-name oc-ml-l oc-text-center" :title="displayName">{{ displayName }}</div>
@@ -19,16 +17,7 @@
 import { defineComponent, PropType, computed, onMounted } from 'vue'
 import { useLoadAvatars, useAvatarsStore } from '@opencloud-eu/web-pkg'
 import UserAvatarImg from './UserAvatarImg.vue'
-
-interface UserLike {
-  id?: number | string
-  name?: string
-  displayName?: string
-  mail?: string
-  opencloud_id?: string | null
-  avatar?: string
-  profileImage?: string
-}
+import type { DisplayUser } from '../../../types/users'
 
 export default defineComponent({
   name: 'UserTile',
@@ -37,7 +26,7 @@ export default defineComponent({
   },
   props: {
     user: {
-      type: Object as PropType<UserLike>,
+      type: Object as PropType<DisplayUser>,
       required: true
     },
     clickable: {
@@ -49,8 +38,8 @@ export default defineComponent({
       default: false
     },
     avatarSize: {
-      type: String as PropType<'small' | 'medium' | 'large'>,
-      default: 'small'
+      type: Number,
+      default: 50
     },
     showEmail: {
       type: Boolean,

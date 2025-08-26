@@ -16,7 +16,7 @@ interface OpenCloudSearchUser {
 }
 
 export interface UserSearchResult {
-  id: string
+  opencloud_id: string
   displayName: string
   mail?: string
   username?: string
@@ -110,7 +110,7 @@ export class UserSearchService {
       // Fetch avatars for all users
       const resultsWithAvatars = await Promise.all(
         mappedResults.map(async (result) => {
-          const avatarUrl = await this.fetchUserAvatar(result.id, clientService)
+          const avatarUrl = await this.fetchUserAvatar(result.opencloud_id, clientService)
           return {
             ...result,
             avatar: avatarUrl
@@ -134,7 +134,7 @@ export class UserSearchService {
       'Unknown User'
 
     return {
-      id: user.id,
+      opencloud_id: user.id,
       displayName,
       mail: user.mail,
       username: user.onPremisesSamAccountName || user.userPrincipalName,
@@ -201,7 +201,7 @@ export class UserSearchService {
   static searchResultToUser(searchResult: UserSearchResult): User {
     return {
       name: searchResult.displayName,
-      opencloud_id: searchResult.id,
+      opencloud_id: searchResult.opencloud_id,
       displayName: searchResult.displayName,
       mail: searchResult.mail,
       avatar: searchResult.avatar,

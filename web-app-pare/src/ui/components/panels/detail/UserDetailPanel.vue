@@ -11,8 +11,8 @@
 
     <div class="member-detail-content oc-p-l oc-p-m-sm">
       <FormSection title="Member Information" icon="user">
-        <MemberForm
-          ref="memberForm"
+        <UserForm
+          ref="userForm"
           :member="member"
           :mode="mode"
           @submit="onFormSubmit"
@@ -26,17 +26,17 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue'
 import { User } from '../../../../utils/psonParser'
-import { useMemberDetailPanel } from '../../../../composables/useDetailPanelLogic'
+import { useUserDetailPanel } from '../../../../composables/useDetailPanelLogic'
 import { FormMode } from '../../../../types/forms'
 import DetailPanelHeader from '../DetailPanelHeader.vue'
-import { MemberForm } from '../forms'
+import { UserForm } from '../forms'
 import { FormSection } from '../../forms'
 
 export default defineComponent({
-  name: 'MemberDetailPanel',
+  name: 'UserDetailPanel',
   components: {
     DetailPanelHeader,
-    MemberForm,
+    UserForm,
     FormSection
   },
   props: {
@@ -53,14 +53,14 @@ export default defineComponent({
   setup(props, { emit }) {
     const {
       canSave,
-      formRef: memberForm,
+      formRef: userForm,
       isVisible,
       panelTitle,
       computedSaveText: saveText,
       onValidationChange,
       onSave,
       createEventHandlers
-    } = useMemberDetailPanel(props.mode)
+    } = useUserDetailPanel(props.mode)
 
     const { onCancel, onFormSubmit } = createEventHandlers(emit)
 
@@ -69,7 +69,7 @@ export default defineComponent({
       isVisible,
       panelTitle,
       saveText,
-      memberForm,
+      userForm,
       onValidationChange,
       onCancel,
       onSave,

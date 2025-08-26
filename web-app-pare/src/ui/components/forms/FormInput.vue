@@ -10,7 +10,7 @@
     :max="max"
     class="oc-input"
     :class="{
-      'form-input-disabled': disabled,
+      'oc-disabled': disabled,
       'oc-text-right': type === 'number',
       'oc-cursor-pointer': type === 'date' || type === 'time'
     }"

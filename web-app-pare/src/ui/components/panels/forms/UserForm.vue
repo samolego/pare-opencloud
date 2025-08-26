@@ -1,71 +1,81 @@
 <template>
-  <div ref="formRef" class="member-form oc-p-m">
-    <form @submit.prevent="onSubmit">
-      <!-- Name with User Search -->
-      <FormField label="Name" required :error="errors.name">
-        <div class="name-field-container">
-          <input
-            ref="nameInputRef"
-            v-model="localForm.name"
-            type="text"
-            placeholder="Start typing to search for users..."
-            required
-            class="oc-input name-input"
-            :class="{ 'has-suggestions': showSuggestions && hasSuggestions }"
-            @input="onNameInput"
-            @focus="onNameFocus"
-            @blur="onNameBlur"
-            @keydown="onKeydown"
-          />
-
-          <!-- Loading indicator -->
-          <div v-if="isLoading" class="loading-indicator">
-            <span class="oc-spinner oc-spinner-s"></span>
-          </div>
-
-          <!-- Suggestions dropdown -->
-          <div
-            v-if="showSuggestions && hasSuggestions"
-            class="suggestions-dropdown"
-            role="listbox"
-            aria-label="User suggestions"
-          >
-            <div class="suggestions-list">
-              <UserTile
-                v-for="(suggestion, index) in suggestions"
-                :key="suggestion.id"
-                :user="suggestion"
-                :is-selected="selectedIndex === index"
-                :show-email="true"
-                :show-open-cloud-id="false"
-                clickable
-                role="option"
-                :aria-selected="selectedIndex === index"
-                @click="selectSuggestion(suggestion)"
-                @mousedown.prevent="selectSuggestion(suggestion)"
-                @mouseenter="selectedIndex = index"
-              />
-            </div>
-
-            <!-- No results message -->
-            <div
-              v-if="!isLoading && query.length >= minQueryLength && suggestions.length === 0"
-              class="no-results"
-            >
-              <span class="oc-text-muted">No users found</span>
-            </div>
-          </div>
-        </div>
-      </FormField>
-
-      <!-- OpenCloud ID (always visible but disabled) -->
-      <FormField
-        label="OpenCloud ID"
-        help-text="Automatically filled when selecting a user above"
-        :error="errors.opencloud_id"
+  <div ref="formRef" class="member-form oc-gap-m">
+    <form @submit.prevent="onSubmit" class="oc-flex oc-flex-row oc-flex-center oc-gap-m">
+      <!-- Additional Avatar Image -->
+      <div
+        class="oc-flex oc-flex-column oc-flex-center oc-flex-middle oc-surface-container oc-rounded"
       >
-        <FormInput v-model="localForm.opencloud_id" :disabled="true" readonly />
-      </FormField>
+        <UserAvatarImg :user="localForm" avatar-size="100" />
+      </div>
+
+      <!-- Form Fields -->
+      <div class="oc-flex oc-flex-column oc-gap-m oc-flex-auto oc-ml-l">
+        <!-- Name with User Search -->
+        <FormField label="Name" required :error="errors.name">
+          <div class="name-field-container oc-relative">
+            <input
+              ref="nameInputRef"
+              v-model="localForm.name"
+              type="text"
+              placeholder="Start typing to search for users..."
+              required
+              class="oc-input name-input"
+              :class="{ 'has-suggestions': showSuggestions && hasSuggestions }"
+              @input="onNameInput"
+              @focus="onNameFocus"
+              @blur="onNameBlur"
+              @keydown="onKeydown"
+            />
+
+            <!-- Loading indicator -->
+            <div class="loading-indicator oc-flex oc-flex-middle">
+              <span class="oc-spinner oc-spinner-s"></span>
+            </div>
+
+            <!-- Suggestions dropdown -->
+            <div
+              v-if="showSuggestions && hasSuggestions"
+              class="suggestions-dropdown oc-absolute"
+              role="listbox"
+              aria-label="User suggestions"
+            >
+              <div class="suggestions-list oc-p-rm">
+                <UserTile
+                  v-for="(suggestion, index) in suggestions"
+                  :key="suggestion.opencloud_id"
+                  :user="suggestion"
+                  :is-selected="selectedIndex === index"
+                  :show-email="true"
+                  :show-open-cloud-id="false"
+                  clickable
+                  role="option"
+                  :aria-selected="selectedIndex === index"
+                  @click="selectSuggestion(suggestion)"
+                  @mousedown.prevent="selectSuggestion(suggestion)"
+                  @mouseenter="selectedIndex = index"
+                />
+              </div>
+
+              <!-- No results message -->
+              <div
+                v-if="!isLoading && query.length >= minQueryLength && suggestions.length === 0"
+                class="no-results oc-text-center oc-p-m"
+              >
+                <span class="oc-text-muted">No users found</span>
+              </div>
+            </div>
+          </div>
+        </FormField>
+
+        <!-- OpenCloud ID (always visible but disabled) -->
+        <FormField
+          label="OpenCloud ID"
+          help-text="Automatically filled when selecting a user above"
+          :error="errors.opencloud_id"
+        >
+          <FormInput v-model="localForm.opencloud_id" :disabled="true" readonly />
+        </FormField>
+      </div>
     </form>
   </div>
 </template>
@@ -75,17 +85,19 @@ import { defineComponent, PropType, watch, ref, computed, onMounted, onUnmounted
 import { useClientService } from '@opencloud-eu/web-pkg'
 import { User } from '../../../../utils/psonParser'
 import { useSimpleForm, useFormValidationEmits } from '../../../../composables/useSimpleForm'
-import { MemberFormData, ValidationErrors } from '../../../../types/forms'
+import { UserFormData, ValidationErrors } from '../../../../types/forms'
 import { FormField, FormInput } from '../../forms'
 import { UserSearchService, type UserSearchResult } from '../../../../services/userSearchService'
 import UserTile from '../../common/UserTile.vue'
+import UserAvatarImg from '../../common/UserAvatarImg.vue'
 
 export default defineComponent({
-  name: 'MemberForm',
+  name: 'UserForm',
   components: {
     FormField,
     FormInput,
-    UserTile
+    UserTile,
+    UserAvatarImg
   },
   props: {
     member: {
@@ -119,7 +131,7 @@ export default defineComponent({
     const hasSuggestions = computed(() => suggestions.value.length > 0)
 
     // Custom validator for member form
-    const memberValidator = (data: MemberFormData): ValidationErrors => {
+    const memberValidator = (data: UserFormData): ValidationErrors => {
       const errors: ValidationErrors = {}
 
       if (!data.name.trim()) {
@@ -134,7 +146,7 @@ export default defineComponent({
       return errors
     }
 
-    const initialData: MemberFormData = {
+    const initialData: UserFormData = {
       name: props.member?.name || '',
       opencloud_id: props.member?.opencloud_id || ''
     }
@@ -195,7 +207,7 @@ export default defineComponent({
     }
 
     const onNameFocus = () => {
-      if (suggestions.value.length > 0 && !isUserSelected.value) {
+      if (suggestions.value.length > 0) {
         showSuggestions.value = true
       }
     }
@@ -350,101 +362,58 @@ export default defineComponent({
 <style lang="scss" scoped>
 @import '../../../styles/mixins';
 
+/* Name Field Container */
 .name-field-container {
-  position: relative;
-  width: 100%;
   z-index: 1000;
   overflow: visible;
 }
 
-.name-input {
-  @include form-control;
-  width: 100%;
-  padding-right: 40px; // Space for loading indicator
-
-  &.has-suggestions {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-}
-
+/* Loading Indicator */
 .loading-indicator {
   position: absolute;
-  right: 12px;
+  right: var(--oc-space-small);
   top: 50%;
   transform: translateY(-50%);
-  display: flex;
-  align-items: center;
   pointer-events: none;
 }
 
+/* Suggestions Dropdown */
 .suggestions-dropdown {
-  position: absolute;
   top: 100%;
   left: 0;
   right: 0;
   z-index: 9999;
-  background-color: var(--oc-role-surface);
-  border: 1px solid var(--oc-role-outline-variant);
-  border-top: none;
-  border-bottom-left-radius: var(--oc-border-radius-medium);
-  border-bottom-right-radius: var(--oc-border-radius-medium);
-  box-shadow: var(--oc-shadow-depth-2);
   max-height: 300px;
   overflow-y: auto;
 }
 
+/* Suggestions List */
 .suggestions-list {
   padding: 0;
   margin: 0;
 }
 
-:deep(.user-tile) {
-  border-bottom: 1px solid var(--oc-role-outline-variant);
-  user-select: none;
-  position: relative;
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  // Ensure the entire area is clickable
-  * {
-    pointer-events: none;
-  }
-
-  &:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    pointer-events: auto;
-  }
-}
-
+/* No Results Message */
 .no-results {
-  padding: 16px;
-  text-align: center;
+  /* No additional styles needed, utility classes handle this */
 }
 
-// Ensure parent containers don't clip the dropdown
+/* Ensure parent containers don't clip the dropdown */
 :deep(.form-field),
 :deep(.oc-p-m),
 :deep(.member-form) {
   overflow: visible !important;
 }
 
-// Mobile responsive
+/* Mobile Responsive */
 @media (max-width: 768px) {
   .suggestions-dropdown {
     max-height: 250px;
   }
 
   :deep(.user-tile-content) {
-    padding: 10px 12px;
-    gap: 10px;
+    padding: var(--oc-space-small) var(--oc-space-medium);
+    gap: var(--oc-space-small);
   }
 }
 </style>

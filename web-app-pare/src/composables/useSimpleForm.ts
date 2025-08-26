@@ -3,7 +3,7 @@ import type { ValidationErrors, ValidatorFunction, SimpleFormData } from '../typ
 
 /**
  * Composable for simple form logic - handles focus, validation, and common patterns
- * Used by CategoryForm, MemberForm, PaymentModeForm, etc.
+ * Used by CategoryForm, UserForm, PaymentModeForm, etc.
  */
 export function useSimpleForm<T extends Record<string, any>>(
   initialData: T,

@@ -86,7 +86,7 @@
       />
 
       <!-- Member Detail Panel -->
-      <MemberDetailPanel
+      <UserDetailPanel
         v-else-if="detailPanel.type === 'member'"
         :key="`member-${detailPanel.mode}-${detailPanel.selectedItem?.id || 'new'}`"
         :member="detailPanel.selectedItem"
@@ -161,7 +161,7 @@ import ContentPanel from './ui/components/panels/ContentPanel.vue'
 import UsersContentPanel from './ui/components/panels/UsersContentPanel.vue'
 import {
   BillDetailPanel,
-  MemberDetailPanel,
+  UserDetailPanel,
   CategoryDetailPanel,
   PaymentModeDetailPanel,
   SettlementDetailPanel
@@ -174,7 +174,7 @@ export default defineComponent({
   components: {
     SideBar,
     BillDetailPanel,
-    MemberDetailPanel,
+    UserDetailPanel,
     CategoryDetailPanel,
     PaymentModeDetailPanel,
     SettlementDetailPanel,

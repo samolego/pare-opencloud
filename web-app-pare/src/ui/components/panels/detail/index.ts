@@ -1,5 +1,5 @@
 export { default as BillDetailPanel } from './BillDetailPanel.vue'
-export { default as MemberDetailPanel } from './MemberDetailPanel.vue'
+export { default as UserDetailPanel } from './UserDetailPanel.vue'
 export { default as CategoryDetailPanel } from './CategoryDetailPanel.vue'
 export { default as PaymentModeDetailPanel } from './PaymentModeDetailPanel.vue'
 export { default as SettlementDetailPanel } from './SettlementDetailPanel.vue'
