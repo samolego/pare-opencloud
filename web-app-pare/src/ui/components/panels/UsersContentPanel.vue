@@ -10,19 +10,37 @@
     @page-change="$emit('page-change', $event)"
   >
     <template #item="{ item }">
-      <div class="user-item-content">
-        <div class="item-header oc-flex oc-flex-middle oc-gap-s">
-          <user-avatar :user-name="getEnhancedItemTitle(item)" :user-id="item.opencloud_id" />
-          <div class="item-title oc-text-bold oc-text-large">
-            {{ getEnhancedItemTitle(item) }}
+      <div class="oc-flex oc-flex-row oc-gap-m">
+        <!-- User Avatar -->
+        <UserAvatarImg :user="item" />
+
+        <!-- Neighbor Element -->
+        <div class="oc-flex oc-flex-column oc-flex-auto oc-ml-m">
+          <!-- Top Section: Username -->
+          <div class="oc-flex oc-flex-row oc-flex-middle oc-gap-s">
+            <user-avatar :user-name="getEnhancedItemTitle(item)" :user-id="item.opencloud_id" />
+            <div class="item-title oc-text-bold oc-text-large">
+              {{ getEnhancedItemTitle(item) }}
+            </div>
           </div>
-        </div>
-        <div class="item-details oc-flex oc-flex-between oc-flex-middle oc-mt-xs">
-          <div class="item-subtitle oc-text-medium oc-font-semibold" :class="getBalanceClass(item)">
-            {{ getBalanceDisplay(item) }}
-          </div>
-          <div class="oc-text-muted oc-text-xsmall" @click="onItemDelete(item)">
-            <oc-icon name="delete-bin-7" />
+
+          <!-- Bottom Section: Balance and Trash Icon -->
+          <div class="oc-flex oc-flex-row oc-flex-between oc-flex-middle oc-mt-xs">
+            <!-- Balance -->
+            <div
+              class="item-subtitle oc-text-medium oc-font-semibold"
+              :class="getBalanceClass(item)"
+            >
+              {{ getBalanceDisplay(item) }}
+            </div>
+
+            <!-- Trash Icon -->
+            <div
+              class="oc-text-muted oc-text-xsmall oc-cursor-pointer"
+              @click.stop="onItemDelete(item)"
+            >
+              <oc-icon name="delete-bin-7" />
+            </div>
           </div>
         </div>
       </div>
@@ -39,13 +57,15 @@ import { useUserData } from '../../../composables/useUserData'
 import { useContentItemFormatting } from '../../../composables/useContentItemFormatting'
 import { useSettlement } from '../../../composables/useSettlement'
 import ContentPanel from './ContentPanel.vue'
+import UserAvatarImg from '../common/UserAvatarImg.vue'
 
 import type { PSONData } from '../../../utils/psonParser'
 
 export default defineComponent({
   name: 'UsersContentPanel',
   components: {
-    ContentPanel
+    ContentPanel,
+    UserAvatarImg
   },
   props: {
     darkTheme: {
@@ -90,7 +110,10 @@ export default defineComponent({
     const getItemAvatar = (item: SidebarItem): string => {
       // Use opencloud_id if available, fallback to CSV id for display
       const userId = item.opencloud_id || item.id.toString()
-      const avatar = getUserAvatar(userId)
+      const avatar = getUserAvatar(
+        userId,
+        clientService.httpAuthenticatedClient?.defaults?.baseURL || window.location.origin
+      )
       return avatar
     }
 

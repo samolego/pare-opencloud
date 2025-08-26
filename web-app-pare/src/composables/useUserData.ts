@@ -77,16 +77,14 @@ export function useUserData() {
   /**
    * Get user avatar URL with fallback generation
    */
-  const getUserAvatar = (userId: string): string | null => {
+  const getUserAvatar = (baseUrl: string, userId: string): string | null => {
     const user = getCachedUser(userId)
 
     // Return actual avatar if available
     if (user?.avatar) return user.avatar
     if (user?.profileImage) return user.profileImage
 
-    const URL = `https://cloud.opencloud.test/graph/v1.0/users/${userId}/photo/$value`
-
-    return URL
+    return `https://${baseUrl}/graph/v1.0/users/${userId}/photo/$value`
   }
 
   /**
