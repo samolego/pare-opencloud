@@ -28,22 +28,22 @@
             />
 
             <!-- Loading indicator -->
-            <div class="loading-indicator oc-flex oc-flex-middle">
+            <div v-if="isLoading" class="loading-indicator oc-flex oc-flex-middle">
               <span class="oc-spinner oc-spinner-s"></span>
             </div>
 
             <!-- Suggestions dropdown -->
             <div
               v-if="showSuggestions && hasSuggestions"
-              class="suggestions-dropdown oc-absolute"
+              class="suggestions-dropdown oc-absolute oc-surface-container oc-border oc-rounded oc-box-shadow-medium"
               role="listbox"
               aria-label="User suggestions"
             >
               <div class="suggestions-list oc-p-rm">
                 <UserTile
                   v-for="(suggestion, index) in suggestions"
-                  :key="suggestion.id"
-                  :user="toUserFormData(suggestion)"
+                  :key="suggestion.opencloud_id"
+                  :user="suggestion"
                   :is-selected="selectedIndex === index"
                   :show-email="true"
                   :show-open-cloud-id="false"
@@ -85,10 +85,9 @@ import { defineComponent, PropType, watch, ref, computed, onMounted, onUnmounted
 import { useClientService } from '@opencloud-eu/web-pkg'
 import { useSimpleForm, useFormValidationEmits } from '../../../../composables/useSimpleForm'
 import { ValidationErrors } from '../../../../types/forms'
-import { UserFormData, BillUser, UserTypeConverter } from '../../../../types/user'
-import { User } from '@opencloud-eu/web-client/graph/generated'
+import { UserFormData, BillUser } from '../../../../types/user'
 import { FormField, FormInput } from '../../forms'
-import { UserSearchService } from '../../../../services/userSearchService'
+import { UserService } from '../../../../services/userService'
 import UserTile from '../../common/UserTile.vue'
 import UserAvatarImg from '../../common/UserAvatarImg.vue'
 
@@ -118,7 +117,7 @@ export default defineComponent({
 
     // Search state
     const query = ref('')
-    const suggestions = ref<User[]>([])
+    const suggestions = ref<UserFormData[]>([])
     const isLoading = ref(false)
     const error = ref<string | null>(null)
     const selectedIndex = ref(-1)
@@ -131,16 +130,12 @@ export default defineComponent({
     // Computed
     const hasSuggestions = computed(() => suggestions.value.length > 0)
 
-    const toUserFormData = (user: User) => UserTypeConverter.fromOpenCloudUser(user)
-
     // Custom validator for member form
     const memberValidator = (data: UserFormData): ValidationErrors => {
       const errors: ValidationErrors = {}
-
       if (!data.name.trim()) {
         errors.name = 'Name is required'
       }
-
       return errors
     }
 
@@ -163,7 +158,7 @@ export default defineComponent({
       error.value = null
 
       try {
-        const results = await UserSearchService.searchUsers(searchQuery, clientService, 10)
+        const results = await UserService.searchUsers(searchQuery, clientService, 10)
         suggestions.value = results
         selectedIndex.value = -1
         showSuggestions.value = results.length > 0
@@ -179,13 +174,7 @@ export default defineComponent({
     // Update query with debouncing
     const updateQuery = (newQuery: string) => {
       query.value = newQuery
-
-      // Clear previous timer
-      if (debounceTimer) {
-        clearTimeout(debounceTimer)
-      }
-
-      // Set new timer
+      if (debounceTimer) clearTimeout(debounceTimer)
       debounceTimer = setTimeout(() => {
         searchUsers(newQuery)
       }, 300)
@@ -194,14 +183,9 @@ export default defineComponent({
     // Input handlers
     const onNameInput = (event: Event) => {
       const target = event.target as HTMLInputElement
-      const value = target.value
-      form.localForm.name = value
-
-      // Clear OpenCloud ID when user types
+      form.localForm.name = target.value
       form.localForm.opencloud_id = ''
-
-      // Always allow searching
-      updateQuery(value)
+      updateQuery(target.value)
     }
 
     const onNameFocus = () => {
@@ -211,7 +195,6 @@ export default defineComponent({
     }
 
     const onNameBlur = () => {
-      // Delay hiding suggestions to allow clicking on them
       setTimeout(() => {
         showSuggestions.value = false
         selectedIndex.value = -1
@@ -222,29 +205,20 @@ export default defineComponent({
       switch (event.key) {
         case 'ArrowUp':
           event.preventDefault()
-          if (selectedIndex.value > 0) {
-            selectedIndex.value--
-          } else if (suggestions.value.length > 0) {
-            selectedIndex.value = suggestions.value.length - 1
-          }
+          if (selectedIndex.value > 0) selectedIndex.value--
+          else if (suggestions.value.length > 0) selectedIndex.value = suggestions.value.length - 1
           break
-
         case 'ArrowDown':
           event.preventDefault()
-          if (selectedIndex.value < suggestions.value.length - 1) {
-            selectedIndex.value++
-          } else {
-            selectedIndex.value = 0
-          }
+          if (selectedIndex.value < suggestions.value.length - 1) selectedIndex.value++
+          else selectedIndex.value = 0
           break
-
         case 'Enter':
           event.preventDefault()
           if (selectedIndex.value >= 0 && selectedIndex.value < suggestions.value.length) {
             selectSuggestion(suggestions.value[selectedIndex.value])
           }
           break
-
         case 'Escape':
           event.preventDefault()
           showSuggestions.value = false
@@ -255,16 +229,11 @@ export default defineComponent({
     }
 
     // Suggestion handlers
-    const selectSuggestion = (user: User) => {
-      // Console log the selected user as requested
-      console.log('Selected user:', user)
-
-      // Update form fields
+    const selectSuggestion = (user: UserFormData) => {
       form.updateForm({
-        name: user.displayName || user.mail || '',
-        opencloud_id: user.id || ''
+        name: user.name,
+        opencloud_id: user.opencloud_id || null
       })
-
       showSuggestions.value = false
       selectedIndex.value = -1
       nameInputRef.value?.blur()
@@ -296,35 +265,28 @@ export default defineComponent({
       form.autoFocus()
     }
 
-    // Watch for member changes
     watch(() => props.member, initializeForm, { immediate: true })
     watch(() => props.mode, initializeForm)
 
-    // Handle validation change emissions
     useFormValidationEmits(form.isValid, emit)
 
     const onSubmit = () => {
       if (!form.validateForm()) return
-
       const member: Omit<BillUser, 'id'> = {
         name: form.localForm.name.trim(),
         opencloud_id: form.localForm.opencloud_id.trim() || null,
         balance: null
       }
-
       emit('submit', member)
     }
 
-    // Lifecycle
     onMounted(() => {
       document.addEventListener('click', handleClickOutside)
     })
 
     onUnmounted(() => {
       document.removeEventListener('click', handleClickOutside)
-      if (debounceTimer) {
-        clearTimeout(debounceTimer)
-      }
+      if (debounceTimer) clearTimeout(debounceTimer)
     })
 
     return {
@@ -332,9 +294,6 @@ export default defineComponent({
       localForm: form.localForm,
       errors: form.errors,
       onSubmit,
-      toUserFormData,
-
-      // Search functionality
       nameInputRef,
       containerRef,
       query,
@@ -359,13 +318,11 @@ export default defineComponent({
 <style lang="scss" scoped>
 @import '../../../styles/mixins';
 
-/* Name Field Container */
 .name-field-container {
-  z-index: 1000;
+  z-index: 100;
   overflow: visible;
 }
 
-/* Loading Indicator */
 .loading-indicator {
   position: absolute;
   right: var(--oc-space-small);
@@ -374,30 +331,26 @@ export default defineComponent({
   pointer-events: none;
 }
 
-/* Suggestions Dropdown */
 .suggestions-dropdown {
   top: 100%;
   left: 0;
   right: 0;
-  z-index: 9999;
+  z-index: 1000;
   max-height: 300px;
   overflow-y: auto;
 }
 
-/* Suggestions List */
 .suggestions-list {
   padding: 0;
   margin: 0;
 }
 
-/* Ensure parent containers don't clip the dropdown */
 :deep(.form-field),
 :deep(.oc-p-m),
 :deep(.member-form) {
   overflow: visible !important;
 }
 
-/* Mobile Responsive */
 @media (max-width: 768px) {
   .suggestions-dropdown {
     max-height: 250px;

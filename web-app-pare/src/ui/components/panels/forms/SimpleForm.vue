@@ -1,9 +1,8 @@
 <template>
-  <div ref="formRef" class="payment-mode-form oc-p-m">
+  <div ref="formRef" class="simple-form oc-p-m">
     <form @submit.prevent="onSubmit">
-      <!-- Name -->
-      <FormField label="Payment Mode Name" required :error="errors.name">
-        <FormInput v-model="localForm.name" placeholder="Enter payment mode name..." required />
+      <FormField :label="config.label" required :error="errors.name">
+        <FormInput v-model="localForm.name" :placeholder="config.placeholder" required />
       </FormField>
     </form>
   </div>
@@ -11,56 +10,67 @@
 
 <script lang="ts">
 import { defineComponent, PropType, watch } from 'vue'
-import { PaymentMode } from '../../../../utils/psonParser'
 import { useNameOnlyForm, useFormValidationEmits } from '../../../../composables/useSimpleForm'
 import { FormField, FormInput } from '../../forms'
+import { FormMode } from '../../../types/forms'
+
+export interface SimpleFormConfig {
+  entityType: string
+  label: string
+  placeholder: string
+}
 
 export default defineComponent({
-  name: 'PaymentModeForm',
+  name: 'SimpleForm',
   components: {
     FormField,
     FormInput
   },
   props: {
-    paymentMode: {
-      type: Object as PropType<PaymentMode | null>,
+    config: {
+      type: Object as PropType<SimpleFormConfig>,
+      required: true
+    },
+    item: {
+      type: Object as PropType<{ name: string } | null>,
       default: null
     },
     mode: {
-      type: String as PropType<'create' | 'edit'>,
+      type: String as PropType<FormMode>,
       default: 'create'
     }
   },
   emits: ['submit', 'validation-change'],
-  setup(props, { emit }) {
-    const form = useNameOnlyForm(props.paymentMode?.name || '', props.mode, 'Payment mode name')
+  setup(props, { emit, expose }) {
+    const form = useNameOnlyForm(props.item?.name || '', props.mode, props.config.label)
 
-    // Initialize form data when payment mode changes
     const initializeForm = () => {
-      if (props.paymentMode) {
-        form.updateForm({ name: props.paymentMode.name })
+      if (props.item) {
+        form.updateForm({ name: props.item.name })
       } else {
         form.resetForm()
       }
       form.autoFocus()
     }
 
-    // Watch for payment mode changes
-    watch(() => props.paymentMode, initializeForm, { immediate: true })
+    watch(() => props.item, initializeForm, { immediate: true })
     watch(() => props.mode, initializeForm)
 
-    // Handle validation change emissions
     useFormValidationEmits(form.isValid, emit)
 
     const onSubmit = () => {
       if (!form.validateForm()) return
 
-      const paymentMode: Omit<PaymentMode, 'id'> = {
+      const entityData = {
         name: form.localForm.name.trim()
       }
 
-      emit('submit', paymentMode)
+      emit('submit', entityData)
     }
+
+    expose({
+      onSubmit
+    })
 
     return {
       formRef: form.formRef,

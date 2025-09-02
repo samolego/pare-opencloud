@@ -39,7 +39,7 @@
 <script lang="ts">
 import { defineComponent, PropType, inject, ref, watch, nextTick } from 'vue'
 import { Bill, PaymentMode, Category, PSONData } from '../../../../utils/psonParser'
-import { useBillDetailPanel } from '../../../../composables/useDetailPanelLogic'
+import { useDetailPanelLogic } from '../../../../composables/useDetailPanel'
 import { FormMode } from '../../../../types/forms'
 import { UserSplitWithInclusion, BillUser } from '../../../../types/user'
 import DetailPanelHeader from '../DetailPanelHeader.vue'
@@ -86,7 +86,7 @@ export default defineComponent({
       onValidationChange,
       onSave,
       createEventHandlers
-    } = useBillDetailPanel(props.mode)
+    } = useDetailPanelLogic(props.mode, 'Bill')
 
     // Use the formRef from composable as billForm
     const billForm = formRef

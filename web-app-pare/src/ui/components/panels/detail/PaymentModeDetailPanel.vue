@@ -11,9 +11,10 @@
 
     <div class="payment-mode-detail-content oc-p-l oc-p-m-sm">
       <FormSection title="Payment Method Information" icon="bank-card">
-        <PaymentModeForm
+        <SimpleForm
           ref="paymentModeForm"
-          :payment-mode="paymentMode"
+          :config="paymentModeFormConfig"
+          :item="paymentMode"
           :mode="mode"
           @submit="onFormSubmit"
           @validation-change="onValidationChange"
@@ -26,17 +27,18 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue'
 import { PaymentMode } from '../../../../utils/psonParser'
-import { usePaymentModeDetailPanel } from '../../../../composables/useDetailPanelLogic'
+import { useDetailPanelLogic } from '../../../../composables/useDetailPanel'
 import { FormMode } from '../../../../types/forms'
 import DetailPanelHeader from '../DetailPanelHeader.vue'
-import { PaymentModeForm } from '../forms'
+import { SimpleForm } from '../forms'
+import { paymentModeFormConfig } from '../../../../configs/formConfigs'
 import { FormSection } from '../../forms'
 
 export default defineComponent({
   name: 'PaymentModeDetailPanel',
   components: {
     DetailPanelHeader,
-    PaymentModeForm,
+    SimpleForm,
     FormSection
   },
   props: {
@@ -60,7 +62,7 @@ export default defineComponent({
       onValidationChange,
       onSave,
       createEventHandlers
-    } = usePaymentModeDetailPanel(props.mode)
+    } = useDetailPanelLogic(props.mode, 'Payment Mode')
 
     const { onCancel, onFormSubmit } = createEventHandlers(emit)
 
@@ -70,6 +72,7 @@ export default defineComponent({
       panelTitle,
       saveText,
       paymentModeForm,
+      paymentModeFormConfig,
       onValidationChange,
       onCancel,
       onSave,

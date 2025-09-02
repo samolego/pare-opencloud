@@ -11,9 +11,10 @@
 
     <div class="oc-p-l">
       <FormSection title="Category Information" icon="price-tag">
-        <CategoryForm
+        <SimpleForm
           ref="categoryForm"
-          :category="category"
+          :config="categoryFormConfig"
+          :item="category"
           :mode="mode"
           @submit="onFormSubmit"
           @validation-change="onValidationChange"
@@ -26,17 +27,18 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue'
 import { Category } from '../../../../utils/psonParser'
-import { useCategoryDetailPanel } from '../../../../composables/useDetailPanelLogic'
+import { useDetailPanelLogic } from '../../../../composables/useDetailPanel'
 import { FormMode } from '../../../../types/forms'
 import DetailPanelHeader from '../DetailPanelHeader.vue'
-import { CategoryForm } from '../forms'
+import { SimpleForm } from '../forms'
+import { categoryFormConfig } from '../../../../configs/formConfigs'
 import { FormSection } from '../../forms'
 
 export default defineComponent({
   name: 'CategoryDetailPanel',
   components: {
     DetailPanelHeader,
-    CategoryForm,
+    SimpleForm,
     FormSection
   },
   props: {
@@ -60,7 +62,7 @@ export default defineComponent({
       onValidationChange,
       onSave,
       createEventHandlers
-    } = useCategoryDetailPanel(props.mode)
+    } = useDetailPanelLogic(props.mode, 'Category')
 
     const { onCancel, onFormSubmit } = createEventHandlers(emit)
 
@@ -70,6 +72,7 @@ export default defineComponent({
       panelTitle,
       saveText,
       categoryForm,
+      categoryFormConfig,
       onValidationChange,
       onCancel,
       onSave,

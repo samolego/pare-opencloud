@@ -52,7 +52,7 @@
 <script lang="ts">
 import { defineComponent, PropType, inject, type Ref } from 'vue'
 import { SidebarItem, SidebarConfig } from '../../../types/sidebar'
-import { useUserData } from '../../../composables/useUserData'
+
 import { useContentItemFormatting } from '../../../composables/useContentItemFormatting'
 import { useSettlement } from '../../../composables/useSettlement'
 import ContentPanel from './ContentPanel.vue'
@@ -98,7 +98,6 @@ export default defineComponent({
   },
   emits: ['page-change'],
   setup(props) {
-    const {} = useUserData()
     const { getItemSubtitle, getItemDescription, isNegativeAmount, truncateText } =
       useContentItemFormatting()
 

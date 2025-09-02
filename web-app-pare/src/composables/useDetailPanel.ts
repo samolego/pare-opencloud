@@ -92,26 +92,3 @@ export function useDetailPanelLogic<T = any>(mode: FormMode, itemType: string, s
     createEventHandlers
   }
 }
-
-/**
- * Specialized version for specific panel types with proper typing
- */
-export function useBillDetailPanel(mode: FormMode) {
-  return useDetailPanelLogic(mode, 'Bill', mode === 'create' ? 'Create Bill' : 'Save Changes')
-}
-
-export function useUserDetailPanel(mode: FormMode) {
-  return useDetailPanelLogic(mode, 'Member', mode === 'create' ? 'Add Member' : 'Save Changes')
-}
-
-export function useCategoryDetailPanel(mode: FormMode) {
-  return useDetailPanelLogic(mode, 'Category', mode === 'create' ? 'Add Category' : 'Save Changes')
-}
-
-export function usePaymentModeDetailPanel(mode: FormMode) {
-  return useDetailPanelLogic(
-    mode,
-    'Payment Mode',
-    mode === 'create' ? 'Add Payment Mode' : 'Save Changes'
-  )
-}

@@ -45,8 +45,8 @@
       <div class="suggestions-list oc-list oc-m-rm">
         <UserTile
           v-for="(user, index) in suggestions"
-          :key="user.id"
-          :user="convertUser(user)"
+          :key="user.opencloud_id"
+          :user="user"
           :class="{ 'is-selected': selectedIndex === index }"
           :show-email="false"
           :show-open-cloud-id="true"
@@ -74,10 +74,9 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useClientService } from '@opencloud-eu/web-pkg'
-import { UserSearchService } from '../../../services/userSearchService'
+import { UserService } from '../../../services/userService'
 import UserTile from '../common/UserTile.vue'
-import { UserTypeConverter } from '../../../types/user'
-import { User } from '@opencloud-eu/web-client/graph/generated'
+import { UserFormData } from '../../../types/user'
 
 export default defineComponent({
   name: 'UserAutocompleteInput',
@@ -118,7 +117,7 @@ export default defineComponent({
   data() {
     return {
       query: '',
-      suggestions: [] as User[],
+      suggestions: [] as UserFormData[],
       isLoading: false,
       error: null as string | null,
       selectedIndex: -1,
@@ -162,7 +161,7 @@ export default defineComponent({
       this.error = null
 
       try {
-        const results = await UserSearchService.searchUsers(
+        const results = await UserService.searchUsers(
           searchQuery,
           this.clientService,
           this.maxResults
@@ -182,12 +181,10 @@ export default defineComponent({
     updateQuery(newQuery: string) {
       this.query = newQuery
 
-      // Clear previous timer
       if (this.debounceTimer) {
         clearTimeout(this.debounceTimer)
       }
 
-      // Set new timer
       this.debounceTimer = setTimeout(() => {
         this.searchUsers(newQuery)
       }, 300)
@@ -209,7 +206,6 @@ export default defineComponent({
     },
 
     onBlur() {
-      // Delay hiding suggestions to allow clicking on them
       setTimeout(() => {
         this.showSuggestions = false
         this.selectedIndex = -1
@@ -254,17 +250,13 @@ export default defineComponent({
       }
     },
 
-    selectSuggestion(user: User) {
-      this.$emit('update:modelValue', user.displayName || '')
+    selectSuggestion(user: UserFormData) {
+      this.$emit('update:modelValue', user.name || '')
       this.$emit('user-selected', user)
       this.showSuggestions = false
       this.selectedIndex = -1
       const inputRef = this.$refs.inputRef as HTMLInputElement
       inputRef?.blur()
-    },
-
-    convertUser(user: User) {
-      return UserTypeConverter.fromOpenCloudUser(user, 0)
     },
 
     clearInput() {
@@ -275,11 +267,6 @@ export default defineComponent({
       this.selectedIndex = -1
       const inputRef = this.$refs.inputRef as HTMLInputElement
       inputRef?.focus()
-    },
-
-    onAvatarError(event: Event) {
-      const img = event.target as HTMLImageElement
-      img.style.display = 'none'
     },
 
     handleClickOutside(event: Event) {
@@ -321,7 +308,7 @@ export default defineComponent({
 
 .user-input {
   @include form-control;
-  padding-right: 40px; // Space for loading/clear button
+  padding-right: 40px;
   flex: 1;
 
   &.has-error {
@@ -381,80 +368,6 @@ export default defineComponent({
   margin: 0;
 }
 
-.suggestion-item {
-  cursor: pointer;
-  border-bottom: 1px solid var(--oc-color-border);
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  &:hover,
-  &.is-selected {
-    background-color: var(--oc-color-background-hover);
-  }
-
-  &.is-selected {
-    background-color: var(--oc-color-shr-highlight);
-  }
-}
-
-.suggestion-content {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  gap: 12px;
-}
-
-.user-avatar {
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  overflow: hidden;
-  background-color: var(--oc-color-background-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.avatar-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.avatar-fallback {
-  color: var(--oc-color-text-muted);
-
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-}
-
-.user-info {
-  flex: 1;
-  min-width: 0; // Allow text truncation
-}
-
-.user-name {
-  font-weight: 500;
-  color: var(--oc-color-text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-email,
-.user-username {
-  font-size: 0.875rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-top: 2px;
-}
-
 .no-results {
   padding: 16px;
   text-align: center;
@@ -462,27 +375,5 @@ export default defineComponent({
 
 .error-message {
   margin-top: 4px;
-}
-
-// Mobile responsive
-@media (max-width: 768px) {
-  .suggestions-dropdown {
-    max-height: 250px;
-  }
-
-  .suggestion-content {
-    padding: 10px 12px;
-    gap: 10px;
-  }
-
-  .user-avatar {
-    width: 28px;
-    height: 28px;
-  }
-
-  .avatar-fallback svg {
-    width: 16px;
-    height: 16px;
-  }
 }
 </style>

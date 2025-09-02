@@ -25,7 +25,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue'
-import { useUserDetailPanel } from '../../../../composables/useDetailPanelLogic'
+import { useDetailPanelLogic } from '../../../../composables/useDetailPanel'
 import { FormMode } from '../../../../types/forms'
 import DetailPanelHeader from '../DetailPanelHeader.vue'
 import { UserForm } from '../forms'
@@ -60,7 +60,7 @@ export default defineComponent({
       onValidationChange,
       onSave,
       createEventHandlers
-    } = useUserDetailPanel(props.mode)
+    } = useDetailPanelLogic(props.mode, 'Member')
 
     const { onCancel, onFormSubmit } = createEventHandlers(emit)
 
