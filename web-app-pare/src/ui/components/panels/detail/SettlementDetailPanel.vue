@@ -211,8 +211,8 @@ export default defineComponent({
         const result = await createIndividualSettlementBill(transaction)
 
         if (result) {
-          // Emit event to parent to refresh data
-          emit('settlement-created', result)
+          // Emit event to parent to refresh data with the settled transaction info
+          emit('settlement-created', { ...result, settledTransaction: transaction })
         }
       } catch (err) {
         console.error('Error settling individual transaction:', err)

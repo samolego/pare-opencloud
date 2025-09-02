@@ -806,12 +806,54 @@ export default defineComponent({
         PSONParser.updateMetadata(parsedData.value)
         emit('update:currentContent', parsedData.value)
 
-        showMessage({
-          title: $gettext('Settlement Complete'),
-          desc: $gettext(
-            `${settlementResult.settlementBills.length} settlement bills created successfully`
-          )
-        })
+        // Handle individual transaction settlement - update the settlement detail panel
+        if (
+          settlementResult.settledTransaction &&
+          detailPanel.value.type === 'settlement' &&
+          detailPanel.value.selectedItem
+        ) {
+          const settledTransaction = settlementResult.settledTransaction
+          const currentSettlement = detailPanel.value.selectedItem
+
+          // Remove the settled transaction from the current settlement
+          if (currentSettlement.transactions) {
+            currentSettlement.transactions = currentSettlement.transactions.filter(
+              (transaction: any) =>
+                !(
+                  transaction.fromUserId === settledTransaction.fromUserId &&
+                  transaction.toUserId === settledTransaction.toUserId &&
+                  transaction.amount === settledTransaction.amount
+                )
+            )
+
+            // Update total transactions count
+            currentSettlement.totalTransactions = currentSettlement.transactions.length
+
+            // Update the detail panel with the modified settlement
+            detailPanel.value.selectedItem = { ...currentSettlement }
+          }
+
+          showMessage({
+            title: $gettext('Transaction Settled'),
+            desc: $gettext('Settlement bill created successfully')
+          })
+
+          if (currentSettlement.transactions.length === 0) {
+            // All transactions settled, close the detail panel
+            onDetailPanelCancel()
+          }
+        } else {
+          // Handle bulk settlement (Settle All)
+          showMessage({
+            title: $gettext('Settlement Complete'),
+            desc: $gettext(
+              `${settlementResult.settlementBills?.length || 1} settlement bills created successfully`
+            )
+          })
+
+          // Close the detail panel for bulk settlements
+          onDetailPanelCancel()
+        }
       } catch (error) {
         console.error('Error updating content after settlement:', error)
         showMessage({
