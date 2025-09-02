@@ -151,8 +151,8 @@ export default defineComponent({
   methods: {
     async searchUsers(searchQuery: string) {
       if (!searchQuery || searchQuery.length < this.minQueryLength) {
-        this.suggestions = []
         this.isLoading = false
+        this.suggestions = []
         return
       }
 
@@ -172,9 +172,9 @@ export default defineComponent({
         this.error = err instanceof Error ? err.message : 'Failed to search users'
         this.suggestions = []
         console.error('Error searching users:', err)
-      } finally {
-        this.isLoading = false
       }
+
+      this.isLoading = false
     },
 
     updateQuery(newQuery: string) {

@@ -98,7 +98,7 @@ export default defineComponent({
   },
   emits: ['page-change'],
   setup(props) {
-    const { preloadUsers } = useUserData()
+    const {} = useUserData()
     const { getItemSubtitle, getItemDescription, isNegativeAmount, truncateText } =
       useContentItemFormatting()
 
@@ -133,28 +133,6 @@ export default defineComponent({
 
       return userBalance.balance > 0 ? 'item-balance-credit' : 'item-balance-debt'
     }
-
-    // Preload user data when items change
-    watch(
-      () => props.items,
-      async (newItems) => {
-        const userIds = newItems.map((item) => item.opencloud_id).filter((id) => id && id !== '')
-
-        if (userIds.length > 0) {
-          await preloadUsers(userIds)
-        }
-      },
-      { immediate: true }
-    )
-
-    // Also preload when component mounts
-    onMounted(async () => {
-      const userIds = props.items.map((item) => item.opencloud_id).filter((id) => id && id !== '')
-
-      if (userIds.length > 0) {
-        await preloadUsers(userIds)
-      }
-    })
 
     return {
       getItemSubtitle: (item: SidebarItem) => getItemSubtitle(item, props.config),

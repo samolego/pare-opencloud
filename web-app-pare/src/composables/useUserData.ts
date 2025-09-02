@@ -65,20 +65,6 @@ export function useUserData() {
   }
 
   /**
-   * Preload user data for a list of user IDs
-   */
-  const preloadUsers = async (userIds: string[]): Promise<void> => {
-    const promises = userIds
-      .filter((id) => id && !userCache.value[id] && !loadingStates.value[id])
-      .map((id) => getUserById(id))
-
-    await Promise.all(promises)
-
-    console.log(`Preloaded ${promises.length} users`)
-    console.log(userCache.value)
-  }
-
-  /**
    * Clear user cache
    */
   const clearCache = (): void => {
@@ -99,7 +85,6 @@ export function useUserData() {
     getUserById,
     getCachedUser,
     isLoading,
-    preloadUsers,
     clearCache,
     clearUserCache,
 

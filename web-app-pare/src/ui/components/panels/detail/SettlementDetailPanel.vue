@@ -70,9 +70,9 @@
                 variation="primary"
                 size="small"
                 appearance="filled"
-                @click="onSettleTransaction(transaction, index)"
                 class="settle-transaction-btn"
                 :disabled="isSettlingTransaction(transaction, index)"
+                @click="onSettleTransaction(transaction, index)"
               >
                 <oc-icon
                   :name="isSettlingTransaction(transaction, index) ? 'loader' : 'check'"
@@ -131,13 +131,8 @@ export default defineComponent({
 
     // Get parsed data from parent component for settlement creation
     const parsedData = inject<Ref<PSONData>>('parsedData')
-    const {
-      createSettlementBills,
-      createIndividualSettlementBill,
-      isCalculating,
-      error,
-      clearError
-    } = useSettlement(parsedData)
+    const { createSettlementBills, createIndividualSettlementBill, isCalculating, clearError } =
+      useSettlement(parsedData)
 
     // Track individual transaction settlement states
     const settlingTransactions = ref<Set<string>>(new Set())
@@ -218,9 +213,6 @@ export default defineComponent({
         if (result) {
           // Emit event to parent to refresh data
           emit('settlement-created', result)
-
-          // Close the panel since settlement data has changed
-          emit('cancel')
         }
       } catch (err) {
         console.error('Error settling individual transaction:', err)
@@ -229,10 +221,10 @@ export default defineComponent({
           desc: err instanceof Error ? err.message : $gettext('Unknown error occurred'),
           status: 'danger'
         })
-      } finally {
-        // Remove from settling set
-        settlingTransactions.value.delete(transactionKey)
       }
+      // Remove from settling set
+      settlingTransactions.value.delete(transactionKey)
+      console.log('Finished settling transaction:', transactionKey)
     }
 
     return {

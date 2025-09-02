@@ -70,7 +70,7 @@
         <!-- OpenCloud ID (always visible but disabled) -->
         <FormField
           label="OpenCloud ID"
-          help-text="Automatically filled when selecting a user above"
+          help-text="Filled automatically if existing user is selected"
           :error="errors.opencloud_id"
         >
           <FormInput v-model="localForm.opencloud_id" :disabled="true" readonly />
