@@ -3,12 +3,14 @@
     class="user-tile oc-rounded"
     :class="{ 'is-clickable': clickable, 'is-selected': isSelected }"
   >
-    <div class="oc-rounded oc-flex oc-flex-row oc-flex-middle oc-flex-center user-tile-content">
+    <div class="oc-rounded oc-flex oc-flex-row oc-flex-middle user-tile-content oc-p-s">
       <!-- User avatar -->
       <UserAvatarImg :user="user" :avatar-size="avatarSize" />
 
       <!-- User info -->
-      <div class="user-name oc-ml-l oc-text-center" :title="displayName">{{ displayName }}</div>
+      <div class="user-name oc-ml-m oc-text-left oc-flex-1" :title="displayName">
+        {{ displayName }}
+      </div>
     </div>
   </div>
 </template>

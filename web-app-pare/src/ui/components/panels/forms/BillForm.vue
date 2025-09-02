@@ -79,11 +79,14 @@
       <div class="form-row">
         <div class="form-column">
           <FormField label="Who paid initially?" required :error="errors.who_paid_id">
-            <div class="who-paid-container">
+            <div class="who-paid-container oc-position-relative oc-width-1-1">
               <div
                 ref="whoPaidInputRef"
-                class="who-paid-input"
-                :class="{ 'is-open': showWhoPaidDropdown }"
+                class="who-paid-input oc-flex oc-flex-middle oc-flex-between oc-p-s oc-border oc-rounded oc-cursor-pointer"
+                :class="{
+                  'who-paid-input--open oc-border-primary': showWhoPaidDropdown,
+                  'who-paid-input--hover': !showWhoPaidDropdown
+                }"
                 tabindex="0"
                 role="combobox"
                 :aria-expanded="showWhoPaidDropdown"
@@ -91,21 +94,26 @@
                 @click="toggleWhoPaidDropdown"
                 @keydown="onWhoPaidKeydown"
               >
-                <div v-if="selectedUser" class="selected-user">
+                <div v-if="selectedUser" class="oc-flex oc-flex-middle oc-flex-1">
                   <UserTile :user="selectedUser" :avatar-size="32" :clickable="false" />
                 </div>
-                <span v-else class="placeholder">Select user...</span>
-                <oc-icon name="keyboard-arrow-down" size="small" class="dropdown-arrow" />
+                <span v-else class="oc-text-muted oc-flex-1">Select user...</span>
+                <oc-icon
+                  name="keyboard-arrow-down"
+                  size="small"
+                  class="oc-text-muted dropdown-arrow"
+                  :class="{ 'dropdown-arrow--rotated': showWhoPaidDropdown }"
+                />
               </div>
 
               <!-- Dropdown -->
               <div
                 v-if="showWhoPaidDropdown"
-                class="oc-select"
+                class="who-paid-dropdown oc-position-absolute oc-surface-container oc-border oc-rounded oc-box-shadow-medium"
                 role="listbox"
                 aria-label="User selection"
               >
-                <div class="dropdown-list">
+                <div class="oc-p-xs">
                   <UserTile
                     v-for="(user, index) in users"
                     :key="user.id"
@@ -115,6 +123,8 @@
                     :show-open-cloud-id="true"
                     clickable
                     role="option"
+                    class="oc-mb-xs oc-rounded"
+                    :class="{ 'oc-surface-container-high': whoPaidSelectedIndex === index }"
                     :aria-selected="whoPaidSelectedIndex === index"
                     @click="selectWhoPaidUser(user)"
                     @mousedown.prevent="selectWhoPaidUser(user)"
@@ -786,107 +796,51 @@ export default defineComponent({
 
 // Who paid dropdown styles
 .who-paid-container {
-  position: relative;
-  width: 100%;
-  z-index: 10000;
+  z-index: 100;
   overflow: visible;
 }
 
 .who-paid-input {
-  @include form-control;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
   min-height: 44px;
-  padding: 8px 12px;
   background-color: var(--oc-role-surface);
-  border: 1px solid var(--oc-role-outline-variant);
-  border-radius: var(--oc-border-radius-medium);
-  transition: border-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 
-  &:hover {
+  &:hover:not(.who-paid-input--open) {
     border-color: var(--oc-role-outline);
   }
 
   &:focus {
     outline: none;
-    border-color: var(--oc-role-primary);
+    border-color: var(--oc-role-primary) !important;
     box-shadow: 0 0 0 2px var(--oc-role-primary-container);
   }
 
-  &.is-open {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-    border-color: var(--oc-role-primary);
+  &--open {
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
   }
 }
 
-.selected-user {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-}
-
-.placeholder {
-  color: var(--oc-role-on-surface-variant);
-  flex: 1;
-}
-
 .dropdown-arrow {
-  color: var(--oc-role-on-surface-variant);
   transition: transform 0.15s ease;
 
-  .who-paid-input.is-open & {
+  &--rotated {
     transform: rotate(180deg);
   }
 }
 
 .who-paid-dropdown {
-  position: absolute;
   top: 100%;
   left: 0;
   right: 0;
-  z-index: 99999;
-  background-color: var(--oc-role-surface);
-  border: 1px solid var(--oc-role-outline-variant);
+  z-index: 1000;
   border-top: none;
-  border-bottom-left-radius: var(--oc-border-radius-medium);
-  border-bottom-right-radius: var(--oc-border-radius-medium);
-  box-shadow: var(--oc-shadow-depth-2);
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
   max-height: 300px;
   overflow-y: auto;
-}
-
-.dropdown-list {
-  padding: 0;
-  margin: 0;
-}
-
-:deep(.user-tile) {
-  border-bottom: 1px solid var(--oc-role-outline-variant);
-  user-select: none;
-  position: relative;
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  // Ensure the entire area is clickable
-  * {
-    pointer-events: none;
-  }
-
-  &:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    pointer-events: auto;
-  }
 }
 
 // Ensure parent containers don't clip the dropdown
@@ -900,15 +854,15 @@ export default defineComponent({
   overflow: visible !important;
 }
 
+// Remove last item margin in dropdown
+.who-paid-dropdown :deep(.user-tile:last-child) {
+  margin-bottom: 0 !important;
+}
+
 // Mobile responsive
 @media (max-width: 768px) {
   .who-paid-dropdown {
     max-height: 250px;
-  }
-
-  :deep(.user-tile-content) {
-    padding: 10px 12px;
-    gap: 10px;
   }
 }
 </style>
