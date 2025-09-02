@@ -1,11 +1,11 @@
 <template>
   <div ref="formRef" class="member-form oc-gap-m">
-    <form @submit.prevent="onSubmit" class="oc-flex oc-flex-row oc-flex-center oc-gap-m">
+    <form class="oc-flex oc-flex-row oc-flex-center oc-gap-m" @submit.prevent="onSubmit">
       <!-- Additional Avatar Image -->
       <div
         class="oc-flex oc-flex-column oc-flex-center oc-flex-middle oc-surface-container oc-rounded"
       >
-        <UserAvatarImg :user="localForm" avatar-size="100" />
+        <UserAvatarImg :user="localForm" :avatar-size="100" />
       </div>
 
       <!-- Form Fields -->
@@ -42,8 +42,8 @@
               <div class="suggestions-list oc-p-rm">
                 <UserTile
                   v-for="(suggestion, index) in suggestions"
-                  :key="suggestion.opencloud_id"
-                  :user="suggestion"
+                  :key="suggestion.id"
+                  :user="toUserFormData(suggestion)"
                   :is-selected="selectedIndex === index"
                   :show-email="true"
                   :show-open-cloud-id="false"
@@ -59,7 +59,7 @@
               <!-- No results message -->
               <div
                 v-if="!isLoading && query.length >= minQueryLength && suggestions.length === 0"
-                class="no-results oc-text-center oc-p-m"
+                class="oc-text-center oc-p-m"
               >
                 <span class="oc-text-muted">No users found</span>
               </div>
@@ -83,11 +83,12 @@
 <script lang="ts">
 import { defineComponent, PropType, watch, ref, computed, onMounted, onUnmounted } from 'vue'
 import { useClientService } from '@opencloud-eu/web-pkg'
-import { User } from '../../../../utils/psonParser'
 import { useSimpleForm, useFormValidationEmits } from '../../../../composables/useSimpleForm'
-import { UserFormData, ValidationErrors } from '../../../../types/forms'
+import { ValidationErrors } from '../../../../types/forms'
+import { UserFormData, BillUser, UserTypeConverter } from '../../../../types/user'
+import { User } from '@opencloud-eu/web-client/graph/generated'
 import { FormField, FormInput } from '../../forms'
-import { UserSearchService, type UserSearchResult } from '../../../../services/userSearchService'
+import { UserSearchService } from '../../../../services/userSearchService'
 import UserTile from '../../common/UserTile.vue'
 import UserAvatarImg from '../../common/UserAvatarImg.vue'
 
@@ -101,7 +102,7 @@ export default defineComponent({
   },
   props: {
     member: {
-      type: Object as PropType<User | null>,
+      type: Object as PropType<BillUser | null>,
       default: null
     },
     mode: {
@@ -117,7 +118,7 @@ export default defineComponent({
 
     // Search state
     const query = ref('')
-    const suggestions = ref<UserSearchResult[]>([])
+    const suggestions = ref<User[]>([])
     const isLoading = ref(false)
     const error = ref<string | null>(null)
     const selectedIndex = ref(-1)
@@ -130,17 +131,14 @@ export default defineComponent({
     // Computed
     const hasSuggestions = computed(() => suggestions.value.length > 0)
 
+    const toUserFormData = (user: User) => UserTypeConverter.fromOpenCloudUser(user)
+
     // Custom validator for member form
     const memberValidator = (data: UserFormData): ValidationErrors => {
       const errors: ValidationErrors = {}
 
       if (!data.name.trim()) {
         errors.name = 'Name is required'
-      }
-
-      // Validate OpenCloud ID format if provided
-      if (data.opencloud_id && data.opencloud_id.trim()) {
-        // todo - test via API if user exists
       }
 
       return errors
@@ -257,16 +255,14 @@ export default defineComponent({
     }
 
     // Suggestion handlers
-    const selectSuggestion = (suggestion: UserSearchResult) => {
-      const user = UserSearchService.searchResultToUser(suggestion)
-
+    const selectSuggestion = (user: User) => {
       // Console log the selected user as requested
       console.log('Selected user:', user)
 
       // Update form fields
       form.updateForm({
-        name: user.displayName || user.name,
-        opencloud_id: user.opencloud_id || ''
+        name: user.displayName || user.mail || '',
+        opencloud_id: user.id || ''
       })
 
       showSuggestions.value = false
@@ -310,7 +306,7 @@ export default defineComponent({
     const onSubmit = () => {
       if (!form.validateForm()) return
 
-      const member: Omit<User, 'id'> = {
+      const member: Omit<BillUser, 'id'> = {
         name: form.localForm.name.trim(),
         opencloud_id: form.localForm.opencloud_id.trim() || null,
         balance: null
@@ -336,6 +332,7 @@ export default defineComponent({
       localForm: form.localForm,
       errors: form.errors,
       onSubmit,
+      toUserFormData,
 
       // Search functionality
       nameInputRef,
@@ -391,11 +388,6 @@ export default defineComponent({
 .suggestions-list {
   padding: 0;
   margin: 0;
-}
-
-/* No Results Message */
-.no-results {
-  /* No additional styles needed, utility classes handle this */
 }
 
 /* Ensure parent containers don't clip the dropdown */

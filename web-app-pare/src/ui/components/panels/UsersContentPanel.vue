@@ -50,7 +50,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, onMounted, watch, inject, type Ref } from 'vue'
+import { defineComponent, PropType, inject, type Ref } from 'vue'
 import { SidebarItem, SidebarConfig } from '../../../types/sidebar'
 import { useUserData } from '../../../composables/useUserData'
 import { useContentItemFormatting } from '../../../composables/useContentItemFormatting'

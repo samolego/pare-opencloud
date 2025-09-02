@@ -1,10 +1,5 @@
 // Define the data structure types for PSON format
-export interface User {
-  id: number
-  name: string
-  opencloud_id: string | null
-  balance: number | null
-}
+import { BillUser } from '../types/user'
 
 export interface PaymentMode {
   id: number
@@ -44,7 +39,7 @@ export interface PSONData {
     modified: string
   }
   data: {
-    users: Record<string, Omit<User, 'id'>>
+    users: Record<string, Omit<BillUser, 'id'>>
     payment_modes: Record<string, Omit<PaymentMode, 'id'>>
     categories: Record<string, Omit<Category, 'id'>>
     bills: Record<
@@ -226,7 +221,7 @@ export class PSONParser {
     return { data, billId }
   }
 
-  static updateUser(data: PSONData, userId: number, user: Omit<User, 'id'>): PSONData {
+  static updateUser(data: PSONData, userId: number, user: Omit<BillUser, 'id'>): PSONData {
     const userIdStr = userId.toString()
 
     // Update the user
@@ -237,7 +232,7 @@ export class PSONParser {
     return data
   }
 
-  static getUsers(data: PSONData): User[] {
+  static getUsers(data: PSONData): BillUser[] {
     return Object.entries(data.data.users).map(([id, user]) => ({
       id: parseInt(id),
       name: user.name,
@@ -331,7 +326,7 @@ export class PSONParser {
   /**
    * Apply balance changes for a bill (generic method that handles both adding and reversing)
    * @param data - PSON data
-   * @param whoPaidId - User who paid the bill
+   * @param whoPaidId - BillUser who paid the bill
    * @param totalAmount - Total amount of the bill
    * @param splits - How the bill is split among users
    * @param direction - 1 for adding bill, -1 for reversing bill

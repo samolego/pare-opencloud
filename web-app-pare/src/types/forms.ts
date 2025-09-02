@@ -1,12 +1,10 @@
 // Common form types used across components
+import { UserFormData } from './user'
 
-export interface UserSplit {
-  amount: string
-}
-
-export interface SimpleFormData {
-  name: string
-}
+// Use TypeScript utility types for consistency
+export type SimpleFormData = Pick<UserFormData, 'name'>
+export type CategoryFormData = Pick<UserFormData, 'name'>
+export type PaymentModeFormData = Pick<UserFormData, 'name'>
 
 export type FormMode = 'create' | 'edit'
 
@@ -37,19 +35,6 @@ export interface BillFormData {
   category_id: number | null
   comment: string
   file_link: string
-}
-
-export interface UserFormData {
-  name: string
-  opencloud_id: string
-}
-
-export interface CategoryFormData {
-  name: string
-}
-
-export interface PaymentModeFormData {
-  name: string
 }
 
 // Form validation function type

@@ -5,13 +5,13 @@
 <script lang="ts">
 import { defineComponent, PropType, computed, onMounted } from 'vue'
 import { useLoadAvatars, useAvatarsStore } from '@opencloud-eu/web-pkg'
-import type { DisplayUser } from '../../../types/users'
+import type { UserFormData } from '../../../types/user'
 
 export default defineComponent({
   name: 'UserAvatarImg',
   props: {
     user: {
-      type: Object as PropType<DisplayUser>,
+      type: Object as PropType<UserFormData>,
       required: true
     },
     avatarSize: {
@@ -22,7 +22,7 @@ export default defineComponent({
   setup(props) {
     // Computed display name
     const displayName = computed(() => {
-      return props.user.displayName || props.user.name || props.user.mail || 'Unknown User'
+      return props.user.name || 'Unknown User'
     })
 
     const avatarsStore = useAvatarsStore()

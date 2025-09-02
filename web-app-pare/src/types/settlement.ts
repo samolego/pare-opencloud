@@ -1,12 +1,7 @@
 // Settlement-related types for debt simplification
 
-import { Bill, BillSplit, User } from '../utils/psonParser'
-
-export interface UserBalance {
-  userId: number
-  name: string
-  balance: number // positive = credit (owed money), negative = debt (owes money)
-}
+import { Bill, BillSplit } from '../utils/psonParser'
+import { BillUser, UserBalance } from './user'
 
 export interface SettlementTransaction {
   fromUserId: number
@@ -41,5 +36,5 @@ export interface SettlementResult {
 export interface BalanceCalculationInput {
   bills: Bill[]
   billSplits: BillSplit[]
-  users: User[]
+  users: BillUser[]
 }

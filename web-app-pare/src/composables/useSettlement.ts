@@ -4,7 +4,8 @@ import { computed, ref, watch, type Ref } from 'vue'
 import { BalanceCalculator } from '../utils/balanceCalculator'
 import { SettlementAlgorithm } from '../utils/settlementAlgorithm'
 import { PSONParser, type PSONData } from '../utils/psonParser'
-import type { UserBalance, Settlement, SettlementResult } from '../types/settlement'
+import type { Settlement, SettlementResult } from '../types/settlement'
+import type { UserBalance } from '../types/user'
 
 export function useSettlement(parsedData: Ref<PSONData> | undefined) {
   const isCalculating = ref(false)
@@ -26,7 +27,11 @@ export function useSettlement(parsedData: Ref<PSONData> | undefined) {
     // Create a hash to avoid recalculating if data hasn't changed
     const dataHash = JSON.stringify({
       billsLength: Object.keys(parsedData.value.data.bills).length || 0,
-      splitsLength: Object.values(parsedData.value.data.bills).reduce((acc, bill) => acc + Object.keys(bill.splits).length, 0) || 0,
+      splitsLength:
+        Object.values(parsedData.value.data.bills).reduce(
+          (acc, bill) => acc + Object.keys(bill.splits).length,
+          0
+        ) || 0,
       usersLength: Object.keys(parsedData.value.data.users).length || 0
     })
 

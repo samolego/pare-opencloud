@@ -19,7 +19,7 @@
 import { defineComponent, PropType, computed, onMounted } from 'vue'
 import { useLoadAvatars, useAvatarsStore } from '@opencloud-eu/web-pkg'
 import UserAvatarImg from './UserAvatarImg.vue'
-import type { DisplayUser } from '../../../types/users'
+import type { UserFormData } from '../../../types/user'
 
 export default defineComponent({
   name: 'UserTile',
@@ -28,7 +28,7 @@ export default defineComponent({
   },
   props: {
     user: {
-      type: Object as PropType<DisplayUser>,
+      type: Object as PropType<UserFormData>,
       required: true
     },
     clickable: {
@@ -55,7 +55,7 @@ export default defineComponent({
   setup(props) {
     // Computed display name
     const displayName = computed(() => {
-      return props.user.displayName || props.user.name || props.user.mail || 'Unknown User'
+      return props.user.name || 'Unknown User'
     })
 
     const avatarsStore = useAvatarsStore()

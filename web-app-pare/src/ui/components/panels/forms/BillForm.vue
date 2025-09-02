@@ -204,7 +204,6 @@ import {
 } from 'vue'
 import { useClientService } from '@opencloud-eu/web-pkg'
 import {
-  User,
   PaymentMode,
   Category,
   Bill,
@@ -212,7 +211,8 @@ import {
   PSONData,
   PSONParser
 } from '../../../../utils/psonParser'
-import { UserSplit, BillFormData, ValidationErrors } from '../../../../types/forms'
+import { BillFormData, ValidationErrors } from '../../../../types/forms'
+import { UserSplit, BillUser } from '../../../../types/user'
 import { FormField, FormInput, FormSelect, FormTextarea, FormSection } from '../../forms'
 import UserTile from '../../common/UserTile.vue'
 
@@ -232,7 +232,7 @@ export default defineComponent({
       default: null
     },
     users: {
-      type: Array as PropType<User[]>,
+      type: Array as PropType<BillUser[]>,
       required: true
     },
     paymentModes: {
@@ -273,29 +273,6 @@ export default defineComponent({
     const selectedUser = computed(
       () => props.users.find((user) => user.id === localForm.who_paid_id) || null
     )
-
-    // Computed avatar URL for selected user
-    const selectedUserAvatarUrl = computed(() => {
-      if (!selectedUser.value) return undefined
-
-      // If user already has an avatar, use it
-      if (selectedUser.value.avatar) {
-        return selectedUser.value.avatar
-      }
-
-      // If we have an OpenCloud ID, construct the avatar URL
-      if (selectedUser.value.opencloud_id && clientService) {
-        try {
-          const baseUrl =
-            clientService.httpAuthenticatedClient?.defaults?.baseURL || window.location.origin
-          return `${baseUrl}/graph/v1.0/users/${selectedUser.value.opencloud_id}/photo/$value`
-        } catch (error) {
-          console.debug('Failed to construct avatar URL:', error)
-        }
-      }
-
-      return undefined
-    })
 
     const localForm = reactive<BillFormData>({
       description: '',
@@ -660,7 +637,7 @@ export default defineComponent({
       }
     }
 
-    const selectWhoPaidUser = (user: User) => {
+    const selectWhoPaidUser = (user: BillUser) => {
       localForm.who_paid_id = user.id
       showWhoPaidDropdown.value = false
       whoPaidSelectedIndex.value = -1
@@ -750,10 +727,9 @@ export default defineComponent({
       selectedUser,
       toggleWhoPaidDropdown,
       selectWhoPaidUser,
-      onWhoPaidKeydown,
+      onWhoPaidKeydown
       // Expose users for template
-      users: computed(() => props.users),
-      selectedUserAvatarUrl
+      //users: computed(() => props.users),
     }
   }
 })

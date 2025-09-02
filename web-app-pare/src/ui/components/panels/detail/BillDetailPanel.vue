@@ -38,15 +38,10 @@
 
 <script lang="ts">
 import { defineComponent, PropType, inject, ref, watch, nextTick } from 'vue'
-import { Bill, User, PaymentMode, Category, PSONData } from '../../../../utils/psonParser'
+import { Bill, PaymentMode, Category, PSONData } from '../../../../utils/psonParser'
 import { useBillDetailPanel } from '../../../../composables/useDetailPanelLogic'
 import { FormMode } from '../../../../types/forms'
-import { UserSplit } from '../../../../types/forms'
-
-// Extended UserSplit with included property for component communication
-interface UserSplitWithInclusion extends UserSplit {
-  included: boolean
-}
+import { UserSplitWithInclusion, BillUser } from '../../../../types/user'
 import DetailPanelHeader from '../DetailPanelHeader.vue'
 import { BillForm } from '../forms'
 import BillSplitSidebar from '../BillSplitSidebar.vue'
@@ -68,7 +63,7 @@ export default defineComponent({
       default: 'create'
     },
     users: {
-      type: Array as PropType<User[]>,
+      type: Array as PropType<BillUser[]>,
       required: true
     },
     paymentModes: {

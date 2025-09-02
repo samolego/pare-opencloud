@@ -1,5 +1,5 @@
 <template>
-  <div class="payment-mode-form oc-p-m" ref="formRef">
+  <div ref="formRef" class="payment-mode-form oc-p-m">
     <form @submit.prevent="onSubmit">
       <!-- Name -->
       <FormField label="Payment Mode Name" required :error="errors.name">

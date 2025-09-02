@@ -1,5 +1,5 @@
 <template>
-  <div class="category-form oc-p-m" ref="formRef">
+  <div ref="formRef" class="category-form oc-p-m">
     <form @submit.prevent="onSubmit">
       <!-- Name -->
       <FormField label="Category Name" required :error="errors.name">

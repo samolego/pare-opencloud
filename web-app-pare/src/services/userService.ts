@@ -1,38 +1,17 @@
 import { Resource } from '@opencloud-eu/web-client'
-
-interface OpenCloudUser {
-  id: string
-  displayName?: string
-  mail?: string
-  onPremisesSamAccountName?: string
-  surname?: string
-  memberOf?: any[]
-  photo?: string
-  avatar?: string
-  profileImage?: string
-  profilePicture?: string
-  thumbnailPhoto?: string
-}
-
-export interface User {
-  name: string
-  opencloud_id: string | null
-  displayName?: string
-  mail?: string
-  avatar?: string
-  profileImage?: string
-}
+import { BillUser, UserTypeConverter, UserUtils } from '../types/user'
+import { User } from '@opencloud-eu/web-client/graph/generated'
 
 export class UserService {
-  private static cachedUser: User | null = null
-  private static userPromise: Promise<User> | null = null
-  private static userCache: Map<string, User> = new Map()
-  private static userPromises: Map<string, Promise<User>> = new Map()
+  private static cachedUser: BillUser | null = null
+  private static userPromise: Promise<BillUser> | null = null
+  private static userCache: Map<string, BillUser> = new Map()
+  private static userPromises: Map<string, Promise<BillUser>> = new Map()
 
   /**
    * Get current user information from OpenCloud GraphUsers API
    */
-  static async getCurrentUser(clientService?: any, resource?: Resource): Promise<User> {
+  static async getCurrentUser(clientService?: any, resource?: Resource): Promise<BillUser> {
     // Return cached user if available
     if (this.cachedUser) {
       return this.cachedUser
@@ -51,22 +30,15 @@ export class UserService {
     return user
   }
 
-  private static async fetchUser(clientService?: any, resource?: Resource): Promise<User> {
+  private static async fetchUser(clientService?: any, resource?: Resource): Promise<BillUser> {
     // Try to get user from OpenCloud GraphUsers API
     if (clientService?.graphAuthenticated?.users) {
       try {
-        const me: OpenCloudUser = await clientService.graphAuthenticated.users.getMe({
+        const me: User = await clientService.graphAuthenticated.users.getMe({
           expand: []
         })
         if (me) {
-          return {
-            name: me.displayName || me.mail || me.onPremisesSamAccountName || 'OpenCloud User',
-            opencloud_id: me.id || null,
-            displayName: me.displayName,
-            mail: me.mail,
-            avatar: me.photo || me.profilePicture || me.thumbnailPhoto || me.avatar,
-            profileImage: me.profilePicture || me.photo || me.thumbnailPhoto
-          }
+          return UserTypeConverter.fromOpenCloudUser(me)
         }
       } catch (error) {
         console.warn('Failed to fetch current user from OpenCloud API:', error)
@@ -76,6 +48,7 @@ export class UserService {
     // Try to get user from resource owner
     if (resource?.owner) {
       return {
+        id: 0,
         name: resource.owner.displayName || resource.owner.id || 'Resource Owner',
         opencloud_id: resource.owner.id || null
       }
@@ -87,16 +60,14 @@ export class UserService {
 
     if (envUserName || envUserId) {
       return {
+        id: 0,
         name: envUserName || 'Environment User',
         opencloud_id: envUserId || null
       }
     }
 
     // Final fallback
-    return {
-      name: 'Current User',
-      opencloud_id: null
-    }
+    return UserUtils.createFallbackUser('Current User', 0)
   }
 
   /**
@@ -110,24 +81,21 @@ export class UserService {
   /**
    * Check if we have a valid user with OpenCloud ID
    */
-  static hasValidUser(user: User): boolean {
-    return !!(user.opencloud_id && user.name !== 'Current User')
+  static hasValidUser(user: BillUser): boolean {
+    return UserUtils.hasValidOpenCloudId(user)
   }
 
   /**
    * Format user display name for UI
    */
-  static formatDisplayName(user: User): string {
-    if (user.opencloud_id) {
-      return `${user.name} (${user.opencloud_id})`
-    }
-    return user.name
+  static formatDisplayName(user: BillUser): string {
+    return UserUtils.getFormattedName(user)
   }
 
   /**
    * Get user by ID from OpenCloud GraphUsers API
    */
-  static async getUserById(userId: string, clientService?: any): Promise<User | null> {
+  static async getUserById(userId: string, clientService?: any): Promise<BillUser | null> {
     if (!userId) return null
 
     // Return cached user if available
@@ -154,34 +122,18 @@ export class UserService {
     }
   }
 
-  private static async fetchUserById(userId: string, clientService?: any): Promise<User | null> {
+  private static async fetchUserById(
+    userId: string,
+    clientService?: any
+  ): Promise<BillUser | null> {
     // Try to get user from OpenCloud GraphUsers API
     if (clientService?.graphAuthenticated?.users) {
       try {
-        const openCloudUser: OpenCloudUser = await clientService.graphAuthenticated.users.getUser(
-          userId,
-          {
-            expand: []
-          }
-        )
+        const openCloudUser: User = await clientService.graphAuthenticated.users.getUser(userId, {
+          expand: []
+        })
         if (openCloudUser) {
-          return {
-            name:
-              openCloudUser.displayName ||
-              openCloudUser.mail ||
-              openCloudUser.onPremisesSamAccountName ||
-              'Unknown User',
-            opencloud_id: openCloudUser.id || userId,
-            displayName: openCloudUser.displayName,
-            mail: openCloudUser.mail,
-            avatar:
-              openCloudUser.photo ||
-              openCloudUser.profilePicture ||
-              openCloudUser.thumbnailPhoto ||
-              openCloudUser.avatar,
-            profileImage:
-              openCloudUser.profilePicture || openCloudUser.photo || openCloudUser.thumbnailPhoto
-          }
+          return UserTypeConverter.fromOpenCloudUser(openCloudUser)
         }
       } catch (error) {
         console.warn(`Failed to fetch user ${userId} from OpenCloud API:`, error)

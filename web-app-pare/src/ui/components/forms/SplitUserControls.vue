@@ -37,15 +37,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, computed, watch } from 'vue'
-import { User } from '../../../utils/psonParser'
-import { UserSplit } from '../../../types/forms'
+import { defineComponent, PropType, watch } from 'vue'
+import { UserSplitWithInclusion, BillUser } from '../../../types/user'
 import FormInput from './FormInput.vue'
-
-// Extended UserSplit with included property for component communication
-interface UserSplitWithInclusion extends UserSplit {
-  included: boolean
-}
 
 export default defineComponent({
   name: 'SplitUserControls',
@@ -54,7 +48,7 @@ export default defineComponent({
   },
   props: {
     users: {
-      type: Array as PropType<User[]>,
+      type: Array as PropType<BillUser[]>,
       required: true
     },
     modelValue: {

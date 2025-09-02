@@ -55,14 +55,8 @@
 
 <script lang="ts">
 import { defineComponent, PropType, ref, watch, computed } from 'vue'
-import { User } from '../../../utils/psonParser'
-import { UserSplit } from '../../../types/forms'
+import { UserSplitWithInclusion, BillUser } from '../../../types/user'
 import { SplitUserControls } from '../forms'
-
-// Extended UserSplit with included property for component communication
-interface UserSplitWithInclusion extends UserSplit {
-  included: boolean
-}
 
 type SplitMode = 'equal' | 'custom'
 
@@ -78,7 +72,7 @@ export default defineComponent({
   },
   props: {
     users: {
-      type: Array as PropType<User[]>,
+      type: Array as PropType<BillUser[]>,
       required: true
     },
     totalAmount: {

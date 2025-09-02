@@ -1,9 +1,11 @@
 import { ref, computed, type Ref } from 'vue'
 import { useClientService } from '@opencloud-eu/web-pkg'
-import { UserService, type User } from '../services/userService'
+import { UserService } from '../services/userService'
+import { BillUser } from '../types/user'
+import { UserUtils } from '../types/user'
 import type { Resource } from '@opencloud-eu/web-client'
 
-const currentUser: Ref<User | null> = ref(null)
+const currentUser: Ref<BillUser | null> = ref(null)
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 
@@ -35,7 +37,8 @@ export function useUser() {
 
       // Return fallback user on error
       currentUser.value = {
-        name: 'Current User',
+        id: 0,
+        name: 'Current BillUser',
         opencloud_id: null
       }
       return currentUser.value
@@ -48,7 +51,7 @@ export function useUser() {
   const user = computed(() => currentUser.value)
   const displayName = computed(() => {
     if (!currentUser.value) return 'Loading...'
-    return UserService.formatDisplayName(currentUser.value)
+    return UserUtils.getFormattedName(currentUser.value)
   })
 
   return {

@@ -14,8 +14,8 @@
         <button
           v-if="searchQuery"
           class="oc-p-xs oc-ml-xs oc-text-muted clear-search-btn"
-          @click="clearSearch"
           title="Clear search"
+          @click="clearSearch"
         >
           <oc-icon name="close" />
         </button>
@@ -83,8 +83,8 @@
           <button
             class="pagination-btn"
             :disabled="currentPage === 1"
-            @click="goToFirstPage"
             title="First page"
+            @click="goToFirstPage"
           >
             <oc-icon name="skip-back" />
           </button>
@@ -92,8 +92,8 @@
           <button
             class="pagination-btn oc-ml-s"
             :disabled="currentPage === 1"
-            @click="goToPreviousPage"
             title="Previous page"
+            @click="goToPreviousPage"
           >
             <oc-icon name="arrow-left-s" />
           </button>
@@ -111,8 +111,8 @@
           <button
             class="pagination-btn"
             :disabled="currentPage === totalPages"
-            @click="goToNextPage"
             title="Next page"
+            @click="goToNextPage"
           >
             <oc-icon name="arrow-right-s" />
           </button>
@@ -120,8 +120,8 @@
           <button
             class="pagination-btn oc-ml-s"
             :disabled="currentPage === totalPages"
-            @click="goToLastPage"
             title="Last page"
+            @click="goToLastPage"
           >
             <oc-icon name="skip-forward" />
           </button>
@@ -467,10 +467,6 @@ input[type='number'] {
   &::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
-  }
-
-  &[type='number'] {
-    -moz-appearance: textfield;
   }
 
   &:focus {

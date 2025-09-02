@@ -4,10 +4,10 @@
       <h2 class="title-text">{{ title }}</h2>
     </div>
     <div class="header-actions">
-      <oc-button variation="passive" @click="$emit('cancel')" class="cancel-btn">
+      <oc-button variation="passive" class="cancel-btn" @click="$emit('cancel')">
         Cancel
       </oc-button>
-      <oc-button variation="primary" :disabled="!canSave" @click="$emit('save')" class="save-btn">
+      <oc-button variation="primary" :disabled="!canSave" class="save-btn" @click="$emit('save')">
         {{ computedSaveText }}
       </oc-button>
     </div>
@@ -37,6 +37,7 @@ export default defineComponent({
       default: ''
     }
   },
+  emits: ['cancel', 'save'],
   computed: {
     computedSaveText() {
       if (this.saveText) {
@@ -44,8 +45,7 @@ export default defineComponent({
       }
       return this.isCreating ? 'Create' : 'Save'
     }
-  },
-  emits: ['cancel', 'save']
+  }
 })
 </script>
 

@@ -1,14 +1,7 @@
 import { ref, computed, type Ref } from 'vue'
 import { useClientService } from '@opencloud-eu/web-pkg'
-import { UserService, type User } from '../services/userService'
-
-interface UserDataCache {
-  [userId: string]: User | null
-}
-
-interface UserLoadingState {
-  [userId: string]: boolean
-}
+import { UserService } from '../services/userService'
+import { BillUser, UserDataCache, UserLoadingState } from '../types/user'
 
 const userCache: Ref<UserDataCache> = ref({})
 const loadingStates: Ref<UserLoadingState> = ref({})
@@ -22,7 +15,7 @@ export function useUserData() {
   /**
    * Get user data by ID with caching
    */
-  const getUserById = async (userId: string): Promise<User | null> => {
+  const getUserById = async (userId: string): Promise<BillUser | null> => {
     if (!userId) return null
 
     // Return cached user if available
@@ -53,7 +46,7 @@ export function useUserData() {
   /**
    * Get cached user data (doesn't trigger fetch)
    */
-  const getCachedUser = (userId: string): User | null => {
+  const getCachedUser = (userId: string): BillUser | null => {
     return userCache.value[userId] || null
   }
 

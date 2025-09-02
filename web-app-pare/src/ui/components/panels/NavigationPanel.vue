@@ -4,9 +4,9 @@
       <ul class="nav-list oc-m-remove oc-p-remove">
         <li v-for="item in navigationItems" :key="item.key" class="nav-item">
           <button
-            @click="onNavigate(item.key)"
             class="nav-button oc-width-1-1"
             :class="{ 'nav-button-active': currentSection === item.key }"
+            @click="onNavigate(item.key)"
           >
             <oc-icon :name="item.icon" size="small" class="nav-icon" />
             <span v-if="!collapsed" class="nav-text">{{ item.label }}</span>

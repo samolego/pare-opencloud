@@ -28,7 +28,7 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue'
 
-interface OpenCloudUser {
+interface User {
   id: string
   displayName?: string
   mail?: string
@@ -41,7 +41,7 @@ export default defineComponent({
   name: 'UserSelectedContainer',
   props: {
     user: {
-      type: Object as PropType<OpenCloudUser>,
+      type: Object as PropType<User>,
       required: true
     },
     deselect: {

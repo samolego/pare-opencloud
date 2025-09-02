@@ -25,12 +25,12 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue'
-import { User } from '../../../../utils/psonParser'
 import { useUserDetailPanel } from '../../../../composables/useDetailPanelLogic'
 import { FormMode } from '../../../../types/forms'
 import DetailPanelHeader from '../DetailPanelHeader.vue'
 import { UserForm } from '../forms'
 import { FormSection } from '../../forms'
+import { BillUser } from '../../../../types/user'
 
 export default defineComponent({
   name: 'UserDetailPanel',
@@ -41,7 +41,7 @@ export default defineComponent({
   },
   props: {
     member: {
-      type: Object as PropType<User | null>,
+      type: Object as PropType<BillUser | null>,
       default: null
     },
     mode: {

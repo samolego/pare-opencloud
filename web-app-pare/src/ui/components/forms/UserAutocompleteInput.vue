@@ -45,8 +45,8 @@
       <div class="suggestions-list oc-list oc-m-rm">
         <UserTile
           v-for="(user, index) in suggestions"
-          :key="user.opencloud_id"
-          :user="user"
+          :key="user.id"
+          :user="convertUser(user)"
           :class="{ 'is-selected': selectedIndex === index }"
           :show-email="false"
           :show-open-cloud-id="true"
@@ -74,8 +74,10 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useClientService } from '@opencloud-eu/web-pkg'
-import { UserSearchService, type UserSearchResult } from '../../../services/userSearchService'
+import { UserSearchService } from '../../../services/userSearchService'
 import UserTile from '../common/UserTile.vue'
+import { UserTypeConverter } from '../../../types/user'
+import { User } from '@opencloud-eu/web-client/graph/generated'
 
 export default defineComponent({
   name: 'UserAutocompleteInput',
@@ -116,7 +118,7 @@ export default defineComponent({
   data() {
     return {
       query: '',
-      suggestions: [] as UserSearchResult[],
+      suggestions: [] as User[],
       isLoading: false,
       error: null as string | null,
       selectedIndex: -1,
@@ -252,14 +254,17 @@ export default defineComponent({
       }
     },
 
-    selectSuggestion(suggestion: UserSearchResult) {
-      const user = UserSearchService.searchResultToUser(suggestion)
-      this.$emit('update:modelValue', user.displayName || user.name)
+    selectSuggestion(user: User) {
+      this.$emit('update:modelValue', user.displayName || '')
       this.$emit('user-selected', user)
       this.showSuggestions = false
       this.selectedIndex = -1
       const inputRef = this.$refs.inputRef as HTMLInputElement
       inputRef?.blur()
+    },
+
+    convertUser(user: User) {
+      return UserTypeConverter.fromOpenCloudUser(user, 0)
     },
 
     clearInput() {

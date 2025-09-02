@@ -133,7 +133,7 @@ export class SettlementAlgorithm {
     for (const [userId, finalBalance] of transactionEffects) {
       if (Math.abs(finalBalance) > 0.01) {
         console.warn(
-          `Settlement validation failed: User ${userId} has remaining balance ${finalBalance}`
+          `Settlement validation failed: BillUser ${userId} has remaining balance ${finalBalance}`
         )
         return false
       }

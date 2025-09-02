@@ -1,6 +1,7 @@
 // Balance calculation utilities for settlement system
 
-import { UserBalance, BalanceCalculationInput } from '../types/settlement'
+import { BalanceCalculationInput } from '../types/settlement'
+import { UserBalance } from '../types/user'
 import { PSONParser, type PSONData } from './psonParser'
 
 export class BalanceCalculator {
@@ -120,7 +121,7 @@ export class BalanceCalculator {
    * @param data - PSON data
    * @param balances - Calculated balances
    */
-  static async saveBalancesToUsers(data: PSONData, balances: UserBalance[]): Promise<void> {
+  static saveBalancesToUsers(data: PSONData, balances: UserBalance[]) {
     console.log('BalanceCalculator: Saving balances to users table')
 
     // Update each user's balance in the users table
@@ -194,7 +195,7 @@ export class BalanceCalculator {
 
     // For now, we'll do a full recalculation
     // TODO: Implement incremental calculation for better performance
-    const balances = await this.forceRecalculateBalances(data)
+    await this.forceRecalculateBalances(data)
 
     console.log(`BalanceCalculator: Balances recalculated for bill ${billId}`)
   }
