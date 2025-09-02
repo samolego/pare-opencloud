@@ -12,7 +12,7 @@
 import { defineComponent, PropType, watch } from 'vue'
 import { useNameOnlyForm, useFormValidationEmits } from '../../../../composables/useSimpleForm'
 import { FormField, FormInput } from '../../forms'
-import { FormMode } from '../../../types/forms'
+import { FormMode } from '../../../../types/forms'
 
 export interface SimpleFormConfig {
   entityType: string

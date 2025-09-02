@@ -3,15 +3,12 @@ import { BillUser, UserTypeConverter, UserUtils, UserFormData } from '../types/u
 import { User } from '@opencloud-eu/web-client/graph/generated'
 
 export class UserService {
-  // --- Caches from both services ---
   private static cachedUser: BillUser | null = null
   private static userPromise: Promise<BillUser> | null = null
   private static userCache: Map<string, BillUser> = new Map()
   private static userPromises: Map<string, Promise<BillUser>> = new Map()
   private static searchCache: Map<string, UserFormData[]> = new Map()
   private static searchPromises: Map<string, Promise<UserFormData[]>> = new Map()
-
-  // --- Methods from original UserService ---
 
   /**
    * Get current user information from OpenCloud GraphUsers API
@@ -31,7 +28,7 @@ export class UserService {
     if (clientService?.graphAuthenticated?.users) {
       try {
         const me: User = await clientService.graphAuthenticated.users.getMe({ expand: [] })
-        if (me) return UserTypeConverter.fromOpenCloudUserToBillUser(me)
+        if (me) return UserTypeConverter.fromOpenCloudUser(me)
       } catch (error) {
         console.warn('Failed to fetch current user from OpenCloud API:', error)
       }
@@ -86,15 +83,13 @@ export class UserService {
         const openCloudUser: User = await clientService.graphAuthenticated.users.getUser(userId, {
           expand: []
         })
-        if (openCloudUser) return UserTypeConverter.fromOpenCloudUserToBillUser(openCloudUser)
+        if (openCloudUser) return UserTypeConverter.fromOpenCloudUser(openCloudUser)
       } catch (error) {
         console.warn(`Failed to fetch user ${userId} from OpenCloud API:`, error)
       }
     }
     return null
   }
-
-  // --- Methods from UserSearchService ---
 
   /**
    * Search for users in OpenCloud by display name, email, or username
@@ -158,7 +153,6 @@ export class UserService {
     }
   }
 
-  // --- Utility methods ---
   static hasValidUser(user: BillUser): boolean {
     return UserUtils.hasValidOpenCloudId(user)
   }
@@ -167,7 +161,6 @@ export class UserService {
     return UserUtils.getFormattedName(user)
   }
 
-  // --- Consolidated cache management ---
   static clearAllCache(): void {
     this.cachedUser = null
     this.userPromise = null

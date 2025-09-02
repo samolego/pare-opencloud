@@ -19,8 +19,6 @@ const loadingStates: Ref<Record<string, boolean>> = ref({})
 export function useUser() {
   const clientService = useClientService()
 
-  // --- CURRENT USER methods ---
-
   /**
    * Initialize and fetch current user data
    */
@@ -45,8 +43,6 @@ export function useUser() {
       isCurrentUserLoading.value = false
     }
   }
-
-  // --- ANY USER methods (from useUserData) ---
 
   /**
    * Get user data by ID with caching
@@ -83,8 +79,6 @@ export function useUser() {
   const isUserLoading = (userId: string): boolean => {
     return !!loadingStates.value[userId]
   }
-
-  // --- Cache Management ---
 
   /**
    * Clear all user-related caches
