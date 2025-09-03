@@ -157,7 +157,7 @@ export class BalanceCalculator {
     const balances = this.calculateUserBalances(input)
 
     // Save the results to users table
-    await this.saveBalancesToUsers(data, balances)
+    this.saveBalancesToUsers(data, balances)
 
     return balances
   }

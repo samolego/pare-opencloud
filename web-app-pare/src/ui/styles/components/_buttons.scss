@@ -63,11 +63,6 @@
   color: var(--oc-role-on-primary);
   min-width: 100px;
 
-  svg {
-    width: 16px;
-    height: 16px;
-  }
-
   &:hover:not(:disabled) {
     background-color: var(--oc-role-primary-container);
     color: var(--oc-role-on-primary-container);

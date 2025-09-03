@@ -175,7 +175,7 @@ import {
 } from './ui/components/panels/detail'
 import { categoryFormConfig, paymentModeFormConfig } from './configs/formConfigs'
 import SettlementAction from './ui/components/SettlementAction.vue'
-import { ConfirmationDialog } from './ui/components/dialogs'
+import ConfirmationDialog from './ui/components/dialogs/ConfirmationDialog.vue'
 
 export default defineComponent({
   name: 'App',
@@ -522,19 +522,13 @@ export default defineComponent({
       // Store the item to be deleted and show confirmation dialog
       confirmDialog.value.pendingItem = item
 
-      // Set dialog content based on item type
-      let itemTypeName = ''
-      if (currentSection.value === 'bill') {
-        itemTypeName = $gettext('bill')
-      } else if (currentSection.value === 'member') {
-        itemTypeName = $gettext('member')
-      } else if (currentSection.value === 'category') {
-        itemTypeName = $gettext('category')
-      } else if (currentSection.value === 'payment_mode') {
-        itemTypeName = $gettext('payment mode')
-      } else {
-        itemTypeName = $gettext('item')
+      const itemTypeNames = {
+        bill: $gettext('bill'),
+        member: $gettext('member'),
+        category: $gettext('category'),
+        payment_mode: $gettext('payment mode')
       }
+      const itemTypeName = itemTypeNames[currentSection.value] || $gettext('item')
 
       confirmDialog.value.title = $gettext('Delete %{itemType}', { itemType: itemTypeName })
       confirmDialog.value.message = $gettext(
@@ -557,32 +551,34 @@ export default defineComponent({
         }
 
         let updatedData = { ...parsedData.value }
+        const itemType = currentSection.value
 
-        if (currentSection.value === 'bill') {
+        if (itemType === 'bill') {
           updatedData = PSONParser.deleteBill(updatedData, item.id)
-          showMessage({
-            title: $gettext('Bill deleted'),
-            desc: $gettext('The bill has been deleted successfully')
-          })
-        } else if (currentSection.value === 'member') {
-          updatedData = PSONParser.deleteUser(updatedData, item.id)
-          showMessage({
-            title: $gettext('Member deleted'),
-            desc: $gettext('The member has been deleted successfully')
-          })
-        } else if (currentSection.value === 'category') {
-          updatedData = PSONParser.deleteCategory(updatedData, item.id)
-          showMessage({
-            title: $gettext('Category deleted'),
-            desc: $gettext('The category has been deleted successfully')
-          })
-        } else if (currentSection.value === 'payment_mode') {
-          updatedData = PSONParser.deletePaymentMode(updatedData, item.id)
-          showMessage({
-            title: $gettext('Payment mode deleted'),
-            desc: $gettext('The payment mode has been deleted successfully')
-          })
+        } else {
+          const tableNameMap = {
+            member: 'users',
+            category: 'categories',
+            payment_mode: 'payment_modes'
+          }
+          const tableName = tableNameMap[itemType]
+          if (tableName) {
+            updatedData = PSONParser.deleteItem(updatedData, tableName, item.id)
+          }
         }
+
+        const itemTypeNames = {
+          bill: 'Bill',
+          member: 'Member',
+          category: 'Category',
+          payment_mode: 'Payment mode'
+        }
+        const itemTypeName = itemTypeNames[itemType] || 'Item'
+
+        showMessage({
+          title: $gettext(`${itemTypeName} deleted`),
+          desc: $gettext(`The ${itemTypeName.toLowerCase()} has been deleted successfully`)
+        })
 
         PSONParser.updateMetadata(updatedData)
         emit('update:currentContent', updatedData)
@@ -593,7 +589,6 @@ export default defineComponent({
           desc: $gettext('Failed to delete the item')
         })
       } finally {
-        // Always close the dialog
         confirmDialog.value.isVisible = false
         confirmDialog.value.pendingItem = null
       }
@@ -655,49 +650,61 @@ export default defineComponent({
       }
     }
 
-    const onCreateCategory = (data: { name: string }) => {
+    const createItem = (itemType: 'category' | 'payment_mode', data: { name: string }) => {
       try {
         const updatedData = { ...parsedData.value }
-        // Find next available category ID
-        const nextCategoryId =
-          Math.max(...Object.keys(updatedData.data.categories).map(Number), 0) + 1
-
-        updatedData.data.categories[nextCategoryId.toString()] = { name: data.name }
+        const tableName = itemType === 'category' ? 'categories' : 'payment_modes'
+        const table = updatedData.data[tableName]
+        const nextId = Math.max(...Object.keys(table).map(Number), 0) + 1
+        table[nextId.toString()] = { name: data.name }
 
         PSONParser.updateMetadata(updatedData)
         emit('update:currentContent', updatedData)
         onDetailPanelCancel()
 
+        const itemTypeName = itemType === 'category' ? 'Category' : 'Payment mode'
         showMessage({
-          title: $gettext('Category added'),
-          desc: $gettext('New category has been added successfully')
+          title: $gettext(`${itemTypeName} added`),
+          desc: $gettext(`New ${itemTypeName.toLowerCase()} has been added successfully`)
         })
       } catch (error) {
-        console.error('Error creating category:', error)
+        console.error(`Error creating ${itemType}:`, error)
+        showMessage({
+          title: $gettext('Error'),
+          desc: $gettext('Failed to create the item')
+        })
       }
     }
 
-    const onCreatePaymentMode = (data: { name: string }) => {
+    const saveItem = (itemType: 'category' | 'payment_mode', data: { name: string }) => {
       try {
-        const updatedData = { ...parsedData.value }
-        // Find next available payment mode ID
-        const nextPaymentModeId =
-          Math.max(...Object.keys(updatedData.data.payment_modes).map(Number), 0) + 1
+        const { selectedItem } = detailPanel.value
+        if (selectedItem && selectedItem.id) {
+          let updatedData = { ...parsedData.value }
+          const tableName = itemType === 'category' ? 'categories' : 'payment_modes'
+          updatedData = PSONParser.updateItem(updatedData, tableName, selectedItem.id, data)
 
-        updatedData.data.payment_modes[nextPaymentModeId.toString()] = { name: data.name }
+          PSONParser.updateMetadata(updatedData)
+          emit('update:currentContent', updatedData)
+          onDetailPanelCancel()
 
-        PSONParser.updateMetadata(updatedData)
-        emit('update:currentContent', updatedData)
-        onDetailPanelCancel()
-
-        showMessage({
-          title: $gettext('Payment mode added'),
-          desc: $gettext('New payment mode has been added successfully')
-        })
+          const itemTypeName = itemType === 'category' ? 'Category' : 'Payment mode'
+          showMessage({
+            title: $gettext(`${itemTypeName} updated`),
+            desc: $gettext(`${itemTypeName} has been updated successfully`)
+          })
+        }
       } catch (error) {
-        console.error('Error creating payment mode:', error)
+        console.error(`Error saving ${itemType}:`, error)
+        showMessage({
+          title: $gettext(`Error saving ${itemType}`),
+          desc: $gettext('There was an error saving your changes. Please try again.')
+        })
       }
     }
+
+    const onCreateCategory = (data: { name: string }) => createItem('category', data)
+    const onCreatePaymentMode = (data: { name: string }) => createItem('payment_mode', data)
 
     const onSaveBill = (data: any) => {
       try {
@@ -750,55 +757,8 @@ export default defineComponent({
       }
     }
 
-    const onSaveCategory = (data: any) => {
-      try {
-        const { selectedItem } = detailPanel.value
-        if (selectedItem && selectedItem.id) {
-          let updatedData = { ...parsedData.value }
-          updatedData = PSONParser.updateCategory(updatedData, selectedItem.id, data)
-
-          PSONParser.updateMetadata(updatedData)
-          emit('update:currentContent', updatedData)
-          onDetailPanelCancel()
-
-          showMessage({
-            title: $gettext('Category updated'),
-            desc: $gettext('Category has been updated successfully')
-          })
-        }
-      } catch (error) {
-        console.error('Error saving category:', error)
-        showMessage({
-          title: $gettext('Error saving category'),
-          desc: $gettext('There was an error saving your changes. Please try again.')
-        })
-      }
-    }
-
-    const onSavePaymentMode = (data: any) => {
-      try {
-        const { selectedItem } = detailPanel.value
-        if (selectedItem && selectedItem.id) {
-          let updatedData = { ...parsedData.value }
-          updatedData = PSONParser.updatePaymentMode(updatedData, selectedItem.id, data)
-
-          PSONParser.updateMetadata(updatedData)
-          emit('update:currentContent', updatedData)
-          onDetailPanelCancel()
-
-          showMessage({
-            title: $gettext('Payment mode updated'),
-            desc: $gettext('Payment mode has been updated successfully')
-          })
-        }
-      } catch (error) {
-        console.error('Error saving payment mode:', error)
-        showMessage({
-          title: $gettext('Error saving payment mode'),
-          desc: $gettext('There was an error saving your changes. Please try again.')
-        })
-      }
-    }
+    const onSaveCategory = (data: { name: string }) => saveItem('category', data)
+    const onSavePaymentMode = (data: { name: string }) => saveItem('payment_mode', data)
 
     const onSettlementCreated = (settlementResult: any) => {
       try {
@@ -968,3 +928,4 @@ export default defineComponent({
   text-align: center;
 }
 </style>
+'''

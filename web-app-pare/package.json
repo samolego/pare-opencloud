@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "author": "OpenCloud",
   "private": true,
-  "homepage": "https://github.com/opencloud-eu/web-app-pare",
+  "homepage": "https://github.com/samolego/pare-opencloud",
   "type": "module",
   "scripts": {
     "build": "pnpm vite build",

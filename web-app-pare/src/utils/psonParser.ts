@@ -211,15 +211,23 @@ export class PSONParser {
     return { data, billId }
   }
 
-  static updateUser(data: PSONData, userId: number, user: Omit<BillUser, 'id'>): PSONData {
-    const userIdStr = userId.toString()
+  static updateItem(
+    data: PSONData,
+    tableName: 'users' | 'categories' | 'payment_modes',
+    itemId: number,
+    item: any
+  ): PSONData {
+    const itemStrId = itemId.toString()
 
-    // Update the user
-    if (data.data.users[userIdStr]) {
-      data.data.users[userIdStr] = user
+    if (data.data[tableName][itemStrId]) {
+      data.data[tableName][itemStrId] = item
     }
 
     return data
+  }
+
+  static updateUser(data: PSONData, userId: number, user: Omit<BillUser, 'id'>): PSONData {
+    return PSONParser.updateItem(data, 'users', userId, user)
   }
 
   static getUsers(data: PSONData): BillUser[] {
@@ -243,14 +251,7 @@ export class PSONParser {
     categoryId: number,
     category: Omit<Category, 'id'>
   ): PSONData {
-    const categoryIdStr = categoryId.toString()
-
-    // Update the category
-    if (data.data.categories[categoryIdStr]) {
-      data.data.categories[categoryIdStr] = category
-    }
-
-    return data
+    return PSONParser.updateItem(data, 'categories', categoryId, category)
   }
 
   static updatePaymentMode(
@@ -258,14 +259,7 @@ export class PSONParser {
     paymentModeId: number,
     paymentMode: Omit<PaymentMode, 'id'>
   ): PSONData {
-    const paymentModeIdStr = paymentModeId.toString()
-
-    // Update the payment mode
-    if (data.data.payment_modes[paymentModeIdStr]) {
-      data.data.payment_modes[paymentModeIdStr] = paymentMode
-    }
-
-    return data
+    return PSONParser.updateItem(data, 'payment_modes', paymentModeId, paymentMode)
   }
 
   static getCategories(data: PSONData): Category[] {
@@ -292,22 +286,25 @@ export class PSONParser {
     return data
   }
 
-  static deleteUser(data: PSONData, userId: number): PSONData {
-    // Remove the user
-    delete data.data.users[userId.toString()]
+  static deleteItem(
+    data: PSONData,
+    tableName: 'users' | 'categories' | 'payment_modes',
+    itemId: number
+  ): PSONData {
+    delete data.data[tableName][itemId.toString()]
     return data
+  }
+
+  static deleteUser(data: PSONData, userId: number): PSONData {
+    return PSONParser.deleteItem(data, 'users', userId)
   }
 
   static deletePaymentMode(data: PSONData, paymentModeId: number): PSONData {
-    // Remove the payment mode
-    delete data.data.payment_modes[paymentModeId.toString()]
-    return data
+    return PSONParser.deleteItem(data, 'payment_modes', paymentModeId)
   }
 
   static deleteCategory(data: PSONData, categoryId: number): PSONData {
-    // Remove the category
-    delete data.data.categories[categoryId.toString()]
-    return data
+    return PSONParser.deleteItem(data, 'categories', categoryId)
   }
 
   /**

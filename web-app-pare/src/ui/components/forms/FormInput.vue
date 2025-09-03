@@ -78,16 +78,3 @@ export default defineComponent({
   }
 })
 </script>
-
-<style lang="scss" scoped>
-@import '../../styles/mixins';
-
-.form-input {
-  @include form-control;
-
-  // Small variant for inline inputs
-  &.form-input-small {
-    @include form-control-small;
-  }
-}
-</style>

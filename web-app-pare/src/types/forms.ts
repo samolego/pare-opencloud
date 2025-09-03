@@ -1,10 +1,4 @@
-// Common form types used across components
-import { UserFormData } from './user'
-
-// Use TypeScript utility types for consistency
-export type SimpleFormData = Pick<UserFormData, 'name'>
-export type CategoryFormData = Pick<UserFormData, 'name'>
-export type PaymentModeFormData = Pick<UserFormData, 'name'>
+export type GenericFormData = { name: string }
 
 export type FormMode = 'create' | 'edit'
 

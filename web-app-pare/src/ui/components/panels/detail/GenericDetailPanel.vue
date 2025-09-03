@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isVisible" class="simple-detail-panel">
+  <div v-if="isVisible" class="detail-panel oc-flex oc-flex-column oc-height-1-1 oc-width-1-1">
     <DetailPanelHeader
       :title="panelTitle"
       :can-save="canSave"
@@ -12,7 +12,7 @@
     <div class="oc-p-l">
       <FormSection :title="formSectionTitle" :icon="formSectionIcon">
         <GenericForm
-          ref="simpleForm"
+          ref="formRef"
           :config="formConfig"
           :item="item"
           :mode="mode"
@@ -69,7 +69,7 @@ export default defineComponent({
   setup(props, { emit }) {
     const {
       canSave,
-      formRef: simpleForm,
+      formRef,
       isVisible,
       panelTitle,
       computedSaveText: saveText,
@@ -85,7 +85,7 @@ export default defineComponent({
       isVisible,
       panelTitle,
       saveText,
-      simpleForm,
+      formRef,
       onValidationChange,
       onCancel,
       onSave,
@@ -96,13 +96,9 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-.simple-detail-panel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+.detail-panel {
   background-color: var(--oc-role-surface);
   border-left: 1px solid var(--oc-role-outline-variant);
-  width: 100%;
 
   @media (max-width: 768px) {
     position: absolute;

@@ -1,5 +1,5 @@
 import { ref, reactive, computed, watch, nextTick, type Ref } from 'vue'
-import type { ValidationErrors, ValidatorFunction, SimpleFormData } from '../types/forms'
+import type { ValidationErrors, ValidatorFunction, GenericFormData } from '../types/forms'
 
 /**
  * Composable for simple form logic - handles focus, validation, and common patterns
@@ -74,7 +74,7 @@ export function useNameOnlyForm(
   mode: 'create' | 'edit' = 'create',
   fieldLabel: string = 'Name'
 ) {
-  const validator: ValidatorFunction<SimpleFormData> = (data) => {
+  const validator: ValidatorFunction<GenericFormData> = (data) => {
     const errors: ValidationErrors = {}
     if (!data.name.trim()) {
       errors.name = `${fieldLabel} is required`
@@ -82,7 +82,7 @@ export function useNameOnlyForm(
     return errors
   }
 
-  const form = useSimpleForm<SimpleFormData>({ name: initialName }, validator, mode)
+  const form = useSimpleForm<GenericFormData>({ name: initialName }, validator, mode)
 
   return {
     ...form
