@@ -17,6 +17,7 @@
             class="split-user-checkbox"
             @change="onSplitIncludedChange(user.id)"
           />
+          <UserAvatarImg :user="user" :avatar-size="24" class="oc-mx-s" />
           <span class="split-user-name oc-text-s">
             {{ user.name }}
           </span>
@@ -40,11 +41,13 @@
 import { defineComponent, PropType, watch } from 'vue'
 import { UserSplitWithInclusion, BillUser } from '../../../types/user'
 import FormInput from './FormInput.vue'
+import UserAvatarImg from '../common/UserAvatarImg.vue'
 
 export default defineComponent({
   name: 'SplitUserControls',
   components: {
-    FormInput
+    FormInput,
+    UserAvatarImg
   },
   props: {
     users: {
@@ -73,14 +76,12 @@ export default defineComponent({
     const onSplitIncludedChange = (userId: number) => {
       const newSplits = { ...props.modelValue }
 
-      // Initialize user split if it doesn't exist
       if (!newSplits[userId]) {
         newSplits[userId] = { amount: '0.00', included: false }
       }
 
       newSplits[userId].included = !newSplits[userId].included
 
-      // If switching to included and we have a total amount, recalculate equal splits
       if (newSplits[userId].included && props.totalAmount > 0) {
         calculateEqualSplits(newSplits)
       } else if (!newSplits[userId].included) {
@@ -93,7 +94,6 @@ export default defineComponent({
     const onSplitAmountChange = (userId: number, amount: string) => {
       const newSplits = { ...props.modelValue }
 
-      // Initialize user split if it doesn't exist
       if (!newSplits[userId]) {
         newSplits[userId] = { amount: '0.00', included: false }
       }
