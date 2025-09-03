@@ -55,43 +55,6 @@ export class UserService {
   }
 
   /**
-   * Get user by ID from OpenCloud GraphUsers API
-   */
-  static async getUserById(userId: string, clientService?: any): Promise<BillUser | null> {
-    if (!userId) return null
-    if (this.userCache.has(userId)) return this.userCache.get(userId)!
-    if (this.userPromises.has(userId)) return this.userPromises.get(userId)!
-
-    const userPromise = this.fetchUserById(userId, clientService)
-    this.userPromises.set(userId, userPromise)
-
-    try {
-      const user = await userPromise
-      if (user) this.userCache.set(userId, user)
-      return user
-    } finally {
-      this.userPromises.delete(userId)
-    }
-  }
-
-  private static async fetchUserById(
-    userId: string,
-    clientService?: any
-  ): Promise<BillUser | null> {
-    if (clientService?.graphAuthenticated?.users) {
-      try {
-        const openCloudUser: User = await clientService.graphAuthenticated.users.getUser(userId, {
-          expand: []
-        })
-        if (openCloudUser) return UserTypeConverter.fromOpenCloudUser(openCloudUser)
-      } catch (error) {
-        console.warn(`Failed to fetch user ${userId} from OpenCloud API:`, error)
-      }
-    }
-    return null
-  }
-
-  /**
    * Search for users in OpenCloud by display name, email, or username
    */
   static async searchUsers(
@@ -151,47 +114,5 @@ export class UserService {
       console.error('UserService: Failed to search users:', error)
       return []
     }
-  }
-
-  static hasValidUser(user: BillUser): boolean {
-    return UserUtils.hasValidOpenCloudId(user)
-  }
-
-  static formatDisplayName(user: BillUser): string {
-    return UserUtils.getFormattedName(user)
-  }
-
-  static clearAllCache(): void {
-    this.cachedUser = null
-    this.userPromise = null
-    this.userCache.clear()
-    this.userPromises.clear()
-    this.searchCache.clear()
-    this.searchPromises.clear()
-  }
-
-  static clearCurrentUserCache(): void {
-    this.cachedUser = null
-    this.userPromise = null
-  }
-
-  static clearUserCache(userId: string): void {
-    this.userCache.delete(userId)
-    this.userPromises.delete(userId)
-  }
-
-  static clearSearchCache(): void {
-    this.searchCache.clear()
-    this.searchPromises.clear()
-  }
-
-  static clearSearchCachePattern(pattern: string): void {
-    const keysToDelete = Array.from(this.searchCache.keys()).filter((key) =>
-      key.includes(pattern.toLowerCase())
-    )
-    keysToDelete.forEach((key) => {
-      this.searchCache.delete(key)
-      this.searchPromises.delete(key)
-    })
   }
 }

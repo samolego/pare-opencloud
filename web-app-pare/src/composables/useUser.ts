@@ -45,28 +45,6 @@ export function useUser() {
   }
 
   /**
-   * Get user data by ID with caching
-   */
-  const getUserById = async (userId: string): Promise<BillUser | null> => {
-    if (!userId) return null
-    if (userCache.value[userId]) return userCache.value[userId]
-    if (loadingStates.value[userId]) return null // Or wait for promise, for now return null
-
-    loadingStates.value[userId] = true
-    try {
-      const user = await UserService.getUserById(userId, clientService)
-      userCache.value[userId] = user
-      return user
-    } catch (error) {
-      console.error(`Error fetching user ${userId}:`, error)
-      userCache.value[userId] = null // Cache failure
-      return null
-    } finally {
-      loadingStates.value[userId] = false
-    }
-  }
-
-  /**
    * Get cached user data (doesn't trigger fetch)
    */
   const getCachedUser = (userId: string): BillUser | null => {
@@ -78,25 +56,6 @@ export function useUser() {
    */
   const isUserLoading = (userId: string): boolean => {
     return !!loadingStates.value[userId]
-  }
-
-  /**
-   * Clear all user-related caches
-   */
-  const clearAllUserCaches = (): void => {
-    currentUser.value = null
-    userCache.value = {}
-    loadingStates.value = {}
-    UserService.clearAllCache() // Also clear service-level cache
-  }
-
-  /**
-   * Clear a specific user from the cache
-   */
-  const clearUserCache = (userId: string): void => {
-    delete userCache.value[userId]
-    delete loadingStates.value[userId]
-    UserService.clearUserCache(userId)
   }
 
   return {
@@ -113,13 +72,10 @@ export function useUser() {
     initUser,
 
     // --- Other User Methods ---
-    getUserById,
     getCachedUser,
-    isUserLoading,
+    isUserLoading
 
     // --- Cache Methods ---
-    clearAllUserCaches,
-    clearUserCache
   }
 }
 

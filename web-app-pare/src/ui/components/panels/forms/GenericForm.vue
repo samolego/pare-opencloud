@@ -14,7 +14,7 @@ import { useNameOnlyForm, useFormValidationEmits } from '../../../../composables
 import { FormField, FormInput } from '../../forms'
 import { FormMode } from '../../../../types/forms'
 
-export interface SimpleFormConfig {
+export interface FormConfig {
   entityType: string
   label: string
   placeholder: string
@@ -28,7 +28,7 @@ export default defineComponent({
   },
   props: {
     config: {
-      type: Object as PropType<SimpleFormConfig>,
+      type: Object as PropType<FormConfig>,
       required: true
     },
     item: {

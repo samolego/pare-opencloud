@@ -11,12 +11,6 @@ export interface FormValidationEmits {
   submit: (data: any) => void
 }
 
-export interface DetailPanelEmits {
-  cancel: () => void
-  create: (data: any) => void
-  save: (data: any) => void
-}
-
 // Generic form data types
 export interface BillFormData {
   description: string
@@ -33,9 +27,3 @@ export interface BillFormData {
 
 // Form validation function type
 export type ValidatorFunction<T> = (data: T) => ValidationErrors
-
-// Form submission data types
-export interface BillSubmissionData {
-  bill: any
-  splits: any[]
-}

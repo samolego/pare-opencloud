@@ -29,7 +29,7 @@ import { defineComponent, PropType } from 'vue'
 import { useDetailPanelLogic } from '../../../../composables/useDetailPanel'
 import { FormMode } from '../../../../types/forms'
 import DetailPanelHeader from '../DetailPanelHeader.vue'
-import GenericForm, { type SimpleFormConfig } from '../forms/GenericForm.vue'
+import GenericForm, { type FormConfig } from '../forms/GenericForm.vue'
 import { FormSection } from '../../forms'
 
 export default defineComponent({
@@ -53,7 +53,7 @@ export default defineComponent({
       required: true
     },
     formConfig: {
-      type: Object as PropType<SimpleFormConfig>,
+      type: Object as PropType<FormConfig>,
       required: true
     },
     formSectionTitle: {
