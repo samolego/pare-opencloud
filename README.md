@@ -13,8 +13,9 @@ Think like baby Nextcloud Cospend. Like really simple.
 
 
 <img width="623" height="448" alt="image" src="https://github.com/user-attachments/assets/6be4535a-50a2-44da-9d58-67f4a0fe187d" />
-<img width="2368" height="1342" alt="image" src="https://github.com/user-attachments/assets/389f1732-5d4c-44f1-becc-d3810c7c040c" />
-<img width="2368" height="1342" alt="image" src="https://github.com/user-attachments/assets/80c407be-4fb4-45eb-a219-315bfc0af18c" />
+<img width="623" height="1295" alt="image" src="https://github.com/user-attachments/assets/3a0d9b9f-f281-4da2-99c2-efc612ab0f7b" />
+<img width="623" height="1342" alt="image" src="https://github.com/user-attachments/assets/80c407be-4fb4-45eb-a219-315bfc0af18c" />
+
 
 ## ✨ Features
 
