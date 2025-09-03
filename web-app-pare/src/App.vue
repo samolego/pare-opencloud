@@ -97,22 +97,30 @@
       />
 
       <!-- Category Detail Panel -->
-      <CategoryDetailPanel
+      <GenericDetailPanel
         v-else-if="detailPanel.type === 'category'"
         :key="`category-${detailPanel.mode}-${detailPanel.selectedItem?.id || 'new'}`"
-        :category="detailPanel.selectedItem"
+        :item="detailPanel.selectedItem"
         :mode="detailPanel.mode"
+        item-type="Category"
+        :form-config="categoryFormConfig"
+        form-section-title="Category Information"
+        form-section-icon="price-tag"
         @cancel="onDetailPanelCancel"
         @create-category="onCreateCategory"
         @save-category="onSaveCategory"
       />
 
       <!-- Payment Mode Detail Panel -->
-      <PaymentModeDetailPanel
+      <GenericDetailPanel
         v-else-if="detailPanel.type === 'payment_mode'"
         :key="`payment_mode-${detailPanel.mode}-${detailPanel.selectedItem?.id || 'new'}`"
-        :payment-mode="detailPanel.selectedItem"
+        :item="detailPanel.selectedItem"
         :mode="detailPanel.mode"
+        item-type="Payment Mode"
+        :form-config="paymentModeFormConfig"
+        form-section-title="Payment Method Information"
+        form-section-icon="bank-card"
         @cancel="onDetailPanelCancel"
         @create-payment-mode="onCreatePaymentMode"
         @save-payment-mode="onSavePaymentMode"
@@ -162,10 +170,10 @@ import UsersContentPanel from './ui/components/panels/UsersContentPanel.vue'
 import {
   BillDetailPanel,
   UserDetailPanel,
-  CategoryDetailPanel,
-  PaymentModeDetailPanel,
-  SettlementDetailPanel
+  SettlementDetailPanel,
+  GenericDetailPanel
 } from './ui/components/panels/detail'
+import { categoryFormConfig, paymentModeFormConfig } from './configs/formConfigs'
 import SettlementAction from './ui/components/SettlementAction.vue'
 import { ConfirmationDialog } from './ui/components/dialogs'
 
@@ -175,9 +183,8 @@ export default defineComponent({
     SideBar,
     BillDetailPanel,
     UserDetailPanel,
-    CategoryDetailPanel,
-    PaymentModeDetailPanel,
     SettlementDetailPanel,
+    GenericDetailPanel,
     SettlementAction,
     ConfirmationDialog
   },
@@ -193,8 +200,6 @@ export default defineComponent({
   emits: ['update:currentContent'],
   setup(props, { emit }) {
     const textEditor = ref<HTMLTextAreaElement>()
-    console.debug('Initial content:')
-    console.debug(props.currentContent)
     const lastSaved = ref<string>('')
     const currentSection = ref<string>('bill')
     const isNavigationCollapsed = ref(true)
@@ -620,8 +625,6 @@ export default defineComponent({
           title: $gettext('Bill created'),
           desc: $gettext('Your bill has been created successfully')
         })
-
-        console.log(`App: Bill created with ID ${result.billId}`)
       } catch (error) {
         console.error('Error creating bill:', error)
       }
@@ -712,8 +715,6 @@ export default defineComponent({
             title: $gettext('Bill updated'),
             desc: $gettext('Your bill has been updated successfully')
           })
-
-          console.log(`App: Bill updated with ID ${result.billId}`)
         }
       } catch (error) {
         console.error('Error saving bill:', error)
@@ -906,7 +907,9 @@ export default defineComponent({
       onSaveCategory,
       onSavePaymentMode,
       onSettlementCreated,
-      onViewTransactions
+      onViewTransactions,
+      categoryFormConfig,
+      paymentModeFormConfig
     }
   }
 })

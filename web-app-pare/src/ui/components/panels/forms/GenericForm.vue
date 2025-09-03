@@ -21,7 +21,7 @@ export interface SimpleFormConfig {
 }
 
 export default defineComponent({
-  name: 'SimpleForm',
+  name: 'GenericForm',
   components: {
     FormField,
     FormInput

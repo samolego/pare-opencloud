@@ -51,8 +51,6 @@ export interface PSONData {
 
 export class PSONParser {
   static parse(content: string): PSONData {
-    console.log('PSONParser: Parsing content')
-    console.log({ content })
     if (!content.trim()) {
       return this.createDefaultPSONData()
     }
@@ -102,8 +100,6 @@ export class PSONParser {
     bill: Omit<Bill, 'id'>,
     splits: Omit<BillSplit, 'id' | 'bill_id'>[]
   ): { data: PSONData; billId: number } {
-    console.log('PSONParser: Adding new bill')
-
     // Get next bill ID
     const billId = this.getNextId(Object.keys(data.data.bills).map(Number))
 
@@ -128,7 +124,6 @@ export class PSONParser {
     // Update user balances incrementally
     this.applyBalanceChanges(data, bill.who_paid_id, bill.total_amount, splits, 1)
 
-    console.log(`PSONParser: Added bill ${billId} with ${splits.length} splits`)
     return { data, billId }
   }
 
@@ -148,7 +143,6 @@ export class PSONParser {
   }
 
   static getAllBillSplits(data: PSONData): BillSplit[] {
-    console.log('PSONParser: Getting all bill splits')
     const splits: BillSplit[] = []
 
     Object.entries(data.data.bills).forEach(([billId, bill]) => {
@@ -162,7 +156,6 @@ export class PSONParser {
       })
     })
 
-    console.log(`PSONParser: Retrieved ${splits.length} bill splits`)
     return splits
   }
 
@@ -184,8 +177,6 @@ export class PSONParser {
     bill: Omit<Bill, 'id'>,
     splits: Omit<BillSplit, 'id' | 'bill_id'>[]
   ): { data: PSONData; billId: number } {
-    console.log(`PSONParser: Updating bill ${billId}`)
-
     // Get old bill and splits for balance reversal
     const oldBills = this.getBills(data)
     const oldBill = oldBills.find((b) => b.id === billId)
@@ -217,7 +208,6 @@ export class PSONParser {
     // Apply new balance changes
     this.applyBalanceChanges(data, bill.who_paid_id, bill.total_amount, splits, 1)
 
-    console.log(`PSONParser: Updated bill ${billId}`)
     return { data, billId }
   }
 
@@ -286,8 +276,6 @@ export class PSONParser {
   }
 
   static deleteBill(data: PSONData, billId: number): PSONData {
-    console.log(`PSONParser: Deleting bill ${billId}`)
-
     // Get bill and splits for balance reversal before deletion
     const bills = this.getBills(data)
     const bill = bills.find((b) => b.id === billId)
@@ -301,7 +289,6 @@ export class PSONParser {
     // Remove the bill
     delete data.data.bills[billId.toString()]
 
-    console.log(`PSONParser: Deleted bill ${billId}`)
     return data
   }
 
@@ -362,11 +349,6 @@ export class PSONParser {
         }
       }
     })
-
-    const action = direction === 1 ? 'Applied' : 'Reversed'
-    console.log(
-      `PSONParser: ${action} balance changes for bill - payer: ${whoPaidId}, splits: ${splits.length}`
-    )
   }
 
   private static getNextId(existingIds: number[]): number {

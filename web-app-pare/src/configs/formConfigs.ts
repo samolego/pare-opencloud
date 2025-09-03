@@ -1,4 +1,4 @@
-import { SimpleFormConfig } from '../ui/components/panels/forms/SimpleForm.vue'
+import { SimpleFormConfig } from '../ui/components/panels/forms/GenericForm.vue'
 
 export const categoryFormConfig: SimpleFormConfig = {
   entityType: 'category',

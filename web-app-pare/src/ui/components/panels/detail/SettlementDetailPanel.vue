@@ -224,7 +224,6 @@ export default defineComponent({
       }
       // Remove from settling set
       settlingTransactions.value.delete(transactionKey)
-      console.log('Finished settling transaction:', transactionKey)
     }
 
     return {

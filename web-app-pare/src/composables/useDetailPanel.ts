@@ -66,7 +66,6 @@ export function useDetailPanelLogic<T = any>(mode: FormMode, itemType: string, s
 
       // Execute post-save callback if provided
       if (postSaveCallback && (data as any)?.id) {
-        console.log(`useDetailPanelLogic: Executing post-save callback for ${itemType}`)
         try {
           await postSaveCallback((data as any).id)
         } catch (error) {

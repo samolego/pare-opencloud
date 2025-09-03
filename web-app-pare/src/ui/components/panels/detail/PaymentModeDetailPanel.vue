@@ -11,7 +11,7 @@
 
     <div class="payment-mode-detail-content oc-p-l oc-p-m-sm">
       <FormSection title="Payment Method Information" icon="bank-card">
-        <SimpleForm
+        <GenericForm
           ref="paymentModeForm"
           :config="paymentModeFormConfig"
           :item="paymentMode"
@@ -30,7 +30,7 @@ import { PaymentMode } from '../../../../utils/psonParser'
 import { useDetailPanelLogic } from '../../../../composables/useDetailPanel'
 import { FormMode } from '../../../../types/forms'
 import DetailPanelHeader from '../DetailPanelHeader.vue'
-import { SimpleForm } from '../forms'
+import { GenericForm } from '../forms'
 import { paymentModeFormConfig } from '../../../../configs/formConfigs'
 import { FormSection } from '../../forms'
 
@@ -38,7 +38,7 @@ export default defineComponent({
   name: 'PaymentModeDetailPanel',
   components: {
     DetailPanelHeader,
-    SimpleForm,
+    GenericForm,
     FormSection
   },
   props: {

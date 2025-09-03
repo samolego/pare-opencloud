@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isVisible" class="category-detail-panel">
+  <div v-if="isVisible" class="simple-detail-panel">
     <DetailPanelHeader
       :title="panelTitle"
       :can-save="canSave"
@@ -10,11 +10,11 @@
     />
 
     <div class="oc-p-l">
-      <FormSection title="Category Information" icon="price-tag">
+      <FormSection :title="formSectionTitle" :icon="formSectionIcon">
         <GenericForm
-          ref="categoryForm"
-          :config="categoryFormConfig"
-          :item="category"
+          ref="simpleForm"
+          :config="formConfig"
+          :item="item"
           :mode="mode"
           @submit="onFormSubmit"
           @validation-change="onValidationChange"
@@ -26,43 +26,57 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue'
-import { Category } from '../../../../utils/psonParser'
 import { useDetailPanelLogic } from '../../../../composables/useDetailPanel'
 import { FormMode } from '../../../../types/forms'
 import DetailPanelHeader from '../DetailPanelHeader.vue'
-import { GenericForm } from '../forms'
-import { categoryFormConfig } from '../../../../configs/formConfigs'
+import GenericForm, { type SimpleFormConfig } from '../forms/GenericForm.vue'
 import { FormSection } from '../../forms'
 
 export default defineComponent({
-  name: 'CategoryDetailPanel',
+  name: 'GenericDetailPanel',
   components: {
     DetailPanelHeader,
     GenericForm,
     FormSection
   },
   props: {
-    category: {
-      type: Object as PropType<Category | null>,
+    item: {
+      type: Object as PropType<{ name: string } | null>,
       default: null
     },
     mode: {
       type: String as PropType<FormMode>,
       default: 'create'
+    },
+    itemType: {
+      type: String,
+      required: true
+    },
+    formConfig: {
+      type: Object as PropType<SimpleFormConfig>,
+      required: true
+    },
+    formSectionTitle: {
+      type: String,
+      required: true
+    },
+    formSectionIcon: {
+      type: String,
+      required: true
     }
   },
-  emits: ['cancel', 'create-category', 'save-category'],
+  emits: ['cancel', 'create-category', 'save-category', 'create-payment-mode', 'save-payment-mode'],
   setup(props, { emit }) {
     const {
       canSave,
-      formRef: categoryForm,
+      formRef: simpleForm,
       isVisible,
       panelTitle,
       computedSaveText: saveText,
       onValidationChange,
       onSave,
       createEventHandlers
-    } = useDetailPanelLogic(props.mode, 'Category')
+    } = useDetailPanelLogic(props.mode, props.itemType)
 
     const { onCancel, onFormSubmit } = createEventHandlers(emit)
 
@@ -71,8 +85,7 @@ export default defineComponent({
       isVisible,
       panelTitle,
       saveText,
-      categoryForm,
-      categoryFormConfig,
+      simpleForm,
       onValidationChange,
       onCancel,
       onSave,
@@ -83,7 +96,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-.category-detail-panel {
+.simple-detail-panel {
   display: flex;
   flex-direction: column;
   height: 100%;

@@ -11,11 +11,6 @@ export class BalanceCalculator {
    * @returns Array of user balances
    */
   static calculateUserBalances(input: BalanceCalculationInput): UserBalance[] {
-    console.log('BalanceCalculator: Starting balance calculation', {
-      billsCount: input.bills.length,
-      splitsCount: input.billSplits.length,
-      usersCount: input.users.length
-    })
     const { bills, billSplits, users } = input
     const balances = new Map<number, number>()
 
@@ -32,8 +27,6 @@ export class BalanceCalculator {
       }
       splitsByBillId.get(split.bill_id)!.push(split)
     })
-
-    console.log('BalanceCalculator: Processing bills and splits')
 
     // Process each bill
     bills.forEach((bill) => {
@@ -61,10 +54,6 @@ export class BalanceCalculator {
       balance: balances.get(user.id) || 0
     }))
 
-    console.log('BalanceCalculator: Balance calculation completed', {
-      resultCount: result.length
-    })
-
     return result
   }
 
@@ -74,28 +63,22 @@ export class BalanceCalculator {
    * @returns Promise<UserBalance[]>
    */
   static async calculateUserBalancesAsync(data: PSONData): Promise<UserBalance[]> {
-    console.log('BalanceCalculator: Starting async balance calculation')
-
     const users = PSONParser.getUsers(data)
 
     // Check if all users have stored balances
     const hasStoredBalances = users.every((user) => user.balance !== null)
 
     if (hasStoredBalances && users.length > 0) {
-      console.log('BalanceCalculator: Found stored balances in users table')
       const userBalances = users.map((user) => ({
         userId: user.id,
         name: user.name,
         balance: user.balance || 0
       }))
 
-      console.log('BalanceCalculator: Returning stored balances', { count: userBalances.length })
       return userBalances
     }
 
     // No stored balances, calculate from scratch
-    console.log('BalanceCalculator: No stored balances, calculating from scratch')
-
     // Use setTimeout to yield to event loop for large datasets
     await new Promise((resolve) => setTimeout(resolve, 0))
 
@@ -122,8 +105,6 @@ export class BalanceCalculator {
    * @param balances - Calculated balances
    */
   static saveBalancesToUsers(data: PSONData, balances: UserBalance[]) {
-    console.log('BalanceCalculator: Saving balances to users table')
-
     // Update each user's balance in the users table
     const usersTable = data.data.users
     if (!usersTable) {
@@ -141,8 +122,6 @@ export class BalanceCalculator {
         }
       }
     })
-
-    console.log('BalanceCalculator: Balances saved successfully to users table')
   }
 
   /**
@@ -151,8 +130,6 @@ export class BalanceCalculator {
    * @returns Promise<UserBalance[]>
    */
   static async forceRecalculateBalances(data: PSONData): Promise<UserBalance[]> {
-    console.log('BalanceCalculator: Force recalculating balances (clearing existing data)')
-
     // Clear existing balances in users table to force recalculation
     const usersTable = data.data.users
     if (usersTable) {
@@ -191,13 +168,9 @@ export class BalanceCalculator {
    * @param billId - ID of the bill that changed
    */
   static async recalculateForBill(data: PSONData, billId: number): Promise<void> {
-    console.log(`BalanceCalculator: Recalculating balances for bill ${billId}`)
-
     // For now, we'll do a full recalculation
     // TODO: Implement incremental calculation for better performance
     await this.forceRecalculateBalances(data)
-
-    console.log(`BalanceCalculator: Balances recalculated for bill ${billId}`)
   }
 
   /**

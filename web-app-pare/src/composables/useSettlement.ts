@@ -19,7 +19,6 @@ export function useSettlement(parsedData: Ref<PSONData> | undefined) {
    */
   const calculateBalances = async () => {
     if (!parsedData?.value) {
-      console.log('useSettlement: No parsed data available')
       userBalances.value = []
       return
     }
@@ -36,11 +35,9 @@ export function useSettlement(parsedData: Ref<PSONData> | undefined) {
     })
 
     if (dataHash === lastCalculationHash.value && userBalances.value.length > 0) {
-      console.log('useSettlement: Data unchanged, skipping calculation')
       return
     }
 
-    console.log('useSettlement: Starting balance calculation')
     isCalculating.value = true
     error.value = null
 
@@ -48,7 +45,6 @@ export function useSettlement(parsedData: Ref<PSONData> | undefined) {
       const balances = await BalanceCalculator.calculateUserBalancesAsync(parsedData.value)
       userBalances.value = balances
       lastCalculationHash.value = dataHash
-      console.log('useSettlement: Balance calculation completed', { count: balances.length })
     } catch (err) {
       console.error('useSettlement: Error calculating user balances:', err)
       error.value = err instanceof Error ? err.message : 'Unknown error calculating balances'
@@ -294,7 +290,6 @@ export function useSettlement(parsedData: Ref<PSONData> | undefined) {
   const recalculateForBill = async (billId: number) => {
     if (!parsedData?.value) return
 
-    console.log(`useSettlement: Recalculating balances for bill ${billId}`)
     isCalculating.value = true
     error.value = null
 
