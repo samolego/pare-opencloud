@@ -1,11 +1,7 @@
 // Settlement algorithm for debt simplification
 
-import {
-  UserBalance,
-  Settlement,
-  SettlementTransaction,
-  SettlementBillData
-} from '../types/settlement'
+import { Settlement, SettlementTransaction, SettlementBillData } from '../types/settlement'
+import { UserBalance } from '../types/user'
 import { BalanceCalculator } from './balanceCalculator'
 
 export class SettlementAlgorithm {
