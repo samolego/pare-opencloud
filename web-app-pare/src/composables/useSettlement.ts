@@ -4,7 +4,7 @@ import { computed, ref, watch, type Ref } from 'vue'
 import { BalanceCalculator } from '../utils/balanceCalculator'
 import { SettlementAlgorithm } from '../utils/settlementAlgorithm'
 import { PSONParser, type PSONData } from '../utils/psonParser'
-import type { Settlement, SettlementResult } from '../types/settlement'
+import type { Settlement, SettlementResult, SettlementTransaction } from '../types/settlement'
 import type { UserBalance } from '../types/user'
 
 export function useSettlement(parsedData: Ref<PSONData> | undefined) {
@@ -141,7 +141,7 @@ export function useSettlement(parsedData: Ref<PSONData> | undefined) {
    * Generic method to create settlement bills from transactions
    */
   const createBillsFromTransactions = (
-    transactions: any[],
+    transactions: SettlementTransaction[],
     date?: string,
     time?: string
   ): Promise<SettlementResult | null> => {
@@ -153,19 +153,15 @@ export function useSettlement(parsedData: Ref<PSONData> | undefined) {
     error.value = null
 
     try {
-      // Convert transactions to settlement bills
-      const now = new Date()
-      const settlementDate = date || now.toISOString().split('T')[0]
-      const settlementTime = time || now.toTimeString().split(' ')[0].slice(0, 5)
+      // Create a temporary settlement object to use the algorithm
+      const tempSettlement: Settlement = {
+        transactions,
+        totalTransactions: transactions.length,
+        balancesBeforeSettlement: userBalances.value
+      }
 
-      const settlementBills = transactions.map((transaction) => ({
-        description: `Settlement: ${transaction.fromUserName} → ${transaction.toUserName}`,
-        fromUserId: transaction.fromUserId,
-        toUserId: transaction.toUserId,
-        amount: transaction.amount,
-        date: settlementDate,
-        time: settlementTime
-      }))
+      // Use SettlementAlgorithm to create settlement bills
+      const settlementBills = SettlementAlgorithm.createSettlementBills(tempSettlement, date, time)
 
       // Add each settlement bill to the data
       let updatedData = { ...parsedData.value }
@@ -251,7 +247,7 @@ export function useSettlement(parsedData: Ref<PSONData> | undefined) {
    * Create settlement bill for a single transaction
    */
   const createIndividualSettlementBill = async (
-    transaction: any,
+    transaction: SettlementTransaction,
     date?: string,
     time?: string
   ): Promise<SettlementResult | null> => {
