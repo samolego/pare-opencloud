@@ -12,13 +12,7 @@
 import { defineComponent, PropType, watch } from 'vue'
 import { useNameOnlyForm, useFormValidationEmits } from '../../../../composables/useSimpleForm'
 import { FormField, FormInput } from '../../forms'
-import { FormMode } from '../../../../types/forms'
-
-export interface FormConfig {
-  entityType: string
-  label: string
-  placeholder: string
-}
+import { FormMode, FormConfig } from '../../../../types/forms'
 
 export default defineComponent({
   name: 'GenericForm',

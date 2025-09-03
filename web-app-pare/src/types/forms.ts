@@ -2,6 +2,12 @@ export type GenericFormData = { name: string }
 
 export type FormMode = 'create' | 'edit'
 
+export interface FormConfig {
+  entityType: string
+  label: string
+  placeholder: string
+}
+
 export interface ValidationErrors {
   [key: string]: string
 }
