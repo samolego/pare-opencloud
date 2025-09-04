@@ -9,7 +9,7 @@
             @click="onNavigate(item.key)"
           >
             <oc-icon :name="item.icon" size="small" class="nav-icon" />
-            <span v-if="!collapsed" class="nav-text">{{ item.label }}</span>
+            <span v-if="!collapsed" class="oc-flex-1">{{ item.label }}</span>
             <span v-if="item.count !== undefined && !collapsed" class="nav-count">{{
               item.count
             }}</span>
@@ -146,10 +146,6 @@ export default defineComponent({
     width: 16px;
     height: 16px;
   }
-}
-
-.nav-text {
-  flex: 1;
 }
 
 .nav-count {
