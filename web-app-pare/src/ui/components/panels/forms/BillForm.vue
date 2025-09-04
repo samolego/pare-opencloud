@@ -150,11 +150,11 @@
     <!-- Additional Details Section -->
     <FormSection title="Additional Details" icon="info-card">
       <!-- Repeat Field -->
-      <div class="oc-mb-l">
+      <!--div class="oc-mb-l">
         <FormField label="Repeat" :error="errors.repeat">
           <FormSelect v-model="localForm.repeat" :options="repeatOptions" />
         </FormField>
-      </div>
+      </!div-->
 
       <!-- Comment -->
       <div class="oc-mb-l">
