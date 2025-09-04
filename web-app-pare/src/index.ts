@@ -3,6 +3,7 @@ import { urlJoin } from '@opencloud-eu/web-client'
 import { RouteRecordRaw } from 'vue-router'
 import { computed } from 'vue'
 import { useGettext } from 'vue3-gettext'
+import translations from '../l10n/translations.json'
 
 import App from './App.vue'
 
@@ -55,7 +56,8 @@ export default defineWebApplication({
       }
     ]
 
-    const menuItems = computed<AppMenuItemExtension[]>(() => [
+    // Item for the menu when you click on 9 dots in the top left corner
+    const menuItem = computed<AppMenuItemExtension[]>(() => [
       {
         // registers a menu item for the app switcher
         id: `app.${appInfo.id}.menuItem`,
@@ -70,7 +72,8 @@ export default defineWebApplication({
     return {
       appInfo,
       routes,
-      extensions: menuItems
+      translations,
+      extensions: menuItem
     }
   }
 })

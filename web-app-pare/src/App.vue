@@ -138,7 +138,7 @@
       <div v-else class="empty-detail-state oc-flex oc-flex-center oc-flex-middle oc-p-l">
         <div class="empty-state-content">
           <oc-icon name="file-text" size="large" />
-          <h2>Select an item to view details</h2>
+          <h2>{{ $gettext('Select an item to view details') }}</h2>
           <p>Choose an item from the list or create a new one to get started.</p>
         </div>
       </div>

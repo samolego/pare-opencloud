@@ -99,7 +99,7 @@
                 </div>
                 <span v-else class="oc-text-muted oc-flex-1">Select user...</span>
                 <oc-icon
-                  name="keyboard-arrow-down"
+                  name="arrow-down"
                   size="small"
                   class="oc-text-muted dropdown-arrow"
                   :class="{ 'dropdown-arrow--rotated': showWhoPaidDropdown }"
