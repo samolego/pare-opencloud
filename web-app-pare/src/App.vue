@@ -361,11 +361,11 @@ export default defineComponent({
           icon: 'bill',
           count: bills.value.length
         },
-        {
+        /*{
           key: 'statistics',
           label: $gettext('Statistics'),
           icon: 'bar-chart'
-        },
+        },*/
         {
           key: 'member',
           label: $gettext('Members'),
