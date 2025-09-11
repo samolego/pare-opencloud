@@ -22,7 +22,7 @@ export default defineWebApplication({
           extension: 'pson',
           routeName: 'pare-finance',
 
-          // Add this if you want your app to be present in the "New" file menu.
+          // Make app present in the "New" file menu.
           newFileMenu: {
             menuTitle() {
               return $gettext('Pare Bill')
