@@ -24,11 +24,10 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 9.15.0
-      - name: cd to web-app-pare
-        run: cd web-app-pare
 
       - name: Get pnpm store directory
         shell: bash
+        working-directory: web-app-pare
         run: |
           echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
@@ -36,28 +35,33 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('web-app-pare/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
+        working-directory: web-app-pare
         run: pnpm install --frozen-lockfile
 
       - name: Type check
+        working-directory: web-app-pare
         run: pnpm check:types
 
       - name: Lint
+        working-directory: web-app-pare
         run: pnpm lint
 
       - name: Run unit tests
+        working-directory: web-app-pare
         run: pnpm test:unit
 
       - name: Build
+        working-directory: web-app-pare
         run: pnpm build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist-${{ github.sha }}
-          path: dist/
+          path: web-app-pare/dist/
           retention-days: 7

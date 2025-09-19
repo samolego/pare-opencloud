@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag to release"
+        description: 'Tag to release'
         required: true
         type: string
 
@@ -24,17 +24,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: '20'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9.15.0
-      - name: cd to web-app-pare
-        run: cd web-app-pare
 
       - name: Get pnpm store directory
         shell: bash
+        working-directory: web-app-pare
         run: |
           echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
@@ -42,32 +41,40 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('web-app-pare/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
+        working-directory: web-app-pare
         run: pnpm install --frozen-lockfile
 
       - name: Type check
+        working-directory: web-app-pare
         run: pnpm check:types
 
       - name: Lint
+        working-directory: web-app-pare
         run: pnpm lint
 
       - name: Run tests
+        working-directory: web-app-pare
         run: pnpm test:unit
 
       - name: Build for production
+        working-directory: web-app-pare
         run: pnpm build
 
       - name: Get package version
         id: package-version
+        working-directory: web-app-pare
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
       - name: Create release archive
+        working-directory: web-app-pare
         run: |
-          mv dist/ pare/
+          mkdir -p pare
+          cp -r dist/* pare/
           zip -r web-app-pare-${{ steps.package-version.outputs.version }}.zip pare/
           rm -rf pare
 
@@ -78,7 +85,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./web-app-pare-${{ steps.package-version.outputs.version }}.zip
+          asset_path: ./web-app-pare/web-app-pare-${{ steps.package-version.outputs.version }}.zip
           asset_name: web-app-pare-${{ steps.package-version.outputs.version }}.zip
           asset_content_type: application/zip
 
@@ -87,6 +94,6 @@ jobs:
         with:
           name: web-app-pare-release-${{ steps.package-version.outputs.version }}
           path: |
-            dist/
-            web-app-pare-${{ steps.package-version.outputs.version }}.zip
+            web-app-pare/dist/
+            web-app-pare/web-app-pare-${{ steps.package-version.outputs.version }}.zip
           retention-days: 30
