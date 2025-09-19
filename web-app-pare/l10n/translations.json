@@ -1,6 +1,5 @@
 {
-  "en": {},
-  "si": {
+  "sl": {
     "Select an item to view details": "Izberi element za ogled podrobnosti",
     "Pare Finance": "Pare Finance",
     "Expand navigation": "Razširi navigacijo",
@@ -46,7 +45,7 @@
     "Member updated": "Član posodobljen",
     "Member has been updated successfully": "Član je bil uspešno posodobljen",
     "Category updated": "Kategorija posodobljena",
-    "Category has been updated successfully": "Kategorija je bila uspešno posodobljena",
+    "Category has been added successfully": "Kategorija je bila uspešno posodobljena",
     "Payment mode updated": "Način plačila posodobljen",
     "Payment mode has been updated successfully": "Način plačila je bil uspešno posodobljen",
     "Error saving bill": "Napaka pri shranjevanju računa",
@@ -60,17 +59,5 @@
     "Failed to update content after creating settlement bills": "Ni mogoče posodobiti vsebine po ustvarjanju računov za poravnavo",
     "Pare Bill": "Pare račun",
     "About": "O programu"
-  },
-  "de": {},
-  "fr": {},
-  "es": {},
-  "it": {},
-  "nl": {},
-  "pl": {},
-  "cs": {},
-  "sk": {},
-  "hr": {},
-  "bg": {},
-  "ru": {},
-  "uk": {}
+  }
 }
