@@ -19,17 +19,10 @@ Think like baby Nextcloud Cospend. Like really simple.
 
 ## ✨ Features
 
-### Expense Management
-- **Bill Tracking**: Create and manage bills with detailed information including description, amount, date, time, and payment method
+- **Bill Tracking**: Create and manage bills with information like amount (obviously), date, time, payment method, etc.
 - **Bill Splitting**: Automatically split bills equally or customize split amounts between participants
-
-### Member Management
-- **User Profiles**: Manage group members with OpenCloud integration
+- **User Profiles**: Manage project members with OpenCloud integration
 - **Payment Tracking**: Track who paid for expenses and who owes money
-
-### User Interface
-- **Dark/Light Theme**: Automatic theme adaptation based on user preferences
-- **Real-time Validation**: Instant feedback on form inputs and split calculations
 
 
 ## Development
